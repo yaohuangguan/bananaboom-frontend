@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { User, ChatMessage, ChatUser } from '../types';
@@ -35,17 +36,19 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
   const [privateReceiver, setPrivateReceiver] = useState<string | null>(null); // Name of private receiver
   const [connectionStatus, setConnectionStatus] = useState<string>(t.chat.connecting);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto scroll to bottom
+  // Auto scroll to bottom of the chat container ONLY
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, privateReceiver]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -90,8 +93,6 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
     newSocket.on(EVENTS.MESSAGE_RECEIVED, (msg: ChatMessage) => {
       // Dedup logic: Check if we already have this message (by timestamp similarity or exact content/author match if recently added)
       // Since we use optimistic UI, we might get our own message back.
-      // However, for simplicity and ensuring we don't miss messages from others, we just append.
-      // Ideally, the message should have a unique ID.
       setMessages(prev => {
         // Simple dedup: if the last message has same content and author and is very recent, skip
         const lastMsg = prev[prev.length - 1];
@@ -107,6 +108,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
 
     // 6. Receive Private Messages
     newSocket.on(EVENTS.PRIVATE_MESSAGE, (msg: ChatMessage) => {
+       // Ignore own messages echoed from backend to prefer optimistic version with correct 'receiver' metadata
+       if (msg.author === currentUser.displayName) return;
+
        setMessages(prev => [...prev, { ...msg, isPrivate: true, timestamp: new Date().toISOString() }]);
        if (msg.author !== currentUser.displayName) {
           toast.info(`Private message from ${msg.author}`);
@@ -141,13 +145,25 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
     e.preventDefault();
     if (!inputText.trim() || !socket || !currentUser) return;
 
+    const timestamp = new Date().toISOString();
+
     if (privateReceiver) {
       // Send Private
       socket.emit(EVENTS.PRIVATE_MESSAGE, {
         receiverName: privateReceiver,
         message: inputText
       });
-      // Backend echoes private messages back to sender usually, so no optimistic needed or it's handled by event
+      
+      // Optimistic Update for Private
+      const optimisticMsg: ChatMessage = {
+          message: inputText,
+          author: currentUser.displayName,
+          userId: currentUser._id,
+          timestamp,
+          isPrivate: true,
+          receiver: privateReceiver // Store receiver for filtering
+      };
+      setMessages(prev => [...prev, optimisticMsg]);
     } else {
       // Send Public
       socket.emit(EVENTS.MESSAGE_SENT, {
@@ -157,15 +173,13 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
         room: "public"
       });
       
-      // OPTIMISTIC UPDATE:
-      // Since the backend might not be echoing back correctly if the user isn't in the room, 
-      // or to ensure immediate feedback, we add it to local state.
+      // OPTIMISTIC UPDATE for Public
       const optimisticMsg: ChatMessage = {
           message: inputText,
           author: currentUser.displayName,
           userId: currentUser._id,
           room: "public",
-          timestamp: new Date().toISOString(),
+          timestamp,
           isPrivate: false
       };
       setMessages(prev => [...prev, optimisticMsg]);
@@ -201,6 +215,22 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
 
   // --- UI RENDER ---
   const userList = Object.values(onlineUsers) as ChatUser[];
+
+  // FILTER MESSAGES BASED ON CHANNEL
+  const filteredMessages = messages.filter(msg => {
+    if (privateReceiver) {
+      // Private Channel: Show messages between me and privateReceiver
+      // Incoming: msg.author is privateReceiver AND msg.isPrivate
+      // Outgoing: msg.author is me AND msg.receiver is privateReceiver AND msg.isPrivate
+      return msg.isPrivate && (
+        msg.author === privateReceiver || 
+        (msg.author === currentUser.displayName && msg.receiver === privateReceiver)
+      );
+    } else {
+      // Public Channel: Show ONLY non-private messages
+      return !msg.isPrivate;
+    }
+  });
   
   return (
     <div className="h-screen pt-24 pb-6 px-4 md:px-6 relative flex flex-col items-center justify-center overflow-hidden">
@@ -301,16 +331,16 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
               </div>
            </div>
 
-           {/* Messages Area */}
-           <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-gradient-to-b from-slate-900 to-slate-950">
-              {messages.length === 0 && (
+           {/* Messages Area - Uses ScrollTop for stable scrolling */}
+           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-gradient-to-b from-slate-900 to-slate-950">
+              {filteredMessages.length === 0 && (
                  <div className="flex flex-col items-center justify-center h-full text-slate-600">
                     <i className="fas fa-satellite text-4xl mb-4 opacity-50"></i>
                     <p className="font-mono text-sm">{t.chat.connecting}</p>
                  </div>
               )}
               
-              {messages.map((msg, idx) => {
+              {filteredMessages.map((msg, idx) => {
                  const isMe = msg.author === currentUser.displayName;
                  const isSystem = msg.isSystem;
                  
@@ -356,7 +386,6 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
                     </div>
                  );
               })}
-              <div ref={messagesEndRef} />
            </div>
 
            {/* Input Area */}

@@ -156,4 +156,5 @@ export interface ChatMessage {
   timestamp?: string;
   isPrivate?: boolean;
   isSystem?: boolean;
+  receiver?: string;
 }
