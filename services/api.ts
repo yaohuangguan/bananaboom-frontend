@@ -3,7 +3,7 @@
 import { BlogPost, User, Comment, Project, ResumeItem, Log, Todo, Photo, PaginatedResponse, PaginationData, AuditLog } from '../types';
 import { toast } from '../components/Toast';
 
-const API_BASE_URL = 'https://bananaboom-api-242273127238.asia-east1.run.app/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://bananaboom-api-242273127238.asia-east1.run.app/api';
 
 /**
  * Native fetch wrapper with error handling, timeouts, and auth headers
