@@ -1,3 +1,4 @@
+
 import { BlogPost } from "../types";
 
 export const resources = {
@@ -117,8 +118,8 @@ export const resources = {
     },
     resume: {
       role: 'Engineer / Voyager',
-      bio: 'Focused on Tech, Entrepreneurship, Wealth Creation, and Personal Growth.',
-      credentials: 'Ex-Tencent & Lalamove Senior Dev | NIO Owner | Professional Stock Trader',
+      bio: 'Focused on Tech, Investment, and Personal Growth.',
+      credentials: 'Ex-Tencent & Lalamove Senior Dev',
       siteIntro: {
         title: 'System Architecture',
         subtitle: 'Overview of the modules available in this digital space.',
@@ -216,19 +217,40 @@ export const resources = {
       },
       leisure: {
         musicTitle: "Sonic Player",
-        playUrl: "Play from URL",
-        search: "Search Library",
-        placeholderUrl: "Paste MP3 URL here...",
-        placeholderSearch: "Search song title...",
-        nowPlaying: "Now Playing",
-        stopped: "Stopped",
-        spaceShooter: "Space War",
-        klotski: "Huarong Dao",
-        startGame: "Start Mission",
-        gameOver: "GAME OVER",
-        score: "Score",
-        reset: "Reset System",
-        instructions: "Arrows to Move • Space to Fire"
+        playUrl: "Play URL",
+        search: "Library",
+        placeholderUrl: "MP3 URL...",
+        placeholderSearch: "Search...",
+        nowPlaying: "Playing",
+        stopped: "Idle",
+        mahjong: "Mahjong Soul Zone",
+        mahjongDesc: "Access the Maj-Soul network.",
+        sudoku: {
+          title: "Neural Grid",
+          level: "Level",
+          reset: "Reset Grid",
+          check: "Check Status",
+          solved: "SEQUENCE CORRECT",
+          failed: "INVALID SEQUENCE",
+          nextLevel: "Proceed to Level 2",
+          complete: "ALL LEVELS CLEARED"
+        },
+        pirate: {
+          title: "The Four Pirate Lords",
+          reset: "Reshuffle",
+          moves: "Moves",
+          victory: "CONQUERED",
+          victoryDesc: "The seas are tamed.",
+          playAgain: "Play Again",
+          rulesTitle: "Mission Parameters",
+          rules: [
+            "Objective: Coordinate the 4 Factions (Red, Blue, Green, Yellow) to their home territories simultaneously.",
+            "Home Territories: Red (Top-Left), Blue (Top-Right), Green (Bottom-Left), Yellow (Bottom-Right).",
+            "Units: Each faction has 4 units (Captain, Ship, Treasure, Map). All 4 must be inside their specific 3x3 colored zone.",
+            "Neutral Zone: The center column and empty spaces allow for movement.",
+            "Difficulty: Hard. Requires look-ahead planning."
+          ]
+        }
       },
       journal: "Our Journal",
       memories: "MEMORIES",
@@ -399,8 +421,8 @@ export const resources = {
     },
     resume: {
       role: '工程师 / 旅行者',
-      bio: '专注于科技、创业、搞钱与个人成长。',
-      credentials: '前腾讯/货拉拉资深开发 | 蔚来车主 | 专业股票操盘手',
+      bio: '专注于科技，投资与个人成长。',
+      credentials: '前腾讯/货拉拉资深开发',
       siteIntro: {
         title: '站点导航',
         subtitle: '本数字空间主要模块功能概览。',
@@ -500,17 +522,38 @@ export const resources = {
         musicTitle: "音乐播放器",
         playUrl: "播放链接",
         search: "搜索曲库",
-        placeholderUrl: "粘贴 MP3 链接...",
-        placeholderSearch: "搜索歌曲名...",
+        placeholderUrl: "MP3 URL...",
+        placeholderSearch: "搜索...",
         nowPlaying: "正在播放",
         stopped: "已停止",
-        spaceShooter: "太空大战",
-        klotski: "华容道",
-        startGame: "Start Mission",
-        gameOver: "GAME OVER",
-        score: "得分",
-        reset: "重置",
-        instructions: "方向键移动 • 空格键射击"
+        mahjong: "雀魂麻将区",
+        mahjongDesc: "接入 Maj-Soul 神经网络",
+        sudoku: {
+          title: "神经网格 (数独)",
+          level: "关卡",
+          reset: "重置网格",
+          check: "验证状态",
+          solved: "序列正确",
+          failed: "序列无效",
+          nextLevel: "进入关卡 2",
+          complete: "所有关卡已清除"
+        },
+        pirate: {
+          title: "四皇海战 (华容道)",
+          reset: "重置牌局",
+          moves: "步数",
+          victory: "征服完成",
+          victoryDesc: "四海已平定。",
+          playAgain: "再战",
+          rulesTitle: "任务参数",
+          rules: [
+            "目标: 将红、蓝、绿、黄四个阵营的滑块同时移动到对应的领地。",
+            "领地分布: 红(左上), 蓝(右上), 绿(左下), 黄(右下)。",
+            "单位: 每个阵营包含4个单位（船长、船、宝箱、地图）。所有单位必须位于其3x3的领地内。",
+            "中立区: 中间列及空位允许通行。",
+            "难度: 困难。需要极强的预判能力。"
+          ]
+        }
       },
       journal: "我们的日志",
       memories: "篇回忆",
