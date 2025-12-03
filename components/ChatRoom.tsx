@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Socket } from 'socket.io-client';
 import { User, ChatMessage, ChatUser } from '../types';
@@ -22,10 +23,22 @@ const EVENTS = {
   ROOM_WELCOME: "ROOM_WELCOME"
 };
 
+// Priority Emails for sorting
+const PRIORITY_EMAILS = ['yaob@miamioh.edu', 'cft_cool@hotmail.com'];
+
 export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket }) => {
   const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  
+  // Real-time online presence from Socket
   const [onlineUsers, setOnlineUsers] = useState<Record<string, ChatUser>>({});
+  
+  // Full User Directory from API (for the list)
+  const [directoryUsers, setDirectoryUsers] = useState<User[]>([]);
+  const [dirPage, setDirPage] = useState(1);
+  const [hasMoreDir, setHasMoreDir] = useState(true);
+  const [isLoadingDir, setIsLoadingDir] = useState(false);
+
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
@@ -47,32 +60,96 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket }) => {
     scrollToBottom();
   }, [messages, activeUser]);
 
-  // Fix Online Users Count: Ensure current user is included if missing
-  // User reported count was 0 when it should be at least 1 (themselves)
-  const userList = useMemo(() => {
-    if (!currentUser) return [];
-    
-    const usersMap = new Map<string, ChatUser>();
-    
-    // 1. Add socket users (ensure they have valid structure)
-    Object.values(onlineUsers || {}).forEach(u => {
-        if (u && u.id && u.name) {
-            usersMap.set(u.id, u);
-        }
-    });
+  // Fetch Directory Users (Pagination)
+  const fetchDirectory = async (page: number) => {
+    if (isLoadingDir) return;
+    setIsLoadingDir(true);
+    try {
+      // Sort by 'vip' desc from backend
+      const { data, pagination } = await apiService.getUsers(page, 20, '', 'vip', 'desc');
+      
+      setDirectoryUsers(prev => {
+        // Simple deduplication based on _id
+        const newUsers = page === 1 ? data : [...prev, ...data];
+        const unique = Array.from(new Map(newUsers.map(u => [u._id, u])).values());
+        return unique;
+      });
+      setHasMoreDir(pagination.hasNextPage);
+    } catch (e) {
+      console.error("Failed to load user directory", e);
+    } finally {
+      setIsLoadingDir(false);
+    }
+  };
 
-    // 2. Force Add Current User (if not present)
-    const myId = currentUser._id || (currentUser as any).id;
-    if (myId) {
-         // Ensure we use the same ID format. If map already has it, it might be from socket with potentially fresher data (or same).
-         // But we ensure at least one entry exists for 'me'.
-         if (!usersMap.has(myId)) {
-             usersMap.set(myId, { id: myId, name: currentUser.displayName });
-         }
+  useEffect(() => {
+    fetchDirectory(1);
+  }, []);
+
+  const loadMoreUsers = () => {
+    if (hasMoreDir && !isLoadingDir) {
+      const nextPage = dirPage + 1;
+      setDirPage(nextPage);
+      fetchDirectory(nextPage);
+    }
+  };
+
+  // Process User List for Display
+  const processedUserList = useMemo(() => {
+    if (!currentUser) return [];
+
+    // 1. Create Map from Directory
+    // Normalize ChatUser vs User types. 
+    // Directory is `User[]` (has _id, displayName, email, vip)
+    // Online is `ChatUser` (has id, name, email)
+    
+    // We want a unified list for display. We use the Directory as the source of truth for the list content,
+    // and overlay "online" status from `onlineUsers`.
+    
+    // We also need to ensure the Current User is in the list if not fetched yet
+    let combined = [...directoryUsers];
+    if (!combined.find(u => u._id === currentUser._id)) {
+        combined.unshift(currentUser);
     }
 
-    return Array.from(usersMap.values());
-  }, [onlineUsers, currentUser]);
+    // 2. Sort Logic
+    // - Priority Emails First
+    // - VIP Second
+    // - Online Status (Optional, maybe just keep backend sort order which is VIP)
+    // - Others
+    combined.sort((a, b) => {
+       const emailA = (a.email || "").toLowerCase();
+       const emailB = (b.email || "").toLowerCase();
+       
+       const isAPriority = PRIORITY_EMAILS.includes(emailA);
+       const isBPriority = PRIORITY_EMAILS.includes(emailB);
+
+       if (isAPriority && !isBPriority) return -1;
+       if (!isBPriority && isAPriority) return 1;
+       if (isAPriority && isBPriority) {
+          // Keep internal order of priority list
+          return PRIORITY_EMAILS.indexOf(emailA) - PRIORITY_EMAILS.indexOf(emailB);
+       }
+
+       // Backend already sorted by VIP, so we might trust array order, 
+       // but lets enforce strictly if mixed with new data
+       if (a.vip && !b.vip) return -1;
+       if (!a.vip && b.vip) return 1;
+
+       return 0;
+    });
+
+    return combined;
+  }, [directoryUsers, currentUser]);
+
+  // Helper to check online status
+  const isUserOnline = (userId: string) => {
+     // onlineUsers keys might be socket IDs or UserIDs depending on backend implementation.
+     // Assuming backend maps UserID -> UserObj or simple ID check.
+     // The provided backend sends `users` object where key is socketID and value is user data.
+     // We need to iterate values to check if user ID exists.
+     return Object.values(onlineUsers).some(u => u.id === userId);
+  };
 
   // Fetch History Logic
   useEffect(() => {
@@ -146,25 +223,36 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket }) => {
 
     // 3. Receive Public Messages
     const handleMessageReceived = (msg: ChatMessage) => {
+      // Force public flag for messages received on this channel
+      const incomingMsg = { ...msg, isPrivate: false };
+
       setMessages(prev => {
         const lastMsg = prev[prev.length - 1];
-        // Simple dedupe for rapid socket events vs optimistic updates
-        const isDuplicate = lastMsg && 
-            lastMsg.author === msg.author && 
-            lastMsg.message === msg.message && 
-            (new Date().getTime() - new Date(lastMsg.timestamp || 0).getTime() < 2000);
+        
+        // Dedupe logic: Only dedupe messages from CURRENT USER to handle optimistic update collisions.
+        // Messages from others should be accepted even if they seem duplicate (e.g. fast typing).
+        const isMe = (incomingMsg.userId === currentUser._id) || 
+                     (incomingMsg.email && incomingMsg.email === currentUser.email) ||
+                     (incomingMsg.author === currentUser.displayName);
+
+        const isDuplicate = isMe && lastMsg && 
+            lastMsg.author === incomingMsg.author && 
+            lastMsg.message === incomingMsg.message && 
+            (new Date().getTime() - new Date(lastMsg.timestamp || 0).getTime() < 5000);
 
         if (isDuplicate) return prev;
-        return [...prev, { ...msg, timestamp: new Date().toISOString() }];
+        
+        // Ensure timestamp exists
+        return [...prev, { ...incomingMsg, timestamp: incomingMsg.timestamp || new Date().toISOString() }];
       });
     };
 
     // 4. Receive Private Messages
     const handlePrivateMessage = (msg: ChatMessage) => {
        // Ignore own messages echoed from backend to prefer optimistic version
-       if (msg.author === currentUser.displayName) return;
+       if (msg.userId === currentUser._id || (msg.email && msg.email === currentUser.email)) return;
 
-       setMessages(prev => [...prev, { ...msg, isPrivate: true, timestamp: new Date().toISOString() }]);
+       setMessages(prev => [...prev, { ...msg, isPrivate: true, timestamp: msg.timestamp || new Date().toISOString() }]);
        if (msg.author !== currentUser.displayName) {
           // If we are not chatting with them, show a toast
           if (activeUser?.name !== msg.author) {
@@ -228,6 +316,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket }) => {
           message: inputText,
           author: currentUser.displayName,
           userId: currentUser._id,
+          email: currentUser.email,
           timestamp,
           isPrivate: true,
           receiver: activeUser.name // Store receiver for filtering
@@ -247,6 +336,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket }) => {
           message: inputText,
           author: currentUser.displayName,
           userId: currentUser._id,
+          email: currentUser.email,
           room: "public",
           timestamp,
           isPrivate: false
@@ -286,10 +376,15 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket }) => {
   const filteredMessages = messages.filter(msg => {
     if (activeUser) {
       // Private Channel Filtering
-      // Show if message is private AND (Sent by Other OR Sent by Me to Other)
+      // Use UserID or Email primarily to determine if "I" sent it
+      const isMsgFromMe = (msg.userId === currentUser._id) || (msg.email === currentUser.email) || (msg.author === currentUser.displayName);
+      
+      // Check if message is FROM the active user I'm chatting with
+      const isMsgFromActive = (msg.userId === activeUser.id) || (activeUser.email && msg.email === activeUser.email) || (msg.author === activeUser.name);
+      
       return msg.isPrivate && (
-        msg.author === activeUser.name || 
-        (msg.author === currentUser.displayName && msg.receiver === activeUser.name)
+        isMsgFromActive || 
+        (isMsgFromMe && msg.receiver === activeUser.name)
       );
     } else {
       // Public Channel Filtering
@@ -320,7 +415,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket }) => {
               <h3 className="font-display font-bold text-cyan-400 uppercase tracking-widest text-sm">
                 <i className="fas fa-users-cog mr-2"></i> {t.chat.crewManifest}
               </h3>
-              <span className="text-xs font-mono text-emerald-400 animate-pulse">● {userList.length} Online</span>
+              <span className="text-xs font-mono text-emerald-400 animate-pulse">● {Object.keys(onlineUsers).length} Online</span>
            </div>
            
            <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
@@ -342,13 +437,16 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket }) => {
               <div className="my-2 h-px bg-slate-700/50 mx-2"></div>
 
               {/* Users List */}
-              {userList.map(u => {
-                 const isMe = u.name === currentUser.displayName;
-                 const isActive = activeUser?.id === u.id;
+              {processedUserList.map(u => {
+                 const isMe = u._id === currentUser._id;
+                 const isActive = activeUser?.id === u._id;
+                 const online = isUserOnline(u._id);
+                 const isPriority = PRIORITY_EMAILS.includes(u.email);
+
                  return (
                    <button 
-                     key={u.id || u.name} 
-                     onClick={() => !isMe && setActiveUser(u)}
+                     key={u._id} 
+                     onClick={() => !isMe && setActiveUser({ id: u._id, name: u.displayName, email: u.email })}
                      disabled={isMe}
                      className={`w-full text-left p-2 rounded-lg flex items-center gap-3 transition-all border ${
                        isActive 
@@ -358,23 +456,44 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket }) => {
                            : 'border-transparent text-slate-300 hover:bg-slate-800'
                      }`}
                    >
-                      <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-700 ring-1 ring-slate-600">
-                         <img src={`https://ui-avatars.com/api/?name=${u.name}&background=random`} alt={u.name} className="w-full h-full object-cover" />
+                      <div className="relative">
+                        <div className={`w-8 h-8 rounded-full overflow-hidden bg-slate-700 ring-1 ${u.vip ? 'ring-amber-500' : 'ring-slate-600'}`}>
+                           <img src={u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName)}&background=random`} alt={u.displayName} className="w-full h-full object-cover" />
+                        </div>
+                        {online && (
+                           <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full"></div>
+                        )}
+                        {isPriority && !online && (
+                           <div className="absolute -top-1 -right-1 text-[8px] text-amber-400"><i className="fas fa-crown"></i></div>
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
-                         <div className="text-sm font-bold truncate">
-                            {u.name} {isMe && `(${t.chat.me})`}
+                         <div className="text-sm font-bold truncate flex items-center gap-1">
+                            {u.displayName} {isMe && `(${t.chat.me})`}
+                            {u.vip && <i className="fas fa-star text-[8px] text-amber-500"></i>}
                          </div>
-                         {typingUsers.has(u.name) && (
+                         {typingUsers.has(u.displayName) ? (
                             <div className="text-[10px] text-emerald-400 animate-pulse font-mono">
                                {t.chat.typing}
                             </div>
+                         ) : (
+                            <div className="text-[10px] text-slate-500 truncate">{u.vip ? 'VIP Officer' : 'Crew'}</div>
                          )}
                       </div>
                       {isActive && <div className="w-2 h-2 bg-amber-400 rounded-full"></div>}
                    </button>
                  );
               })}
+              
+              {/* Load More Button */}
+              {hasMoreDir && (
+                 <button 
+                   onClick={loadMoreUsers} 
+                   className="w-full py-2 text-[10px] text-slate-500 uppercase font-bold hover:text-cyan-400 hover:bg-cyan-900/10 rounded transition-colors"
+                 >
+                   {isLoadingDir ? 'Loading...' : 'Load More Users'}
+                 </button>
+              )}
            </div>
         </div>
 
@@ -408,7 +527,8 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket }) => {
               )}
               
               {filteredMessages.map((msg, idx) => {
-                 const isMe = msg.author === currentUser.displayName;
+                 // Robust isMe Check: UserID > Email > Name
+                 const isMe = (msg.userId === currentUser._id) || (msg.email === currentUser.email) || (msg.author === currentUser.displayName);
                  const isSystem = msg.isSystem;
                  
                  // System Message

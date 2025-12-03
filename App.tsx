@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, Suspense, lazy, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Header } from './components/Header';
@@ -866,7 +867,7 @@ const App: React.FC = () => {
         const userPayload = {
             name: user.displayName,
             id: user._id,
-            // photoURL: user.photoURL 
+            email: user.email // Pass email for robust id
         };
         newSocket.emit('USER_CONNECTED', userPayload);
       });

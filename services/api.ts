@@ -1,10 +1,4 @@
 
-
-
-
-
-
-
 import { BlogPost, User, Comment, Project, ResumeItem, Log, Todo, Photo, PaginatedResponse, PaginationData, AuditLog, ChatMessage, FitnessRecord, FitnessStats } from '../types';
 import { toast } from '../components/Toast';
 
@@ -296,6 +290,13 @@ export const apiService = {
     });
   },
 
+  revokeVip: async (email: string): Promise<any> => {
+    return await fetchClient('/users/revoke-vip', {
+      method: 'PUT',
+      body: JSON.stringify({ email })
+    });
+  },
+
   backupLogs: async (type?: string): Promise<void> => {
     const token = localStorage.getItem('auth_token');
     const urlEndpoint = type ? `${API_BASE_URL}/backup?type=${type}` : `${API_BASE_URL}/backup`;
@@ -379,17 +380,32 @@ export const apiService = {
   },
 
   // --- Audit Logs ---
-  getAuditLogs: async (page: number = 1, limit: number = 20, operator?: string, action?: string): Promise<{ data: AuditLog[], pagination: PaginationData }> => {
+  getAuditLogs: async (
+    page: number = 1, 
+    limit: number = 20, 
+    filters: {
+      operator?: string; // User ID
+      action?: string;
+      target?: string;
+      ip?: string;
+      startDate?: string;
+      endDate?: string;
+    } = {}
+  ): Promise<{ data: AuditLog[], pagination: PaginationData }> => {
     const queryParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
     });
-    if (operator) queryParams.append('operator', operator);
-    if (action) queryParams.append('action', action);
+    
+    if (filters.operator) queryParams.append('operator', filters.operator);
+    if (filters.action) queryParams.append('action', filters.action);
+    if (filters.target) queryParams.append('target', filters.target);
+    if (filters.ip) queryParams.append('ip', filters.ip);
+    if (filters.startDate) queryParams.append('startDate', filters.startDate);
+    if (filters.endDate) queryParams.append('endDate', filters.endDate);
 
     const response = await fetchClient<PaginatedResponse<AuditLog>>(`/audit?${queryParams.toString()}`);
     
-    // Adapt backend pagination structure
     const backendPagination = response.pagination as any;
     const pagination: PaginationData = {
       currentPage: backendPagination.currentPage,
@@ -398,6 +414,38 @@ export const apiService = {
       itemsPerPage: limit,
       hasNextPage: backendPagination.currentPage < backendPagination.totalPages,
       hasPrevPage: backendPagination.currentPage > 1
+    };
+
+    return { data: response.data, pagination };
+  },
+
+  // --- Users List ---
+  // Updated to support sort options: sortBy ('vip', 'date', 'name') and order ('asc', 'desc')
+  getUsers: async (
+    page: number = 1, 
+    limit: number = 20, 
+    search: string = '', 
+    sortBy: string = 'vip', 
+    order: string = 'desc'
+  ): Promise<{ data: User[], pagination: PaginationData }> => {
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      sortBy: sortBy,
+      order: order
+    });
+    if (search) queryParams.append('search', search);
+
+    const response = await fetchClient<PaginatedResponse<User>>(`/users?${queryParams.toString()}`);
+    
+    const backendPagination = response.pagination as any;
+    const pagination: PaginationData = {
+      currentPage: backendPagination.currentPage || page,
+      totalPages: backendPagination.totalPages || 1,
+      totalItems: backendPagination.totalUsers || 0,
+      itemsPerPage: limit,
+      hasNextPage: (backendPagination.currentPage || page) < (backendPagination.totalPages || 1),
+      hasPrevPage: (backendPagination.currentPage || page) > 1
     };
 
     return { data: response.data, pagination };
@@ -419,8 +467,7 @@ export const apiService = {
       // Filter out duplicate featured post if it comes from backend
       posts = posts.filter(p => p._id !== FEATURED_POST._id);
 
-      // Inject Feature Post on Page 1 if no search query active (optional choice, keeping it simpler for now)
-      // Only inject if no search query to avoid messing up search results
+      // Inject Feature Post on Page 1 if no search query active
       if (page === 1 && !search && !tag) {
          posts = [FEATURED_POST, ...posts];
       }
@@ -429,8 +476,8 @@ export const apiService = {
       const pagination: PaginationData = {
         currentPage: backendPagination.currentPage,
         totalPages: backendPagination.totalPages,
-        totalItems: backendPagination.totalPosts || 0, // Backend sends totalPosts
-        itemsPerPage: backendPagination.perPage || limit, // Backend sends perPage
+        totalItems: backendPagination.totalPosts || 0,
+        itemsPerPage: backendPagination.perPage || limit,
         hasNextPage: backendPagination.currentPage < backendPagination.totalPages,
         hasPrevPage: backendPagination.currentPage > 1
       };
@@ -680,6 +727,7 @@ export const apiService = {
         message: msg.content || msg.message, // Use content
         author: msg.user?.name || msg.user?.displayName || 'Unknown',
         userId: msg.user?.id || msg.user?._id,
+        email: msg.user?.email || msg.email, // Map email from user object or top level
         timestamp: msg.createdDate || msg.date,
         isPrivate: false,
         room: msg.room
@@ -697,6 +745,7 @@ export const apiService = {
         message: msg.content || msg.message, // Use content
         author: msg.user?.name || msg.user?.displayName || 'Unknown',
         userId: msg.user?.id || msg.user?._id,
+        email: msg.user?.email || msg.email, // Map email
         timestamp: msg.createdDate || msg.date,
         isPrivate: true,
         receiver: msg.toUser 

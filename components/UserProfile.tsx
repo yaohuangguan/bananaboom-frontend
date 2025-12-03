@@ -1,16 +1,6 @@
 
-
-
-
-
-
-
-
-
-
-
-import React, { useState, useRef } from 'react';
-import { User } from '../types';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { User, PaginationData } from '../types';
 import { useTranslation } from '../i18n/LanguageContext';
 import { apiService } from '../services/api';
 import { toast } from './Toast';
@@ -34,13 +24,69 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
   const [newPassword, setNewPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-  // VIP Grant State
-  const [vipEmail, setVipEmail] = useState('');
-  const [isGrantingVip, setIsGrantingVip] = useState(false);
+  // --- ADMIN CONSOLE STATE ---
+  const [adminUsers, setAdminUsers] = useState<User[]>([]);
+  const [adminSearch, setAdminSearch] = useState('');
+  const [adminPage, setAdminPage] = useState(1);
+  const [adminPagination, setAdminPagination] = useState<PaginationData | null>(null);
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [targetUser, setTargetUser] = useState<User | null>(null);
+  const [isProcessingVip, setIsProcessingVip] = useState(false);
 
   // Export Log State
   const [isExporting, setIsExporting] = useState(false);
   const [exportType, setExportType] = useState('');
+
+  // Check if current user is VIP Admin
+  const isVipAdmin = user.vip && user.private_token === 'ilovechenfangting';
+
+  // --- ADMIN EFFECTS ---
+  // Debounce search
+  useEffect(() => {
+    if (!isVipAdmin) return;
+    const timer = setTimeout(() => {
+        fetchAdminUsers(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [adminSearch]);
+
+  const fetchAdminUsers = async (page: number) => {
+    if (!isVipAdmin) return;
+    setAdminLoading(true);
+    try {
+      // Sort by VIP first (backend support: sortBy='vip', order='desc')
+      const { data, pagination } = await apiService.getUsers(page, 10, adminSearch, 'vip', 'desc');
+      setAdminUsers(data);
+      setAdminPagination(pagination);
+      setAdminPage(page);
+    } catch (e) {
+      console.error("Admin fetch failed", e);
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  const handleToggleVip = async () => {
+    if (!targetUser) return;
+    setIsProcessingVip(true);
+    try {
+      if (targetUser.vip) {
+         await apiService.revokeVip(targetUser.email);
+         toast.success(`VIP revoked for ${targetUser.displayName}`);
+      } else {
+         await apiService.grantVip(targetUser.email);
+         toast.success(`VIP granted to ${targetUser.displayName}`);
+      }
+      // Refresh list to update UI
+      fetchAdminUsers(adminPage);
+      setTargetUser(null);
+    } catch (e) {
+      console.error(e);
+      toast.error("Operation failed");
+    } finally {
+      setIsProcessingVip(false);
+    }
+  };
 
   const handleAvatarClick = () => {
     if (isUploadingAvatar) return;
@@ -62,7 +108,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
       });
 
       // 3. Re-fetch full user profile to ensure complete state (vip, tokens, etc.)
-      // This fixes the issue where the update response might be partial or malformed
       const fullUser = await apiService.getCurrentUser();
       onUpdateUser(fullUser);
       
@@ -123,23 +168,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
     }
   };
 
-  const handleGrantVip = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!vipEmail) return;
-
-    setIsGrantingVip(true);
-    try {
-      await apiService.grantVip(vipEmail);
-      toast.success(`VIP clearance granted to ${vipEmail}.`);
-      setVipEmail('');
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to grant VIP.');
-    } finally {
-      setIsGrantingVip(false);
-    }
-  };
-
   const handleExportLogs = async () => {
     setIsExporting(true);
     try {
@@ -152,9 +180,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
       setIsExporting(false);
     }
   };
-
-  // Check if current user is VIP Admin
-  const isVipAdmin = user.vip && user.private_token === 'ilovechenfangting';
 
   return (
     <div className="container mx-auto px-6 py-24 pt-32 max-w-4xl animate-fade-in relative z-10">
@@ -348,35 +373,124 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
             </div>
           )}
 
-          {/* Admin Console: Grant VIP (Only for VIPs) */}
+          {/* Admin Console: Enhanced User Manager */}
           {isVipAdmin && (
-             <div className="bg-rose-50/50 dark:bg-rose-900/10 backdrop-blur-md rounded-3xl p-8 border border-rose-200 dark:border-rose-900/30">
+             <div className="bg-rose-50/50 dark:bg-rose-900/10 backdrop-blur-md rounded-3xl p-8 border border-rose-200 dark:border-rose-900/30 flex flex-col h-[600px]">
                 <div className="flex items-center gap-3 mb-6">
-                   <i className="fas fa-crown text-rose-500 text-xl"></i>
-                   <h3 className="text-xl font-bold text-rose-800 dark:text-rose-400">{t.profile.admin}</h3>
+                   <div className="w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center text-xl shadow-lg shadow-rose-500/30">
+                      <i className="fas fa-crown"></i>
+                   </div>
+                   <div>
+                      <h3 className="text-xl font-bold text-rose-800 dark:text-rose-400">{t.profile.admin}</h3>
+                      <p className="text-xs text-rose-400 dark:text-rose-500/70 font-mono uppercase tracking-widest">Clearance Level: OMEGA</p>
+                   </div>
                 </div>
                 
-                <form onSubmit={handleGrantVip} className="space-y-6">
-                   <div>
-                      <label className="block text-xs font-bold uppercase tracking-widest text-rose-400/80 mb-2">{t.profile.targetEmail}</label>
-                      <input 
-                        type="email" 
-                        value={vipEmail}
-                        onChange={(e) => setVipEmail(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-950 border border-rose-200 dark:border-rose-900/50 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none transition-all text-slate-900 dark:text-white font-medium"
-                        placeholder="user@example.com"
-                      />
+                {/* Search Bar */}
+                <div className="mb-4 relative">
+                   <input 
+                     type="text" 
+                     value={adminSearch}
+                     onChange={(e) => setAdminSearch(e.target.value)}
+                     className="w-full bg-white dark:bg-slate-950 border border-rose-200 dark:border-rose-800 rounded-xl px-4 py-3 pl-10 focus:ring-2 focus:ring-rose-500/30 outline-none transition-all placeholder-rose-300 text-sm"
+                     placeholder="Search agents by name or email..."
+                   />
+                   <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-rose-300"></i>
+                </div>
+
+                {/* Main Content Area: Split View */}
+                <div className="flex-1 flex gap-4 min-h-0">
+                   
+                   {/* Left: User List */}
+                   <div className="w-1/2 bg-white/60 dark:bg-slate-900/60 border border-rose-100 dark:border-rose-900/20 rounded-2xl overflow-y-auto custom-scrollbar p-2 space-y-2">
+                      {adminLoading ? (
+                         <div className="text-center py-10 text-rose-400 animate-pulse">Scanning...</div>
+                      ) : adminUsers.length === 0 ? (
+                         <div className="text-center py-10 text-rose-300 text-sm">No records found.</div>
+                      ) : (
+                         <>
+                           {adminUsers.map(u => (
+                              <button
+                                 key={u._id}
+                                 onClick={() => setTargetUser(u)}
+                                 className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left group ${
+                                    targetUser?._id === u._id 
+                                       ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/30' 
+                                       : 'hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm text-slate-600 dark:text-slate-300'
+                                 }`}
+                              >
+                                 <div className={`w-8 h-8 rounded-full overflow-hidden border-2 shrink-0 ${targetUser?._id === u._id ? 'border-rose-200' : 'border-transparent group-hover:border-rose-200'}`}>
+                                    <img src={u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName)}&background=random`} className="w-full h-full object-cover" />
+                                 </div>
+                                 <div className="min-w-0 flex-1">
+                                    <div className="font-bold text-xs truncate flex items-center gap-1">
+                                       {u.displayName}
+                                       {u.vip && <i className={`fas fa-star text-[8px] ${targetUser?._id === u._id ? 'text-yellow-300' : 'text-amber-500'}`}></i>}
+                                    </div>
+                                    <div className={`text-[10px] truncate ${targetUser?._id === u._id ? 'text-rose-100' : 'text-slate-400'}`}>{u.email}</div>
+                                 </div>
+                              </button>
+                           ))}
+                           
+                           {/* Pagination Controls inside list */}
+                           {adminPagination && adminPagination.totalPages > 1 && (
+                              <div className="flex justify-center gap-2 pt-2">
+                                 <button disabled={!adminPagination.hasPrevPage} onClick={() => fetchAdminUsers(adminPage - 1)} className="w-8 h-8 rounded-full bg-white border border-rose-100 text-rose-400 disabled:opacity-50 flex items-center justify-center hover:bg-rose-50"><i className="fas fa-chevron-left text-xs"></i></button>
+                                 <button disabled={!adminPagination.hasNextPage} onClick={() => fetchAdminUsers(adminPage + 1)} className="w-8 h-8 rounded-full bg-white border border-rose-100 text-rose-400 disabled:opacity-50 flex items-center justify-center hover:bg-rose-50"><i className="fas fa-chevron-right text-xs"></i></button>
+                              </div>
+                           )}
+                         </>
+                      )}
                    </div>
-                   <div className="pt-2">
-                     <button 
-                       type="submit" 
-                       disabled={isGrantingVip || !vipEmail}
-                       className="px-6 py-3 bg-rose-500 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-rose-600 shadow-lg shadow-rose-500/20 transition-all disabled:opacity-50"
-                     >
-                       {isGrantingVip ? <i className="fas fa-circle-notch fa-spin"></i> : t.profile.grantVip}
-                     </button>
+
+                   {/* Right: User Detail & Action */}
+                   <div className="w-1/2 flex flex-col items-center justify-center bg-white/40 dark:bg-slate-900/40 border border-rose-100 dark:border-rose-900/20 rounded-2xl p-6 text-center relative overflow-hidden">
+                      {!targetUser ? (
+                         <div className="text-rose-300">
+                            <i className="fas fa-user-astronaut text-4xl mb-4 opacity-50"></i>
+                            <p className="text-xs font-mono uppercase">Select an agent to manage clearance.</p>
+                         </div>
+                      ) : (
+                         <div className="z-10 w-full animate-fade-in">
+                            <div className="w-20 h-20 rounded-full mx-auto mb-4 border-4 border-white shadow-xl relative">
+                               <img src={targetUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(targetUser.displayName)}&background=random`} className="w-full h-full rounded-full object-cover" />
+                               {targetUser.vip && (
+                                  <div className="absolute -bottom-2 -right-2 bg-amber-500 text-white w-8 h-8 rounded-full flex items-center justify-center border-2 border-white shadow-md text-xs">
+                                     <i className="fas fa-crown"></i>
+                                  </div>
+                               )}
+                            </div>
+                            
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">{targetUser.displayName}</h3>
+                            <p className="text-xs text-slate-500 font-mono mb-6 break-all">{targetUser.email}</p>
+                            
+                            <div className="bg-rose-50 dark:bg-slate-800 rounded-xl p-3 mb-6 border border-rose-100 dark:border-slate-700">
+                               <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">Current Status</p>
+                               <div className={`text-sm font-bold ${targetUser.vip ? 'text-amber-500' : 'text-slate-500'}`}>
+                                  {targetUser.vip ? 'VIP ACCESS GRANTED' : 'STANDARD ACCESS'}
+                               </div>
+                            </div>
+
+                            <button 
+                              onClick={handleToggleVip}
+                              disabled={isProcessingVip}
+                              className={`w-full py-3 rounded-xl font-bold uppercase tracking-wider text-xs shadow-lg transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                 targetUser.vip 
+                                    ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/30'
+                                    : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30'
+                              }`}
+                            >
+                               {isProcessingVip ? <i className="fas fa-circle-notch fa-spin"></i> : targetUser.vip ? 'Revoke VIP' : 'Grant VIP'}
+                            </button>
+                         </div>
+                      )}
+                      
+                      {/* Background Decor */}
+                      <div className="absolute -bottom-10 -right-10 text-9xl text-rose-500 opacity-[0.03] rotate-12 pointer-events-none">
+                         <i className="fas fa-fingerprint"></i>
+                      </div>
                    </div>
-                </form>
+                </div>
              </div>
           )}
 

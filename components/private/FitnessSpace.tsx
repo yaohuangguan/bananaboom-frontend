@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { apiService } from '../../services/api';
 import { FitnessRecord, User } from '../../types';
@@ -7,8 +8,8 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContai
 
 type FitnessTab = 'WORKOUT' | 'STATUS' | 'DIET' | 'PHOTOS';
 
-const MY_EMAIL = 'yaob@miamioh.edu';
-const PARTNER_EMAIL = 'cft_cool@hotmail.com';
+// Priority Users to Pin
+const PRIORITY_EMAILS = ['yaob@miamioh.edu', 'cft_cool@hotmail.com'];
 
 // --- DATE HELPERS (Local Time) ---
 const toLocalDateStr = (date: Date) => {
@@ -54,8 +55,12 @@ export const FitnessSpace: React.FC = () => {
   // Data State: Map dateStr -> List of records (supporting multiple users per day)
   const [monthRecords, setMonthRecords] = useState<Map<string, FitnessRecord[]>>(new Map());
 
-  // User Target State
-  const [targetUser, setTargetUser] = useState<'me' | 'partner'>('me');
+  // User Selection State
+  const [userList, setUserList] = useState<User[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userPage, setUserPage] = useState(1);
+  const [hasMoreUsers, setHasMoreUsers] = useState(true);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
   // Tab State
   const [activeTab, setActiveTab] = useState<FitnessTab>('WORKOUT');
@@ -69,6 +74,69 @@ export const FitnessSpace: React.FC = () => {
 
   // Photo Lightbox State
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+
+  // --- FETCH USERS ---
+  const fetchUsers = async (page: number) => {
+    if (isLoadingUsers) return;
+    setIsLoadingUsers(true);
+    try {
+      // Sort by VIP desc from backend as a base
+      const { data, pagination } = await apiService.getUsers(page, 20, '', 'vip', 'desc');
+      
+      setUserList(prev => {
+        // De-dup
+        const all = page === 1 ? data : [...prev, ...data];
+        const unique = Array.from(new Map(all.map(u => [u._id, u])).values());
+        return unique;
+      });
+      setHasMoreUsers(pagination.hasNextPage);
+      
+      // Auto-select first user if none selected
+      if (page === 1 && data.length > 0 && !selectedUser) {
+         // Try to find priority user first, else first available
+         const priority = data.find(u => PRIORITY_EMAILS.includes(u.email));
+         setSelectedUser(priority || data[0]);
+      }
+    } catch (e) {
+      console.error("Failed to load fitness users", e);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers(1);
+  }, []);
+
+  const handleLoadMoreUsers = () => {
+    if (hasMoreUsers && !isLoadingUsers) {
+      const next = userPage + 1;
+      setUserPage(next);
+      fetchUsers(next);
+    }
+  };
+
+  // Sort the user list for display
+  const displayUserList = useMemo(() => {
+    const list = [...userList];
+    list.sort((a, b) => {
+       const emailA = (a.email || "").toLowerCase();
+       const emailB = (b.email || "").toLowerCase();
+       
+       const isAPriority = PRIORITY_EMAILS.includes(emailA);
+       const isBPriority = PRIORITY_EMAILS.includes(emailB);
+
+       if (isAPriority && !isBPriority) return -1;
+       if (!isBPriority && isAPriority) return 1;
+       if (isAPriority && isBPriority) {
+          return PRIORITY_EMAILS.indexOf(emailA) - PRIORITY_EMAILS.indexOf(emailB);
+       }
+       if (a.vip && !b.vip) return -1;
+       if (!a.vip && b.vip) return 1;
+       return 0;
+    });
+    return list;
+  }, [userList]);
 
   // --- CALENDAR LOGIC ---
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
@@ -113,27 +181,27 @@ export const FitnessSpace: React.FC = () => {
 
   // Update Form Data when Date or User changes
   useEffect(() => {
+    if (!selectedUser) return;
+
     const dateStr = toLocalDateStr(currentDate);
     const dayRecords = monthRecords.get(dateStr) || [];
     
-    // Find record by Email match
-    // 'me' -> MY_EMAIL, 'partner' -> PARTNER_EMAIL
-    const targetEmail = targetUser === 'me' ? MY_EMAIL : PARTNER_EMAIL;
-
+    // Find record by Email match against selected user
     const foundRecord = dayRecords.find(r => {
         const u = r.user as User;
-        return u?.email === targetEmail;
+        return u?.email === selectedUser.email;
     });
 
     setRecord(foundRecord || {});
-  }, [currentDate, monthRecords, targetUser]);
+  }, [currentDate, monthRecords, selectedUser]);
 
   // Load Stats (Filtered by Target User)
   useEffect(() => {
+    if (!selectedUser) return;
+
     const loadStats = async () => {
       try {
-        const email = targetUser === 'me' ? MY_EMAIL : PARTNER_EMAIL;
-        const data = await apiService.getFitnessStats(30, email);
+        const data = await apiService.getFitnessStats(30, selectedUser.email);
         const chartData = data.dates.map((dateStr, index) => ({
           date: dateStr.substring(5), // MM-DD
           weight: data.weights[index],
@@ -145,16 +213,19 @@ export const FitnessSpace: React.FC = () => {
       }
     };
     loadStats();
-  }, [isSaving, targetUser]);
+  }, [isSaving, selectedUser]);
 
   const handleSave = async () => {
+    if (!selectedUser) {
+        toast.error("Please select a user profile.");
+        return;
+    }
     setIsSaving(true);
     try {
       const payload = {
         ...record,
         date: toLocalDateStr(currentDate),
-        // Explicitly send email for BOTH users to ensure avatar association
-        targetUserEmail: targetUser === 'me' ? MY_EMAIL : PARTNER_EMAIL
+        targetUserEmail: selectedUser.email
       };
       await apiService.submitFitnessRecord(payload as any);
       toast.success(t.privateSpace.fitness.saved);
@@ -212,15 +283,6 @@ export const FitnessSpace: React.FC = () => {
       case 'movie': return 'fa-film';
       case 'love': return 'fa-heart';
       default: return 'fa-fire';
-    }
-  };
-
-  const getMoodEmoji = (mood?: string) => {
-    switch (mood) {
-      case 'happy': return '😊';
-      case 'neutral': return '😐';
-      case 'bad': return '😫';
-      default: return '';
     }
   };
 
@@ -333,7 +395,7 @@ export const FitnessSpace: React.FC = () => {
       );
     }
     return cells;
-  }, [viewDate, currentDate, monthRecords, t]); // Added t to dependency to refresh on lang change
+  }, [viewDate, currentDate, monthRecords, t]);
 
   return (
     <div className="flex flex-col gap-6 text-slate-900">
@@ -383,12 +445,12 @@ export const FitnessSpace: React.FC = () => {
       </div>
 
       {/* 2. MIDDLE: Chart (Stats) & User Selector */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-auto md:h-72">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-auto">
          {/* Stats Chart */}
          <div className="md:col-span-2 bg-white/80 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/50 flex flex-col h-72 md:h-auto">
             <div className="flex justify-between items-center mb-4">
                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-widest flex items-center gap-2">
-                  <i className="fas fa-chart-area text-rose-400"></i> {targetUser === 'me' ? "Sam's Progress" : "Jennifer's Progress"}
+                  <i className="fas fa-chart-area text-rose-400"></i> {selectedUser ? `${selectedUser.displayName}'s Progress` : 'Progress'}
                </h3>
             </div>
             <div className="flex-1 w-full min-h-0">
@@ -406,42 +468,45 @@ export const FitnessSpace: React.FC = () => {
             </div>
          </div>
 
-         {/* Target User Switcher */}
-         <div className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-3xl p-6 shadow-xl shadow-rose-200 flex flex-col justify-center text-white h-72 md:h-auto relative overflow-hidden">
+         {/* Target User Switcher (Dynamic List) */}
+         <div className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-3xl p-6 shadow-xl shadow-rose-200 flex flex-col text-white h-72 relative overflow-hidden">
             {/* Decoration */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
             
-            <h3 className="text-sm font-bold uppercase tracking-widest opacity-80 mb-6 text-center z-10">Active Profile</h3>
+            <h3 className="text-sm font-bold uppercase tracking-widest opacity-80 mb-4 text-center z-10 shrink-0">Active Profile</h3>
             
-            <div className="flex flex-col gap-4 z-10">
-               <button 
-                  onClick={() => setTargetUser('me')}
-                  className={`flex items-center gap-4 p-3 rounded-2xl transition-all border-2 ${targetUser === 'me' ? 'bg-white text-rose-600 border-white shadow-lg' : 'bg-transparent border-white/20 hover:bg-white/10'}`}
-               >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold overflow-hidden border-2 ${targetUser === 'me' ? 'border-rose-100' : 'border-white/30'}`}>
-                     {/* Static Avatar for Sam or Initials */}
-                     <img src={`https://ui-avatars.com/api/?name=Sam&background=f43f5e&color=fff`} className="w-full h-full object-cover" alt="Sam" />
-                  </div>
-                  <div className="flex flex-col text-left">
-                     <span className="font-bold text-lg leading-none">Sam</span>
-                     <span className="text-[10px] opacity-70 font-mono">yaob@...</span>
-                  </div>
-                  {targetUser === 'me' && <i className="fas fa-check-circle ml-auto text-xl animate-pulse"></i>}
-               </button>
-
-               <button 
-                  onClick={() => setTargetUser('partner')}
-                  className={`flex items-center gap-4 p-3 rounded-2xl transition-all border-2 ${targetUser === 'partner' ? 'bg-white text-rose-600 border-white shadow-lg' : 'bg-transparent border-white/20 hover:bg-white/10'}`}
-               >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold overflow-hidden border-2 ${targetUser === 'partner' ? 'border-rose-100' : 'border-white/30'}`}>
-                     <img src={`https://ui-avatars.com/api/?name=Jennifer&background=f43f5e&color=fff`} className="w-full h-full object-cover" alt="Jennifer" />
-                  </div>
-                  <div className="flex flex-col text-left">
-                     <span className="font-bold text-lg leading-none">Jennifer</span>
-                     <span className="text-[10px] opacity-70 font-mono">cft_cool@...</span>
-                  </div>
-                  {targetUser === 'partner' && <i className="fas fa-check-circle ml-auto text-xl animate-pulse"></i>}
-               </button>
+            <div className="flex-1 overflow-y-auto custom-scrollbar z-10 space-y-3 pr-1">
+               {displayUserList.map(user => {
+                  const isActive = selectedUser?._id === user._id;
+                  return (
+                     <button 
+                        key={user._id}
+                        onClick={() => setSelectedUser(user)}
+                        className={`w-full flex items-center gap-3 p-2 rounded-2xl transition-all border-2 ${isActive ? 'bg-white text-rose-600 border-white shadow-lg' : 'bg-transparent border-white/20 hover:bg-white/10'}`}
+                     >
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold overflow-hidden border-2 shrink-0 ${isActive ? 'border-rose-100' : 'border-white/30'}`}>
+                           <img src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName)}&background=f43f5e&color=fff`} className="w-full h-full object-cover" alt={user.displayName} />
+                        </div>
+                        <div className="flex flex-col text-left min-w-0 flex-1">
+                           <span className="font-bold text-sm leading-none truncate flex items-center gap-1">
+                              {user.displayName} 
+                              {user.vip && <i className="fas fa-star text-[8px] text-yellow-300"></i>}
+                           </span>
+                           <span className="text-[9px] opacity-70 font-mono truncate">{user.email}</span>
+                        </div>
+                        {isActive && <i className="fas fa-check-circle text-lg animate-pulse shrink-0"></i>}
+                     </button>
+                  )
+               })}
+               
+               {hasMoreUsers && (
+                  <button 
+                     onClick={handleLoadMoreUsers}
+                     className="w-full py-2 text-[10px] font-bold uppercase border border-white/20 rounded-xl hover:bg-white/10 transition-colors"
+                  >
+                     {isLoadingUsers ? 'Loading...' : 'Load More'}
+                  </button>
+               )}
             </div>
          </div>
       </div>
@@ -472,7 +537,7 @@ export const FitnessSpace: React.FC = () => {
                <span className="text-xs font-bold text-rose-400 uppercase tracking-wider">Logging for:</span>
                <div className="flex items-center gap-2 bg-rose-500 text-white px-3 py-1 rounded-full shadow-sm">
                   <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[8px]"><i className="fas fa-user"></i></div>
-                  <span className="text-xs font-bold">{targetUser === 'me' ? 'Sam' : 'Jennifer'}</span>
+                  <span className="text-xs font-bold truncate max-w-[100px]">{selectedUser?.displayName || 'Select User'}</span>
                </div>
                <span className="text-xs font-mono text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
                   {currentDate.toLocaleDateString()}

@@ -187,6 +187,7 @@ export interface PaginatedResponse<T> {
 export interface ChatUser {
   id: string;
   name: string;
+  email?: string;
   socketId?: string;
 }
 
@@ -194,6 +195,7 @@ export interface ChatMessage {
   message: string;
   author: string;
   userId?: string;
+  email?: string;
   room?: string;
   timestamp?: string;
   isPrivate?: boolean;
