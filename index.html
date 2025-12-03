@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
   <head>
@@ -24,18 +23,30 @@
             fontFamily: {
               sans: ['Inter', 'system-ui', 'sans-serif'],
               display: ['Sen', 'system-ui', 'sans-serif'],
+              mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace'],
             },
             colors: {
               slate: {
                 850: '#151e2e',
                 950: '#020617',
               },
+              milky: {
+                50: '#fdfbf7', // The main warm background
+                100: '#f7f4ed',
+                200: '#e8e2d2',
+                900: '#1c1917',
+              },
               primary: {
-                50: '#fffbeb',
-                100: '#fef3c7',
-                500: '#f59e0b', // Amber-500 (Gold) - Replaces Purple
-                600: '#d97706', // Amber-600
-                700: '#b45309', // Amber-700
+                50: 'rgb(var(--color-primary-50) / <alpha-value>)',
+                100: 'rgb(var(--color-primary-100) / <alpha-value>)',
+                200: 'rgb(var(--color-primary-200) / <alpha-value>)',
+                300: 'rgb(var(--color-primary-300) / <alpha-value>)',
+                400: 'rgb(var(--color-primary-400) / <alpha-value>)',
+                500: 'rgb(var(--color-primary-500) / <alpha-value>)',
+                600: 'rgb(var(--color-primary-600) / <alpha-value>)',
+                700: 'rgb(var(--color-primary-700) / <alpha-value>)',
+                800: 'rgb(var(--color-primary-800) / <alpha-value>)',
+                900: 'rgb(var(--color-primary-900) / <alpha-value>)',
               }
             },
             animation: {
@@ -43,11 +54,14 @@
               'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
               'pulse-slow': 'pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
               'rise': 'rise 60s linear infinite',
-              'rise-slow': 'rise 90s linear infinite',
-              'rise-slower': 'rise 120s linear infinite',
+              'rise-loop': 'riseLoop 120s linear infinite', /* Slower, smoother loop */
+              'rise-loop-slow': 'riseLoop 180s linear infinite',
+              'rise-loop-slower': 'riseLoop 240s linear infinite',
+              'nebula-drift': 'nebulaDrift 40s ease-in-out infinite alternate',
               'twinkle': 'twinkle 4s ease-in-out infinite',
               'shooting': 'shooting 8s ease-out infinite',
               'bounce-slight': 'bounceSlight 2s infinite',
+              'spin-slow': 'spin 12s linear infinite',
             },
             keyframes: {
               fadeIn: {
@@ -61,6 +75,14 @@
               rise: {
                 '0%': { transform: 'translateY(100vh)' },
                 '100%': { transform: 'translateY(-100vh)' },
+              },
+              riseLoop: {
+                '0%': { transform: 'translateY(0)' },
+                '100%': { transform: 'translateY(-100%)' },
+              },
+              nebulaDrift: {
+                '0%': { transform: 'translate(0, 0) scale(1)' },
+                '100%': { transform: 'translate(-20px, -10px) scale(1.1)' },
               },
               twinkle: {
                 '0%, 100%': { opacity: '0.3', transform: 'scale(0.8)' },
@@ -80,6 +102,33 @@
       }
     </script>
     <style>
+      :root {
+        /* Light Mode: Vintage Brown / Sepia Ink */
+        --color-primary-50: 253 248 246;
+        --color-primary-100: 249 241 236;
+        --color-primary-200: 236 218 206;
+        --color-primary-300: 216 186 168;
+        --color-primary-400: 184 145 120;
+        --color-primary-500: 153 102 70;  /* Main Sepia/Bronze */
+        --color-primary-600: 125 78 50;
+        --color-primary-700: 97 58 35;
+        --color-primary-800: 74 45 28;
+        --color-primary-900: 54 33 20;
+      }
+      .dark {
+        /* Dark Mode: Amber */
+        --color-primary-50: 255 251 235;
+        --color-primary-100: 254 243 199;
+        --color-primary-200: 253 230 138;
+        --color-primary-300: 252 211 77;
+        --color-primary-400: 251 191 36;
+        --color-primary-500: 245 158 11;
+        --color-primary-600: 217 119 6;
+        --color-primary-700: 180 83 9;
+        --color-primary-800: 146 64 14;
+        --color-primary-900: 120 53 15;
+      }
+
       body {
         font-family: 'Inter', sans-serif;
         -webkit-font-smoothing: antialiased;
@@ -154,8 +203,8 @@
     }
     </script>
   </head>
-  <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-500 overflow-x-hidden">
-    <script type="module" src="/index.tsx"></script>
+  <body class="bg-milky-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-500 overflow-x-hidden">
+    <script type="module" src="index.tsx"></script>
     <div id="root"></div>
   </body>
 </html>

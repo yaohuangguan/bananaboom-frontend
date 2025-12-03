@@ -1,15 +1,18 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+
+import React, { useState, useEffect, Suspense, lazy, useRef } from 'react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { BlogList } from './components/BlogList';
 import { CommentsSection } from './components/CommentsSection';
 import { CosmicBackground } from './components/CosmicBackground';
+import { ScenicBackground } from './components/ScenicBackground';
 import { ToastContainer } from './components/Toast';
 import { DeleteModal } from './components/DeleteModal';
 import { UserProfile } from './components/UserProfile';
 import { SettingsPage } from './components/SettingsPage';
 import { ChatRoom } from './components/ChatRoom';
 import { AuditLogViewer } from './components/AuditLogViewer';
+import { DeepArchives } from './components/DeepArchives';
 import { apiService } from './services/api';
 import { Theme, PageView, User, BlogPost, PaginationData } from './types';
 import { LanguageProvider, useTranslation } from './i18n/LanguageContext';
@@ -69,6 +72,62 @@ const triggerHeartExplosion = (e: React.MouseEvent) => {
       document.body.removeChild(heart);
     }, 1000);
   }
+};
+
+// --- Star Compass Component ---
+const StarCompass = () => {
+  const [rotation, setRotation] = useState(0);
+  const compassRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!compassRef.current) return;
+    const rect = compassRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    // Calculate angle in radians
+    const radians = Math.atan2(e.clientX - centerX, -(e.clientY - centerY));
+    // Convert to degrees
+    const degree = radians * (180 / Math.PI);
+    setRotation(degree);
+  };
+
+  return (
+    <div 
+      ref={compassRef}
+      onMouseMove={handleMouseMove}
+      className="relative w-64 h-64 md:w-80 md:h-80 mx-auto group cursor-crosshair"
+    >
+       {/* Outer Ring */}
+       <div className="absolute inset-0 rounded-full border-2 border-slate-200 dark:border-slate-800 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+       <div className="absolute inset-2 rounded-full border border-dashed border-amber-500/30 group-hover:border-amber-500/60 transition-colors animate-[spin_60s_linear_infinite]"></div>
+       
+       {/* Labels */}
+       <div className="absolute top-4 left-1/2 -translate-x-1/2 text-xs font-mono font-bold text-slate-400">N</div>
+       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs font-mono font-bold text-slate-400">S</div>
+       <div className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-slate-400">W</div>
+       <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-slate-400">E</div>
+
+       {/* Rotating Needle Container */}
+       <div 
+         className="absolute inset-0 flex items-center justify-center transition-transform duration-100 ease-out"
+         style={{ transform: `rotate(${rotation}deg)` }}
+       >
+          {/* Needle */}
+          <div className="relative w-8 h-full">
+             <div className="absolute top-8 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[60px] border-b-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[60px] border-t-slate-300 dark:border-t-slate-700"></div>
+             {/* Center Cap */}
+             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-slate-900 dark:bg-white rounded-full border-2 border-amber-500 z-10"></div>
+          </div>
+       </div>
+
+       {/* Hover Label */}
+       <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-xs font-mono text-amber-500 uppercase tracking-widest whitespace-nowrap">
+          Interstellar Compass
+       </div>
+    </div>
+  );
 };
 
 // --- Login Modal Component (Star Chart Theme) ---
@@ -547,8 +606,26 @@ const ArticleView: React.FC<ArticleViewProps> = ({ blog, allBlogs, onBack, onNav
 };
 
 // --- Resume View Component (Refactored) ---
-const ResumeView = () => {
+interface ResumeViewProps {
+  onNavigate: (page: PageView) => void;
+  currentUser: User | null;
+  onLoginRequest: () => void;
+}
+
+const ResumeView: React.FC<ResumeViewProps> = ({ onNavigate, currentUser, onLoginRequest }) => {
   const { t } = useTranslation();
+
+  const handleArchivesClick = () => {
+    onNavigate(PageView.ARCHIVES);
+  };
+
+  const handleChatClick = () => {
+    if (currentUser) {
+      onNavigate(PageView.CHAT);
+    } else {
+      onLoginRequest();
+    }
+  };
 
   return (
     <div className="container mx-auto px-6 py-24 pt-32 max-w-5xl animate-fade-in relative z-10">
@@ -575,134 +652,118 @@ const ResumeView = () => {
         </div>
       </div>
 
-      {/* 2. Site Introduction / Features Grid */}
-      <div className="mb-24">
+      {/* 2. Site Introduction / Features Grid (REDESIGNED BENTO GRID) */}
+      <div className="mb-24 relative">
+         {/* Section Header */}
          <div className="flex items-center gap-4 mb-10">
             <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
-            <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400">{t.resume.siteIntro.title}</h2>
+            <div className="px-4 py-1 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 backdrop-blur-sm">
+               <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">{t.resume.siteIntro.title}</h2>
+            </div>
             <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
          </div>
 
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Feature 1: Journal */}
-            <div className="group p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 transition-all hover:shadow-2xl hover:shadow-amber-500/5 relative overflow-hidden">
-               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <i className="fas fa-book text-8xl text-amber-500"></i>
+         {/* Bento Grid Layout */}
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* CARD 1: JOURNAL (Large) */}
+            <div 
+              onClick={() => onNavigate(PageView.BLOG)}
+              className="md:col-span-1 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-900 dark:to-slate-800 rounded-[2rem] p-8 border border-slate-200 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group relative overflow-hidden"
+            >
+               <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <i className="fas fa-book-open text-9xl text-amber-500"></i>
                </div>
-               <div className="relative z-10">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-6">
-                     <i className="fas fa-pen-fancy text-xl"></i>
+               <div className="relative z-10 flex flex-col h-full">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-xl shadow-lg shadow-amber-500/20 mb-6">
+                     <i className="fas fa-pen-nib"></i>
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t.resume.siteIntro.journalTitle}</h3>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">{t.resume.siteIntro.journalDesc}</p>
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t.resume.siteIntro.journalTitle}</h3>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-8">
+                     {t.resume.siteIntro.journalDesc}
+                  </p>
+                  <div className="mt-auto flex items-center text-amber-600 dark:text-amber-400 font-bold text-sm uppercase tracking-wider group-hover:gap-2 transition-all">
+                     <span>Read Logs</span> <i className="fas fa-arrow-right ml-2"></i>
+                  </div>
                </div>
             </div>
 
-            {/* Feature 2: Profile */}
-            <div className="group p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 transition-all hover:shadow-2xl hover:shadow-blue-500/5 relative overflow-hidden">
-               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <i className="fas fa-id-card text-8xl text-blue-500"></i>
+            {/* CARD 2: DEEP ARCHIVES (Center Feature) */}
+            <div 
+              onClick={handleArchivesClick}
+              className="md:col-span-1 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 rounded-[2rem] p-8 border border-slate-200 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group relative overflow-hidden"
+            >
+               <div className="absolute bottom-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <i className="fas fa-archive text-9xl text-blue-500"></i>
                </div>
-               <div className="relative z-10">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-6">
-                     <i className="fas fa-user-tie text-xl"></i>
+               <div className="relative z-10 flex flex-col h-full">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-500 text-white flex items-center justify-center text-xl shadow-lg shadow-blue-500/20 mb-6">
+                     <i className="fas fa-history"></i>
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t.resume.siteIntro.profileTitle}</h3>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">{t.resume.siteIntro.profileDesc}</p>
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t.resume.siteIntro.profileTitle}</h3>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-8">
+                     {t.resume.siteIntro.profileDesc}
+                  </p>
+                  <div className="mt-auto flex items-center text-blue-600 dark:text-blue-400 font-bold text-sm uppercase tracking-wider group-hover:gap-2 transition-all">
+                     <span>Access Archives</span> <i className="fas fa-arrow-right ml-2"></i>
+                  </div>
                </div>
             </div>
 
-            {/* Feature 3: Chat */}
-            <div className="group p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 transition-all hover:shadow-2xl hover:shadow-emerald-500/5 relative overflow-hidden">
-               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <i className="fas fa-comments text-8xl text-emerald-500"></i>
+            {/* CARD 3: STAR COMM (Compact) */}
+            <div 
+              onClick={handleChatClick}
+              className="md:col-span-1 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-slate-900 dark:to-slate-800 rounded-[2rem] p-8 border border-slate-200 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group relative overflow-hidden"
+            >
+               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <i className="fas fa-satellite-dish text-[12rem] text-purple-500"></i>
                </div>
-               <div className="relative z-10">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-6">
-                     <i className="fas fa-satellite-dish text-xl"></i>
+               <div className="relative z-10 flex flex-col h-full">
+                  <div className="w-14 h-14 rounded-2xl bg-purple-500 text-white flex items-center justify-center text-xl shadow-lg shadow-purple-500/20 mb-6">
+                     <i className="fas fa-comments"></i>
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t.resume.siteIntro.chatTitle}</h3>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">{t.resume.siteIntro.chatDesc}</p>
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t.resume.siteIntro.chatTitle}</h3>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-8">
+                     {t.resume.siteIntro.chatDesc}
+                  </p>
+                  <div className="mt-auto flex items-center text-purple-600 dark:text-purple-400 font-bold text-sm uppercase tracking-wider group-hover:gap-2 transition-all">
+                     <span>Initialize Link</span> <i className="fas fa-arrow-right ml-2"></i>
+                  </div>
                </div>
             </div>
 
-            {/* Feature 4: Private Space */}
-            <div className="group p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-rose-500/50 transition-all hover:shadow-2xl hover:shadow-rose-500/5 relative overflow-hidden">
-               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <i className="fas fa-heart text-8xl text-rose-500"></i>
-               </div>
-               <div className="relative z-10">
-                  <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-6">
-                     <i className="fas fa-lock text-xl"></i>
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t.resume.siteIntro.privateTitle}</h3>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">{t.resume.siteIntro.privateDesc}</p>
-               </div>
-            </div>
          </div>
       </div>
 
-      {/* 3. Resume / Experience Timeline */}
-      <div className="grid md:grid-cols-[1fr_2fr] gap-12 border-t border-slate-200 dark:border-slate-800 pt-20">
-        {/* Left Column: Education & Skills */}
-        <div className="space-y-12">
-          <section>
-            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-6">{t.resume.education}</h2>
-            <div className="space-y-4">
-              <div className="bg-white/60 dark:bg-slate-800/40 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/50 backdrop-blur-md hover:border-primary-500/30 transition-colors">
-                <h3 className="font-bold text-slate-900 dark:text-white text-lg">{t.resume.educationSchool}</h3>
-                <p className="text-sm text-primary-600 dark:text-primary-400 font-medium mt-1">{t.resume.educationDegree}</p>
-                <p className="text-xs text-slate-500 mt-2 font-mono uppercase">{t.resume.gpa}</p>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-6">{t.resume.skills}</h2>
-            <div className="flex flex-wrap gap-2">
-              {['React', 'TypeScript', 'Next.js', 'Tailwind', 'Node.js', 'GraphQL', 'AWS', 'Docker', 'Quant Trading', 'Startup'].map(tech => (
-                <span key={tech} className="px-3 py-1.5 bg-white/60 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 backdrop-blur-sm">
-                  {tech}
-                </span>
-              ))}
-            </div>
-          </section>
-          
-          <section>
-             <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-6">Contact</h2>
-             <div className="flex flex-col gap-3">
-                <a href="mailto:719919153@qq.com" className="flex items-center gap-3 text-slate-600 dark:text-slate-400 hover:text-amber-500 transition-colors">
-                   <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><i className="fas fa-envelope text-xs"></i></div>
-                   <span className="text-sm font-mono">719919153@qq.com</span>
-                </a>
-                <a href="https://github.com/yaohuangguan" target="_blank" rel="noreferrer" className="flex items-center gap-3 text-slate-600 dark:text-slate-400 hover:text-amber-500 transition-colors">
-                   <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><i className="fab fa-github text-xs"></i></div>
-                   <span className="text-sm font-mono">github.com/yaohuangguan</span>
-                </a>
-             </div>
-          </section>
+      {/* 3. Replaced Section: Star Compass & Contact */}
+      <div className="grid md:grid-cols-2 gap-12 border-t border-slate-200 dark:border-slate-800 pt-20">
+        <div className="flex flex-col items-center justify-center order-2 md:order-1">
+          <StarCompass />
         </div>
 
-        {/* Right Column: Experience */}
-        <div className="space-y-12">
+        <div className="space-y-12 order-1 md:order-2 flex flex-col justify-center">
           <section>
-            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-8">{t.resume.experience}</h2>
-            <div className="relative border-l-2 border-slate-200 dark:border-slate-800 ml-3 space-y-12">
-              {t.resume.jobs.map((job, idx) => (
-                <div key={idx} className="pl-10 relative group">
-                  {/* Timeline Dot */}
-                  <span className={`absolute -left-[9px] top-6 w-4 h-4 rounded-full ${job.color} ring-4 ring-white dark:ring-slate-950 transition-transform group-hover:scale-125 shadow-lg`}></span>
-                  
-                  <div className="bg-transparent group-hover:bg-slate-50 dark:group-hover:bg-slate-800/30 p-6 rounded-3xl transition-colors border border-transparent group-hover:border-slate-200 dark:group-hover:border-slate-700/50">
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{job.company}</h3>
-                    <p className="text-sm text-amber-600 dark:text-amber-400 mb-4 font-bold uppercase tracking-wider">{job.role}</p>
-                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-base">
-                      {job.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+             <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-6">Contact</h2>
+             <div className="flex flex-col gap-4">
+                <a href="mailto:719919153@qq.com" className="group flex items-center gap-4 text-slate-600 dark:text-slate-400 hover:text-amber-500 transition-colors bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500/30">
+                   <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                      <i className="fas fa-envelope text-sm"></i>
+                   </div>
+                   <div className="flex flex-col">
+                      <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Email</span>
+                      <span className="text-sm font-mono font-bold">719919153@qq.com</span>
+                   </div>
+                </a>
+                <a href="https://github.com/yaohuangguan" target="_blank" rel="noreferrer" className="group flex items-center gap-4 text-slate-600 dark:text-slate-400 hover:text-amber-500 transition-colors bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500/30">
+                   <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                      <i className="fab fa-github text-sm"></i>
+                   </div>
+                   <div className="flex flex-col">
+                      <span className="text-xs font-bold uppercase tracking-widest text-slate-400">GitHub</span>
+                      <span className="text-sm font-mono font-bold">github.com/yaohuangguan</span>
+                   </div>
+                </a>
+             </div>
           </section>
         </div>
       </div>
@@ -780,7 +841,6 @@ const App: React.FC = () => {
       setPrivateBlogs([]); 
       localStorage.removeItem('auth_token'); 
       localStorage.removeItem('googleInfo');
-      // Note: The api service now emits a toast for this, so we don't need a redundant alert
       setIsLoginModalOpen(true);
       setCurrentPage(PageView.HOME);
     };
@@ -806,8 +866,6 @@ const App: React.FC = () => {
   }, [user, currentPage]);
 
   const fetchPublicBlogs = async (page: number, search = publicSearch, tag = publicTag) => {
-    // Only set loading to true if we don't have data yet (initial load) or if the list is already empty
-    // This prevents the flickering/skeleton screen when paginating or filtering existing data.
     if (publicBlogs.length === 0) {
       setIsLoadingBlogs(true);
     }
@@ -816,7 +874,6 @@ const App: React.FC = () => {
       const { data, pagination: paginationMeta } = await apiService.getPosts(page, 10, search, tag || '');
       setPublicBlogs(data);
       setPagination(paginationMeta);
-      // Update state to reflect current search params used
       setPublicSearch(search);
       setPublicTag(tag);
     } catch (error) {
@@ -832,15 +889,12 @@ const App: React.FC = () => {
   };
 
   const fetchPrivateBlogs = async (page: number = 1) => {
-    // Only fetch if logged in
     try {
       const { data, pagination: paginationMeta } = await apiService.getPrivatePosts(page, 10);
       setPrivateBlogs(data);
       setPrivatePagination(paginationMeta);
     } catch (error) {
       console.error("Failed to fetch private blogs (safely handled):", error);
-      // Backend filesystem write error or auth error often happens here. 
-      // Return empty array to keep UI stable.
       setPrivateBlogs([]);
     }
   };
@@ -889,26 +943,22 @@ const App: React.FC = () => {
     }, 100);
   };
 
-  // Handler for confirming public blog deletion
   const confirmPublicDelete = async () => {
     if (!publicPostToDelete) return;
     try {
       await apiService.deletePost(publicPostToDelete._id);
       setPublicPostToDelete(null);
-      // Refresh current page
       fetchPublicBlogs(pagination?.currentPage || 1); 
     } catch (error) {
       console.error("Failed to delete public post", error);
     }
   };
   
-  // Handler for Public Likes (Toggle Logic)
   const handlePublicLike = async (id: string) => {
     const isLiked = likedPosts.has(id);
     const newLikedPosts = new Set(likedPosts);
     
     try {
-       // Optimistic UI Update
        setPublicBlogs(prev => prev.map(p => {
          if (p._id === id) {
            return { ...p, likes: isLiked ? Math.max(0, (p.likes || 0) - 1) : (p.likes || 0) + 1 };
@@ -929,16 +979,16 @@ const App: React.FC = () => {
        
     } catch (e) {
       console.error("Like failed", e);
-      // Revert if needed (simplified here)
     }
   };
 
+  // Determine main background class based on theme
+  const mainBgClass = currentPage === PageView.PRIVATE_SPACE 
+    ? 'bg-gradient-to-br from-pink-200 via-rose-200 to-pink-200' 
+    : theme === Theme.DARK ? 'bg-slate-950' : 'bg-transparent';
+
   return (
-    <div className={`min-h-screen relative overflow-hidden transition-colors duration-500 selection:bg-primary-500/30 ${
-      currentPage === PageView.PRIVATE_SPACE 
-        ? 'bg-gradient-to-br from-pink-200 via-rose-200 to-pink-200' 
-        : 'bg-transparent'
-    }`}>
+    <div className={`min-h-screen relative overflow-hidden transition-colors duration-500 selection:bg-primary-500/30 ${mainBgClass}`}>
       
       {/* Toast Container for Global Notifications */}
       <ToastContainer />
@@ -951,8 +1001,12 @@ const App: React.FC = () => {
          title={t.delete.confirmTitle}
       />
       
-      {/* Background Layer - Only show Cosmic Background if NOT in Private Space */}
-      {currentPage !== PageView.PRIVATE_SPACE && <CosmicBackground theme={theme} />}
+      {/* Background Layer Logic */}
+      {currentPage !== PageView.PRIVATE_SPACE && (
+        <>
+          {theme === Theme.DARK ? <CosmicBackground theme={theme} /> : <ScenicBackground />}
+        </>
+      )}
 
       <Header 
         theme={theme}
@@ -978,85 +1032,125 @@ const App: React.FC = () => {
         onLogout={handleLogout}
       />
       
-      <main className="relative z-10">
+      <main className="relative z-10 pointer-events-none">
         {currentPage === PageView.HOME && (
           <>
             <Hero onCtaClick={() => {
               setCurrentPage(PageView.BLOG);
               setTimeout(() => document.getElementById('latest-posts')?.scrollIntoView({ behavior: 'smooth' }), 100);
             }} />
-            <div id="about">
-              <ResumeView />
+            <div id="about" className="pointer-events-auto">
+              <ResumeView 
+                onNavigate={(page) => {
+                   setCurrentPage(page);
+                   window.scrollTo(0, 0);
+                }} 
+                currentUser={user} 
+                onLoginRequest={() => setIsLoginModalOpen(true)} 
+              />
             </div>
           </>
         )}
         
         {currentPage === PageView.PRIVATE_SPACE && (
-          <Suspense fallback={<PageLoader />}>
-            <PrivateSpaceDashboard 
-              user={user} 
-              blogs={privateBlogs} 
-              onSelectBlog={handleSelectBlog}
-              onRefresh={() => fetchPrivateBlogs(privatePagination?.currentPage || 1)}
-              pagination={privatePagination}
-              onPageChange={fetchPrivateBlogs}
-            />
-          </Suspense>
+          <div className="pointer-events-auto w-full">
+            <Suspense fallback={<PageLoader />}>
+              <PrivateSpaceDashboard 
+                user={user} 
+                blogs={privateBlogs} 
+                onSelectBlog={handleSelectBlog}
+                onRefresh={() => fetchPrivateBlogs(privatePagination?.currentPage || 1)}
+                pagination={privatePagination}
+                onPageChange={fetchPrivateBlogs}
+              />
+            </Suspense>
+          </div>
         )}
         
         {currentPage === PageView.BLOG && (
-          <BlogList 
-            blogs={publicBlogs} 
-            onSelectBlog={handleSelectBlog} 
-            isLoading={isLoadingBlogs}
-            currentUser={user}
-            onDeletePost={(blog) => setPublicPostToDelete(blog)}
-            pagination={pagination}
-            onPageChange={(page) => fetchPublicBlogs(page)}
-            onFilterChange={handlePublicFilterChange}
-            onLike={handlePublicLike}
-            likedPosts={likedPosts}
-          />
+          <div className="pointer-events-auto w-full min-h-screen">
+            <BlogList 
+              blogs={publicBlogs} 
+              onSelectBlog={handleSelectBlog} 
+              isLoading={isLoadingBlogs}
+              currentUser={user}
+              onDeletePost={(blog) => setPublicPostToDelete(blog)}
+              pagination={pagination}
+              onPageChange={(page) => fetchPublicBlogs(page)}
+              onFilterChange={handlePublicFilterChange}
+              onLike={handlePublicLike}
+              likedPosts={likedPosts}
+            />
+          </div>
         )}
 
         {currentPage === PageView.ARTICLE && selectedBlog && (
-          <ArticleView 
-            blog={selectedBlog}
-            // Pass the correct list depending on context
-            allBlogs={selectedBlog.isPrivate ? privateBlogs : publicBlogs} 
-            onBack={handleBackToBlog}
-            onNavigateToBlog={handleSelectBlog}
-            currentUser={user}
-            onLoginRequest={() => setIsLoginModalOpen(true)}
-          />
+          <div className="pointer-events-auto w-full min-h-screen">
+            <ArticleView 
+              blog={selectedBlog}
+              // Pass the correct list depending on context
+              allBlogs={selectedBlog.isPrivate ? privateBlogs : publicBlogs} 
+              onBack={handleBackToBlog}
+              onNavigateToBlog={handleSelectBlog}
+              currentUser={user}
+              onLoginRequest={() => setIsLoginModalOpen(true)}
+            />
+          </div>
         )}
-        {currentPage === PageView.RESUME && <ResumeView />}
+        
+        {currentPage === PageView.RESUME && (
+          <div className="pointer-events-auto w-full min-h-screen">
+            <ResumeView 
+              onNavigate={(page) => {
+                 setCurrentPage(page);
+                 window.scrollTo(0, 0);
+              }} 
+              currentUser={user} 
+              onLoginRequest={() => setIsLoginModalOpen(true)}
+            />
+          </div>
+        )}
 
         {/* New Pages */}
         {currentPage === PageView.PROFILE && user && (
-          <UserProfile user={user} onUpdateUser={setUser} />
+          <div className="pointer-events-auto w-full min-h-screen">
+            <UserProfile user={user} onUpdateUser={setUser} />
+          </div>
+        )}
+
+        {/* Deep Archives Page (New) */}
+        {currentPage === PageView.ARCHIVES && (
+           <div className="pointer-events-auto w-full min-h-screen">
+             <DeepArchives onBack={() => setCurrentPage(PageView.RESUME)} />
+           </div>
         )}
         
         {currentPage === PageView.CHAT && user && (
-          <ChatRoom currentUser={user} />
+          <div className="pointer-events-auto w-full min-h-screen">
+            <ChatRoom currentUser={user} />
+          </div>
         )}
 
         {/* Audit Log (VIP Only) */}
         {currentPage === PageView.AUDIT_LOG && user?.vip && (
-          <AuditLogViewer />
+          <div className="pointer-events-auto w-full min-h-screen">
+            <AuditLogViewer />
+          </div>
         )}
 
         {currentPage === PageView.SETTINGS && (
-          <SettingsPage 
-            theme={theme} 
-            toggleTheme={toggleTheme} 
-            language={language}
-            toggleLanguage={toggleLanguage}
-          />
+          <div className="pointer-events-auto w-full min-h-screen">
+            <SettingsPage 
+              theme={theme} 
+              toggleTheme={toggleTheme} 
+              language={language}
+              toggleLanguage={toggleLanguage}
+            />
+          </div>
         )}
       </main>
 
-      <footer className={`relative overflow-hidden mt-20 transition-colors z-10 ${
+      <footer className={`relative overflow-hidden mt-20 transition-colors z-10 pointer-events-auto ${
         currentPage === PageView.PRIVATE_SPACE 
           ? 'bg-rose-900/5 text-rose-900/50 border-t border-rose-900/5 py-16' 
           : 'bg-slate-900 text-slate-300 border-t border-slate-800 py-24'

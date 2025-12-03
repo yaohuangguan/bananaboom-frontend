@@ -124,7 +124,8 @@ export enum PageView {
   PROFILE = 'PROFILE',
   SETTINGS = 'SETTINGS',
   CHAT = 'CHAT',
-  AUDIT_LOG = 'AUDIT_LOG'
+  AUDIT_LOG = 'AUDIT_LOG',
+  ARCHIVES = 'ARCHIVES'
 }
 
 export interface PaginationData {

@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Language } from '../types';
 import { resources } from './resources';
 
@@ -15,13 +15,30 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('zh');
 
+  // Load from localStorage on mount
+  useEffect(() => {
+    const savedLang = localStorage.getItem('app_language');
+    if (savedLang === 'en' || savedLang === 'zh') {
+      setLanguage(savedLang);
+    }
+  }, []);
+
   const toggleLanguage = () => {
-    setLanguage((prev) => (prev === 'en' ? 'zh' : 'en'));
+    setLanguage((prev) => {
+      const newLang = prev === 'en' ? 'zh' : 'en';
+      localStorage.setItem('app_language', newLang);
+      return newLang;
+    });
+  };
+
+  const setLanguageHandler = (lang: Language) => {
+    setLanguage(lang);
+    localStorage.setItem('app_language', lang);
   };
 
   const value = {
     language,
-    setLanguage,
+    setLanguage: setLanguageHandler,
     toggleLanguage,
     t: resources[language]
   };
