@@ -1,0 +1,17 @@
+{
+    "name": "PS5 Space | Engineering & Design | Sam Yao",
+    "short_name": "Sam Yao Space",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#fdfbf7",
+    "theme_color": "#996646",
+    "orientation": "portrait-primary",
+    "icons": [
+      {
+        "src": "logo.svg",
+        "sizes": "192x192 512x512",
+        "type": "image/svg+xml",
+        "purpose": "any maskable"
+      }
+    ]
+  }
