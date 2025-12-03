@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, Suspense, lazy, useRef } from 'react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
@@ -797,6 +798,9 @@ const App: React.FC = () => {
 
   // Server-Side Pagination for Private Blogs
   const [privatePagination, setPrivatePagination] = useState<PaginationData | null>(null);
+  // Search state for Private Blogs
+  const [privateSearch, setPrivateSearch] = useState('');
+  const [privateTag, setPrivateTag] = useState<string | null>(null);
 
   const { t, language, toggleLanguage } = useTranslation();
 
@@ -852,7 +856,15 @@ const App: React.FC = () => {
   // Fetch private blogs ONLY when user logs in AND is on Private Space
   useEffect(() => {
     if (user && currentPage === PageView.PRIVATE_SPACE) {
-      fetchPrivateBlogs();
+      // If we already have data, don't blindly reset to page 1 unless empty
+      // We want to persist page state when returning from article view
+      if (privateBlogs.length === 0) {
+        fetchPrivateBlogs(1);
+      } else {
+        // Refresh current page
+        fetchPrivateBlogs(privatePagination?.currentPage || 1);
+      }
+      
       // Ensure user stays on private page only if valid
       if (user.vip && user.private_token === 'ilovechenfangting') {
          // authorized
@@ -888,15 +900,29 @@ const App: React.FC = () => {
     fetchPublicBlogs(1, search, tag);
   };
 
-  const fetchPrivateBlogs = async (page: number = 1) => {
+  const fetchPrivateBlogs = async (page?: number, search?: string, tag?: string) => {
+    // Resolve parameters, defaulting to current state if not provided
+    const targetPage = page || privatePagination?.currentPage || 1;
+    const targetSearch = search !== undefined ? search : privateSearch;
+    const targetTag = tag !== undefined ? tag : privateTag;
+
     try {
-      const { data, pagination: paginationMeta } = await apiService.getPrivatePosts(page, 10);
+      const { data, pagination: paginationMeta } = await apiService.getPrivatePosts(targetPage, 10, targetSearch, targetTag || '');
       setPrivateBlogs(data);
       setPrivatePagination(paginationMeta);
+      
+      // Update state
+      setPrivateSearch(targetSearch);
+      setPrivateTag(targetTag);
     } catch (error) {
       console.error("Failed to fetch private blogs (safely handled):", error);
       setPrivateBlogs([]);
     }
+  };
+
+  const handlePrivateFilterChange = (search: string, tag: string | null) => {
+    // Always reset to page 1 when filtering explicitly changes
+    fetchPrivateBlogs(1, search, tag || undefined);
   };
 
   useEffect(() => {
@@ -935,10 +961,18 @@ const App: React.FC = () => {
       setCurrentPage(PageView.BLOG);
     }
     
+    // Give time for view transition then scroll
     setTimeout(() => {
-      const blogSection = document.getElementById('latest-posts');
-      if (blogSection) {
-        blogSection.scrollIntoView({ behavior: 'smooth' });
+      // Different anchor for private vs public might be needed, 
+      // but 'latest-posts' is generic or top of feed
+      const scrollTarget = selectedBlog?.isPrivate 
+          ? document.querySelector('.private-feed-top') 
+          : document.getElementById('latest-posts');
+          
+      if (scrollTarget) {
+        scrollTarget.scrollIntoView({ behavior: 'smooth' });
+      } else {
+         window.scrollTo(0,0);
       }
     }, 100);
   };
@@ -1061,7 +1095,9 @@ const App: React.FC = () => {
                 onSelectBlog={handleSelectBlog}
                 onRefresh={() => fetchPrivateBlogs(privatePagination?.currentPage || 1)}
                 pagination={privatePagination}
-                onPageChange={fetchPrivateBlogs}
+                onPageChange={(p) => fetchPrivateBlogs(p)}
+                onFilterChange={handlePrivateFilterChange}
+                initialSearch={privateSearch}
               />
             </Suspense>
           </div>

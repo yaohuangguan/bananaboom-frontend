@@ -17,6 +17,10 @@ interface PrivateSpaceDashboardProps {
   // Pagination Props
   pagination?: PaginationData | null;
   onPageChange?: (page: number) => void;
+  
+  // Search/Filter Props
+  onFilterChange?: (search: string, tag: string | null) => void;
+  initialSearch?: string;
 }
 
 export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({ 
@@ -25,7 +29,9 @@ export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({
   onSelectBlog, 
   onRefresh,
   pagination,
-  onPageChange
+  onPageChange,
+  onFilterChange,
+  initialSearch
 }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('JOURNAL');
@@ -73,6 +79,8 @@ export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({
             onRefresh={onRefresh}
             pagination={pagination}
             onPageChange={onPageChange}
+            onFilterChange={onFilterChange}
+            initialSearch={initialSearch}
           />
         )}
         

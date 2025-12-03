@@ -10,6 +10,18 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: '0.0.0.0',
+      // 🔥🔥🔥 核心：反向代理配置 🔥🔥🔥
+      proxy: {
+        // 当你访问 '/api' 开头的路径时，Vite 会帮你转发给后端
+        '/api': {
+          target: 'http://localhost:5000', // 本地后端的地址
+          changeOrigin: true,              // 允许跨域（修改 Host 头）
+          secure: false,                   // 如果是 https 且证书无效，设为 false
+          
+          // 可选：如果你的后端路由本身不带 /api，需要把 /api 重写掉
+          // rewrite: (path) => path.replace(/^\/api/, '') 
+        }
+      }
     },
     plugins: [react()],
     resolve: {

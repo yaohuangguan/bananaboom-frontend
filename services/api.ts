@@ -3,7 +3,7 @@
 import { BlogPost, User, Comment, Project, ResumeItem, Log, Todo, Photo, PaginatedResponse, PaginationData, AuditLog } from '../types';
 import { toast } from '../components/Toast';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://bananaboom-api-242273127238.asia-east1.run.app/api';
+const API_BASE_URL = 'https://bananaboom-api-242273127238.asia-east1.run.app/api';
 
 /**
  * Native fetch wrapper with error handling, timeouts, and auth headers
@@ -374,11 +374,14 @@ export const apiService = {
   },
 
   // --- Audit Logs ---
-  getAuditLogs: async (page: number = 1, limit: number = 20): Promise<{ data: AuditLog[], pagination: PaginationData }> => {
+  getAuditLogs: async (page: number = 1, limit: number = 20, operator?: string, action?: string): Promise<{ data: AuditLog[], pagination: PaginationData }> => {
     const queryParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
     });
+    if (operator) queryParams.append('operator', operator);
+    if (action) queryParams.append('action', action);
+
     const response = await fetchClient<PaginatedResponse<AuditLog>>(`/audit?${queryParams.toString()}`);
     
     // Adapt backend pagination structure
@@ -444,12 +447,14 @@ export const apiService = {
     }
   },
 
-  getPrivatePosts: async (page: number = 1, limit: number = 10): Promise<{ data: BlogPost[], pagination: PaginationData }> => {
+  getPrivatePosts: async (page: number = 1, limit: number = 10, search: string = '', tag: string = ''): Promise<{ data: BlogPost[], pagination: PaginationData }> => {
     try {
       const queryParams = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
       });
+      if (search) queryParams.append('q', search);
+      if (tag) queryParams.append('tag', tag);
 
       const response = await fetchClient<PaginatedResponse<BlogPost>>(`/posts/private/posts?${queryParams.toString()}`);
       
