@@ -775,7 +775,16 @@ const ResumeView: React.FC<ResumeViewProps> = ({ onNavigate, currentUser, onLogi
 
 // --- App Content Component ---
 const App: React.FC = () => {
-  const [theme, setTheme] = useState<Theme>(Theme.LIGHT);
+  const [theme, setTheme] = useState<Theme>(() => {
+    const savedTheme = localStorage.getItem('app_theme');
+    if (savedTheme === Theme.DARK || savedTheme === Theme.LIGHT) {
+      return savedTheme as Theme;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return Theme.DARK;
+    }
+    return Theme.LIGHT;
+  });
   const [currentPage, setCurrentPage] = useState<PageView>(PageView.HOME);
   const [user, setUser] = useState<User | null>(null);
   const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
@@ -809,11 +818,6 @@ const App: React.FC = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    // Check system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setTheme(Theme.DARK);
-    }
-    
     // Load liked posts from localStorage
     const savedLikes = localStorage.getItem('liked_posts');
     if (savedLikes) {
@@ -971,6 +975,7 @@ const App: React.FC = () => {
     } else {
       document.documentElement.classList.remove('dark');
     }
+    localStorage.setItem('app_theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {
