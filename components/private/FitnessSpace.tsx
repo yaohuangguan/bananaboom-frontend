@@ -20,7 +20,35 @@ const toLocalDateStr = (date: Date) => {
 };
 
 // --- HOLIDAY & SOLAR TERM UTILS ---
-const getSpecialDay = (month: number, day: number) => {
+
+// Helper to calculate 24 Solar Terms for 21st Century (2000-2099)
+const getSolarTermDate = (year: number, termIndex: number): number => {
+  // Constants C for 21st Century
+  // Order: 0:XiaoHan(Jan), 1:DaHan(Jan), 2:LiChun(Feb), 3:YuShui(Feb)... 23:DongZhi(Dec)
+  const C_VALUES = [
+    5.4055, 20.12,   // Jan: 小寒, 大寒
+    3.87, 18.73,     // Feb: 立春, 雨水
+    5.63, 20.646,    // Mar: 惊蛰, 春分
+    4.81, 20.1,      // Apr: 清明, 谷雨
+    5.52, 21.04,     // May: 立夏, 小满
+    5.678, 21.37,    // Jun: 芒种, 夏至
+    7.108, 22.83,    // Jul: 小暑, 大暑
+    7.5, 23.13,      // Aug: 立秋, 处暑
+    7.646, 23.042,   // Sep: 白露, 秋分
+    8.318, 23.438,   // Oct: 寒露, 霜降
+    7.438, 22.36,    // Nov: 立冬, 小雪
+    7.18, 21.94      // Dec: 大雪, 冬至
+  ];
+  
+  // y is the last two digits of the year (e.g., 2025 -> 25)
+  const y = year % 100;
+  
+  // Simplified formula for 21st century: D = [ y * D + C ] - [ y / 4 ]
+  const day = Math.floor(y * 0.2422 + C_VALUES[termIndex]) - Math.floor(y / 4);
+  return day;
+};
+
+const getSpecialDay = (year: number, month: number, day: number) => {
   const m = month + 1;
   const key = `${m}-${day}`;
   
@@ -31,16 +59,28 @@ const getSpecialDay = (month: number, day: number) => {
     '12-24': '平安夜', '12-25': '圣诞节'
   };
 
-  const solarTerms: Record<string, string> = {
-    '2-4': '立春', '2-19': '雨水', '3-6': '惊蛰', '3-21': '春分',
-    '4-5': '清明', '4-20': '谷雨', '5-6': '立夏', '5-21': '小满',
-    '6-6': '芒种', '6-21': '夏至', '7-7': '小暑', '7-23': '大暑',
-    '8-8': '立秋', '8-23': '处暑', '9-8': '白露', '9-23': '秋分',
-    '10-8': '寒露', '10-23': '霜降', '11-7': '立冬', '11-22': '小雪',
-    '12-7': '大雪', '12-22': '冬至', '1-6': '小寒', '1-20': '大寒'
-  };
+  if (holidays[key]) return holidays[key];
 
-  return holidays[key] || solarTerms[key] || null;
+  // Calculate Solar Terms dynamically
+  // Month is 0-indexed (Jan=0, Feb=1...)
+  // Each month has 2 terms. Jan has terms 0 & 1, Feb has 2 & 3, etc.
+  const termIndex1 = month * 2;
+  const termIndex2 = month * 2 + 1;
+  
+  const date1 = getSolarTermDate(year, termIndex1);
+  const date2 = getSolarTermDate(year, termIndex2);
+  
+  const TERM_NAMES = [
+    "小寒", "大寒", "立春", "雨水", "惊蛰", "春分",
+    "清明", "谷雨", "立夏", "小满", "芒种", "夏至",
+    "小暑", "大暑", "立秋", "处暑", "白露", "秋分",
+    "寒露", "霜降", "立冬", "小雪", "大雪", "冬至"
+  ];
+
+  if (day === date1) return TERM_NAMES[termIndex1];
+  if (day === date2) return TERM_NAMES[termIndex2];
+
+  return null;
 };
 
 export const FitnessSpace: React.FC = () => {
@@ -305,7 +345,7 @@ export const FitnessSpace: React.FC = () => {
       const isSelected = toLocalDateStr(currentDate) === localDateStr;
       const isToday = toLocalDateStr(new Date()) === localDateStr;
       const dayRecords = monthRecords.get(localDateStr) || [];
-      const holiday = getSpecialDay(month, d);
+      const holiday = getSpecialDay(year, month, d);
 
       cells.push(
         <button

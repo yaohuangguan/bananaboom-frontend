@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Socket } from 'socket.io-client';
 import { User, ChatMessage, ChatUser } from '../types';
@@ -148,7 +147,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket }) => {
      // Assuming backend maps UserID -> UserObj or simple ID check.
      // The provided backend sends `users` object where key is socketID and value is user data.
      // We need to iterate values to check if user ID exists.
-     return Object.values(onlineUsers).some(u => u.id === userId);
+     return Object.values(onlineUsers).some((u: ChatUser) => u.id === userId);
   };
 
   // Fetch History Logic
