@@ -355,6 +355,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
                       <option value="users">Users Database</option>
                       <option value="chats">Chat History</option>
                       <option value="logs">System Logs</option>
+                      <option value="fitness">Fitness Records</option>
+                      <option value="audit">Audit Logs</option>
                    </select>
                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
                      <i className="fas fa-chevron-down text-xs"></i>

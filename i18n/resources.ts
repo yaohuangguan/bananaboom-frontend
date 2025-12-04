@@ -4,6 +4,7 @@
 
 
 
+
 import { BlogPost } from "../types";
 
 export const resources = {
@@ -32,6 +33,12 @@ export const resources = {
       introSuffix: '. Navigating the digital cosmos, building robust architectures, and exploring the frontiers of Artificial Intelligence.',
       ctaPrimary: 'Explore Journal',
       ctaSecondary: 'System Profile'
+    },
+    portfolio: {
+      title: 'Portfolio',
+      subtitle: 'A collection of engineering projects and professional history.',
+      resume: 'Resume',
+      projects: 'Projects'
     },
     blogList: {
       title: 'Transmission Log',
@@ -384,6 +391,12 @@ export const resources = {
       introSuffix: '。漫游在数字宇宙，构建稳健的架构，探索人工智能的疆界。',
       ctaPrimary: '查阅日志',
       ctaSecondary: '系统档案'
+    },
+    portfolio: {
+      title: '作品集',
+      subtitle: '工程项目与职业生涯的合集。',
+      resume: '简历',
+      projects: '项目'
     },
     blogList: {
       title: '传输日志',

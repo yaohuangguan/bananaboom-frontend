@@ -1,5 +1,6 @@
 
-import { BlogPost, User, Comment, Project, ResumeItem, Log, Todo, Photo, PaginatedResponse, PaginationData, AuditLog, ChatMessage, FitnessRecord, FitnessStats } from '../types';
+
+import { BlogPost, User, Comment, Project, ResumeItem, Log, Todo, Photo, PaginatedResponse, PaginationData, AuditLog, ChatMessage, FitnessRecord, FitnessStats, PortfolioProject, ResumeData } from '../types';
 import { toast } from '../components/Toast';
 
 const API_BASE_URL = 'https://bananaboom-api-242273127238.asia-east1.run.app/api';
@@ -788,9 +789,39 @@ export const apiService = {
     }
   },
 
-  // --- Homepage & Projects ---
+  // --- Homepage & Projects (Legacy) ---
   getProjects: async (): Promise<Project[]> => {
     return await fetchClient<Project[]>('/home/projects');
+  },
+
+  // --- NEW: Portfolio Projects ---
+  getPortfolioProjects: async (): Promise<PortfolioProject[]> => {
+    return await fetchClient<PortfolioProject[]>('/projects');
+  },
+
+  createProject: async (data: Partial<PortfolioProject>): Promise<PortfolioProject> => {
+    const res = await fetchClient<PortfolioProject>('/projects', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    toast.success('Project created successfully');
+    return res;
+  },
+
+  updateProject: async (id: string, data: Partial<PortfolioProject>): Promise<PortfolioProject> => {
+    const res = await fetchClient<PortfolioProject>(`/projects/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+    toast.success('Project updated successfully');
+    return res;
+  },
+
+  deleteProject: async (id: string): Promise<void> => {
+    await fetchClient(`/projects/${id}`, {
+      method: 'DELETE'
+    });
+    toast.success('Project deleted successfully');
   },
 
   getLogs: async (): Promise<Log[]> => {
@@ -801,9 +832,23 @@ export const apiService = {
     return await fetchClient('/home/likes');
   },
 
-  // --- Resume ---
+  // --- Resume (Legacy) ---
   getResume: async (): Promise<ResumeItem[]> => {
     return await fetchClient<ResumeItem[]>('/resume');
+  },
+
+  // --- NEW: Resume Data ---
+  getResumeData: async (): Promise<ResumeData> => {
+    return await fetchClient<ResumeData>('/resumes');
+  },
+
+  updateResume: async (data: Partial<ResumeData>): Promise<ResumeData> => {
+    const res = await fetchClient<ResumeData>('/resumes', {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+    toast.success('Resume updated successfully');
+    return res;
   },
 
   // --- Fitness ---

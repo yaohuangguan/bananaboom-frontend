@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, Suspense, lazy, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Header } from './components/Header';
@@ -13,7 +14,8 @@ import { UserProfile } from './components/UserProfile';
 import { SettingsPage } from './components/SettingsPage';
 import { ChatRoom } from './components/ChatRoom';
 import { AuditLogViewer } from './components/AuditLogViewer';
-import { DeepArchives } from './components/DeepArchives';
+// New Portfolio Page (Includes Projects & Resume)
+import { PortfolioPage } from './components/PortfolioPage';
 import { apiService } from './services/api';
 import { Theme, PageView, User, BlogPost, PaginationData } from './types';
 import { LanguageProvider, useTranslation } from './i18n/LanguageContext';
@@ -608,7 +610,8 @@ const ArticleView: React.FC<ArticleViewProps> = ({ blog, allBlogs, onBack, onNav
   );
 };
 
-// --- Resume View Component (Refactored) ---
+// --- Resume View Component (Keep as Homepage "About" Section) ---
+// Note: The "Nav Link" goes to the new PortfolioPage, but this component stays for the home page anchor.
 interface ResumeViewProps {
   onNavigate: (page: PageView) => void;
   currentUser: User | null;
@@ -617,10 +620,6 @@ interface ResumeViewProps {
 
 const ResumeView: React.FC<ResumeViewProps> = ({ onNavigate, currentUser, onLoginRequest }) => {
   const { t } = useTranslation();
-
-  const handleArchivesClick = () => {
-    onNavigate(PageView.ARCHIVES);
-  };
 
   const handleChatClick = () => {
     if (currentUser) {
@@ -691,9 +690,9 @@ const ResumeView: React.FC<ResumeViewProps> = ({ onNavigate, currentUser, onLogi
                </div>
             </div>
 
-            {/* CARD 2: DEEP ARCHIVES (Center Feature) */}
+            {/* CARD 2: PROFILE/RESUME PAGE LINK (Center Feature) - Updated to new PageView.RESUME */}
             <div 
-              onClick={handleArchivesClick}
+              onClick={() => onNavigate(PageView.RESUME)}
               className="md:col-span-1 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 rounded-[2rem] p-8 border border-slate-200 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group relative overflow-hidden"
             >
                <div className="absolute bottom-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -1189,16 +1188,10 @@ const App: React.FC = () => {
           </div>
         )}
         
+        {/* Update PageView.RESUME to point to the new PortfolioPage */}
         {currentPage === PageView.RESUME && (
           <div className="pointer-events-auto w-full min-h-screen">
-            <ResumeView 
-              onNavigate={(page) => {
-                 setCurrentPage(page);
-                 window.scrollTo(0, 0);
-              }} 
-              currentUser={user} 
-              onLoginRequest={() => setIsLoginModalOpen(true)}
-            />
+            <PortfolioPage currentUser={user} />
           </div>
         )}
 
@@ -1209,10 +1202,11 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* Deep Archives Page (New) */}
+        {/* Deep Archives removed as requested, keeping case just in case enum is used, but pointing to Resume for now or just null */}
         {currentPage === PageView.ARCHIVES && (
            <div className="pointer-events-auto w-full min-h-screen">
-             <DeepArchives onBack={() => setCurrentPage(PageView.RESUME)} />
+             {/* Archives redirect or legacy component placeholder if needed */}
+             <div className="p-20 text-center text-slate-500">Archives have been migrated to the new Profile page.</div>
            </div>
         )}
         

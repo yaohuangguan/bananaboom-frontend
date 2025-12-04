@@ -63,6 +63,24 @@ export interface Project {
   likes?: number;
 }
 
+// New Portfolio Project Model
+export interface PortfolioProject {
+  _id: string;
+  title_zh: string;
+  title_en: string;
+  summary_zh?: string;
+  summary_en?: string;
+  description_zh?: string;
+  description_en?: string;
+  techStack: string[];
+  repoUrl?: string;
+  demoUrl?: string;
+  coverImage?: string;
+  order: number;
+  isVisible: boolean;
+  createdAt: string;
+}
+
 export interface ResumeItem {
   _id: string;
   title: string;
@@ -71,6 +89,56 @@ export interface ResumeItem {
   _info?: string;
   degree?: string;
   url?: string;
+}
+
+// New Resume Model
+export interface ResumeData {
+  _id: string;
+  basics: {
+    name_zh?: string;
+    name_en?: string;
+    label_zh?: string;
+    label_en?: string;
+    email?: string;
+    phone?: string;
+    location_zh?: string;
+    location_en?: string;
+    summary_zh?: string;
+    summary_en?: string;
+  };
+  education: Array<{
+    institution?: string;
+    location?: string;
+    area_zh?: string;
+    area_en?: string;
+    studyType_zh?: string;
+    studyType_en?: string;
+    startDate?: string;
+    endDate?: string;
+    score_zh?: string;
+    score_en?: string;
+  }>;
+  work: Array<{
+    company_zh?: string;
+    company_en?: string;
+    position_zh?: string;
+    position_en?: string;
+    startDate?: string;
+    endDate?: string;
+    highlights_zh?: string[];
+    highlights_en?: string[];
+  }>;
+  skills: Array<{
+    name_zh?: string;
+    name_en?: string;
+    keywords: string[];
+  }>;
+  languages: Array<{
+    language_zh?: string;
+    language_en?: string;
+    fluency_zh?: string;
+    fluency_en?: string;
+  }>;
 }
 
 export interface Log {
@@ -160,13 +228,13 @@ export enum PageView {
   HOME = 'HOME',
   BLOG = 'BLOG',
   ARTICLE = 'ARTICLE',
-  RESUME = 'RESUME',
+  RESUME = 'RESUME', // Now maps to PortfolioPage
   PRIVATE_SPACE = 'PRIVATE_SPACE',
   PROFILE = 'PROFILE',
   SETTINGS = 'SETTINGS',
   CHAT = 'CHAT',
   AUDIT_LOG = 'AUDIT_LOG',
-  ARCHIVES = 'ARCHIVES'
+  ARCHIVES = 'ARCHIVES' // Deprecated, but keeping enum to avoid breaks if any
 }
 
 export interface PaginationData {
