@@ -838,12 +838,12 @@ export const apiService = {
   },
 
   // --- NEW: Resume Data ---
-  getResumeData: async (): Promise<ResumeData> => {
-    return await fetchClient<ResumeData>('/resumes');
+  getResumeData: async (userSlug: string = 'sam'): Promise<ResumeData> => {
+    return await fetchClient<ResumeData>(`/resumes?user=${userSlug}`);
   },
 
-  updateResume: async (data: Partial<ResumeData>): Promise<ResumeData> => {
-    const res = await fetchClient<ResumeData>('/resumes', {
+  updateResume: async (data: Partial<ResumeData>, userSlug: string = 'sam'): Promise<ResumeData> => {
+    const res = await fetchClient<ResumeData>(`/resumes?user=${userSlug}`, {
       method: 'PUT',
       body: JSON.stringify(data)
     });

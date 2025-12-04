@@ -14,6 +14,9 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ currentUser }) =
   const [resume, setResume] = useState<ResumeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
+  // Resume Profile Switcher
+  const [targetProfile, setTargetProfile] = useState<'sam' | 'jenny'>('sam');
+  
   // Admin Editing
   const [isEditing, setIsEditing] = useState(false);
   const [editResume, setEditResume] = useState<ResumeData | null>(null);
@@ -23,14 +26,16 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ currentUser }) =
 
   useEffect(() => {
     loadResume();
-  }, []);
+  }, [targetProfile]);
 
   const loadResume = async () => {
+    setIsLoading(true);
     try {
-      const data = await apiService.getResumeData();
+      const data = await apiService.getResumeData(targetProfile);
       setResume(data);
     } catch (e) {
       console.error("Failed to load resume", e);
+      setResume(null);
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +57,7 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ currentUser }) =
   const handleSave = async () => {
     if (!editResume) return;
     try {
-      await apiService.updateResume(editResume);
+      await apiService.updateResume(editResume, targetProfile);
       setResume(editResume);
       setIsEditing(false);
     } catch (e) {
@@ -126,29 +131,52 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ currentUser }) =
 
   return (
     <div className="relative">
+      
+      {/* Admin Controls */}
       {isVip && (
-        <button 
-          onClick={handleEditOpen}
-          className="absolute -top-16 right-0 px-4 py-2 bg-slate-800 text-white text-xs font-bold uppercase rounded-lg hover:bg-slate-700 transition-colors shadow-lg z-20"
-        >
-          <i className="fas fa-edit mr-2"></i> Edit Resume
-        </button>
+        <div className="absolute -top-16 right-0 flex gap-4 z-20">
+           {/* Profile Switcher */}
+           <div className="flex bg-slate-800 rounded-lg overflow-hidden border border-slate-700">
+              <button 
+                onClick={() => setTargetProfile('sam')}
+                className={`px-4 py-2 text-xs font-bold uppercase transition-colors ${targetProfile === 'sam' ? 'bg-amber-500 text-black' : 'text-slate-400 hover:text-white'}`}
+              >
+                Sam
+              </button>
+              <button 
+                onClick={() => setTargetProfile('jenny')}
+                className={`px-4 py-2 text-xs font-bold uppercase transition-colors ${targetProfile === 'jenny' ? 'bg-pink-500 text-white' : 'text-slate-400 hover:text-white'}`}
+              >
+                Jenny
+              </button>
+           </div>
+
+           <button 
+             onClick={handleEditOpen}
+             className="px-4 py-2 bg-slate-800 text-white text-xs font-bold uppercase rounded-lg hover:bg-slate-700 transition-colors shadow-lg"
+           >
+             <i className="fas fa-edit mr-2"></i> Edit {targetProfile === 'sam' ? 'Sam' : 'Jenny'}
+           </button>
+        </div>
       )}
 
       {/* Edit Modal - Portal to Body */}
       {isEditing && editResume && createPortal(
         <div className={modalBaseClass}>
            <div className={editorClass}>
-              <div className="flex border-b border-current overflow-x-auto bg-black/5 dark:bg-black/20">
-                 {(['BASICS', 'WORK', 'EDUCATION', 'SKILLS', 'LANGUAGES'] as const).map(tab => (
-                    <button
-                       key={tab}
-                       onClick={() => setActiveTab(tab)}
-                       className={`${tabClassBase} ${activeTab === tab ? activeTabClass : inactiveTabClass}`}
-                    >
-                       {tab}
-                    </button>
-                 ))}
+              <div className="flex justify-between items-center border-b border-current bg-black/5 dark:bg-black/20 pr-4">
+                 <div className="flex overflow-x-auto">
+                    {(['BASICS', 'WORK', 'EDUCATION', 'SKILLS', 'LANGUAGES'] as const).map(tab => (
+                       <button
+                          key={tab}
+                          onClick={() => setActiveTab(tab)}
+                          className={`${tabClassBase} ${activeTab === tab ? activeTabClass : inactiveTabClass}`}
+                       >
+                          {tab}
+                       </button>
+                    ))}
+                 </div>
+                 <div className="text-xs font-bold uppercase opacity-50 px-4">Editing: {targetProfile}</div>
               </div>
 
               <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
