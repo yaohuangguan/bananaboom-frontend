@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { LanguageProvider } from './i18n/LanguageContext';
+import { Analytics } from "@vercel/analytics/next"
+
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -13,6 +15,7 @@ root.render(
   <React.StrictMode>
     <LanguageProvider>
       <App />
+      <Analytics />
     </LanguageProvider>
   </React.StrictMode>
 );
