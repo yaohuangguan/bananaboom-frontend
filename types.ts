@@ -264,6 +264,7 @@ export interface ChatMessage {
   author: string;
   userId?: string;
   email?: string;
+  photoURL?: string;
   room?: string;
   timestamp?: string;
   isPrivate?: boolean;

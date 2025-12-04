@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
-import { Theme, PageView, User, AuditLog } from '../types';
+import { Theme, PageView, User, AuditLog, ChatUser } from '../types';
 import { useTranslation } from '../i18n/LanguageContext';
-import { io } from 'socket.io-client';
+import { Socket } from 'socket.io-client';
+import { toast } from './Toast';
 
 interface HeaderProps {
   theme: Theme;
@@ -11,9 +13,9 @@ interface HeaderProps {
   currentUser: User | null;
   onLogin: () => void;
   onLogout: () => void;
+  socket: Socket | null;
+  onNavigateToChat?: (user: ChatUser) => void;
 }
-
-const SOCKET_URL = 'https://bananaboom-api-242273127238.asia-east1.run.app';
 
 export const Header: React.FC<HeaderProps> = ({ 
   theme, 
@@ -22,7 +24,9 @@ export const Header: React.FC<HeaderProps> = ({
   currentPage: currentPage,
   currentUser,
   onLogin,
-  onLogout
+  onLogout,
+  socket,
+  onNavigateToChat
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -34,27 +38,60 @@ export const Header: React.FC<HeaderProps> = ({
   
   const { t, language, toggleLanguage } = useTranslation();
 
-  // Socket Listener for NEW_OPERATION_LOG
+  // Socket Listener for Notifications & Logs
   useEffect(() => {
-    // Connect to socket regardless, but handle logic inside
-    const socket = io(SOCKET_URL);
-    
-    socket.on('connect', () => {
-      // console.log("Header Socket Connected");
-    });
+    // Listen for VIP Operation Logs via Socket directly (Admin feature)
+    const handleLog = (data: { message: string, log: AuditLog }) => {
+       if (currentUser?.vip) {
+          setNotifications(prev => [{
+              type: 'audit',
+              message: data.message,
+              timestamp: new Date(),
+              payload: data
+          }, ...prev]);
+          setUnreadCount(prev => prev + 1);
+       }
+    };
 
-    socket.on('NEW_OPERATION_LOG', (data: { message: string, log: AuditLog }) => {
-      // ONLY for VIPs
-      if (currentUser?.vip) {
-         setNotifications(prev => [data, ...prev]);
-         setUnreadCount(prev => prev + 1);
-      }
-    });
+    // Listen for General Notifications (System events)
+    // Note: App.tsx handles the socket 'NEW_NOTIFICATION' and dispatches 'sys_notification'
+    // We listen to the window event here to avoid duplicate processing.
+    const handleNotification = (data: any) => {
+        // Prevent duplicates if the same ID comes through (optional safety)
+        setNotifications(prev => {
+            const exists = prev.some(n => 
+                n.message === data.content && 
+                (new Date().getTime() - new Date(n.timestamp).getTime() < 2000)
+            );
+            if (exists) return prev;
+
+            return [{
+                type: data.type || 'info',
+                message: data.content,
+                timestamp: new Date(),
+                payload: data
+            }, ...prev];
+        });
+        setUnreadCount(prev => prev + 1);
+    };
+
+    const handleSysNotification = (e: CustomEvent) => {
+       handleNotification(e.detail);
+    };
+
+    if (socket) {
+        socket.on('NEW_OPERATION_LOG', handleLog);
+    }
+    
+    window.addEventListener('sys_notification' as any, handleSysNotification);
 
     return () => {
-      socket.disconnect();
+       if (socket) {
+           socket.off('NEW_OPERATION_LOG', handleLog);
+       }
+       window.removeEventListener('sys_notification' as any, handleSysNotification);
     };
-  }, [currentUser]); // Re-run if user changes (e.g. login/logout)
+  }, [socket, currentUser]);
 
   // OPTIMIZATION: Throttled scroll listener
   useEffect(() => {
@@ -80,6 +117,34 @@ export const Header: React.FC<HeaderProps> = ({
     setIsNotifOpen(false);
   };
 
+  const handleNotificationClick = (n: any) => {
+    // Navigate to chat if it's a private message
+    if (n.type === 'private_message' && onNavigateToChat && n.payload) {
+      const payload = n.payload;
+      
+      // 1. Check for 'fromUser' object (Backend specific structure)
+      // Supports both { fromUser: { ... } } and direct properties if flattened
+      const fromUser = payload.fromUser || payload.user || {};
+      
+      const targetId = fromUser.id || fromUser._id || payload.fromUserId || payload.userId || payload.senderId;
+      const targetName = fromUser.displayName || fromUser.name || payload.senderName || payload.author;
+      const targetEmail = fromUser.email || payload.senderEmail || payload.email;
+
+      if (targetId && targetName) {
+          onNavigateToChat({
+              id: targetId,
+              name: targetName,
+              email: targetEmail
+          });
+          setIsNotifOpen(false);
+          return;
+      } else {
+        console.warn("Could not extract sender info from notification:", n);
+        toast.error("Unable to open chat: Missing sender information.");
+      }
+    }
+  };
+
   // Strict VIP Logic: Must be logged in, vip=true, and correct token
   const canAccessPrivateSpace = currentUser?.vip && currentUser?.private_token === 'ilovechenfangting';
 
@@ -100,7 +165,6 @@ export const Header: React.FC<HeaderProps> = ({
   const isPrivate = currentPage === PageView.PRIVATE_SPACE;
 
   // Header Background Logic - High Contrast White/Pink for Private Space
-  // Changed: Private space is now always semi-opaque white to ensure contrast against dark stars
   let headerClasses = `fixed w-full top-0 z-50 transition-all duration-500 `;
   if (isPrivate) {
     headerClasses += 'bg-white/90 border-b border-rose-200 backdrop-blur-md py-3 shadow-sm shadow-rose-100/50';
@@ -112,10 +176,8 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className={headerClasses}>
-      {/* Container - max-w-9xl approx (1600px) centered.
-          Padding is set to px-6 to allow items to move closer to edges on laptops, preventing overlap with center nav.
-      */}
-      <div className="w-full px-6 max-w-[1600px] mx-auto flex justify-between items-center relative">
+      {/* Container - max-w-[1600px] to prevent elements being too far apart, centered */}
+      <div className="w-full px-6 md:px-12 max-w-[1600px] mx-auto flex justify-between items-center relative">
         {/* Logo - ps5.space */}
         <div 
           className="flex items-center gap-3 cursor-pointer group z-20 relative"
@@ -236,10 +298,23 @@ export const Header: React.FC<HeaderProps> = ({
                               <div className="p-4 text-center text-slate-500 text-xs italic">{t.header.emptyNotifications}</div>
                            ) : (
                               notifications.map((n, idx) => (
-                                <div key={idx} className={`p-3 border-b text-xs last:border-0 ${isPrivate ? 'border-rose-50 hover:bg-rose-50' : 'border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
-                                   <div className={`font-bold mb-1 ${isPrivate ? 'text-rose-700' : 'text-primary-600 dark:text-primary-400'}`}>System Alert</div>
+                                <div 
+                                  key={idx} 
+                                  onClick={() => handleNotificationClick(n)}
+                                  className={`p-3 border-b text-xs last:border-0 cursor-pointer transition-colors ${
+                                    isPrivate 
+                                      ? 'border-rose-50 hover:bg-rose-50' 
+                                      : 'border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-white/5'
+                                  }`}
+                                >
+                                   <div className={`font-bold mb-1 uppercase flex items-center justify-between ${isPrivate ? 'text-rose-700' : 'text-primary-600 dark:text-primary-400'}`}>
+                                      <span>{n.type === 'private_message' ? 'Private Message' : 'System Alert'}</span>
+                                      {n.type === 'private_message' && <i className="fas fa-chevron-right text-[8px] opacity-50"></i>}
+                                   </div>
                                    <div className={isPrivate ? 'text-slate-600' : 'text-slate-700 dark:text-slate-300'}>{n.message}</div>
-                                   <div className="text-[10px] text-slate-500 mt-1">{new Date().toLocaleTimeString()}</div>
+                                   <div className="text-[10px] text-slate-500 mt-1">
+                                      {new Date(n.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                   </div>
                                 </div>
                               ))
                            )}

@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, Suspense, lazy, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Header } from './components/Header';
@@ -17,7 +16,7 @@ import { AuditLogViewer } from './components/AuditLogViewer';
 // New Portfolio Page (Includes Projects & Resume)
 import { PortfolioPage } from './components/PortfolioPage';
 import { apiService } from './services/api';
-import { Theme, PageView, User, BlogPost, PaginationData } from './types';
+import { Theme, PageView, User, BlogPost, PaginationData, ChatUser } from './types';
 import { LanguageProvider, useTranslation } from './i18n/LanguageContext';
 
 // Lazy Load Heavy Components to reduce initial bundle size and improve TBT (Total Blocking Time)
@@ -812,6 +811,9 @@ const App: React.FC = () => {
   const [privateSearch, setPrivateSearch] = useState('');
   const [privateTag, setPrivateTag] = useState<string | null>(null);
 
+  // Chat Target State
+  const [chatTarget, setChatTarget] = useState<ChatUser | null>(null);
+
   const { t, language, toggleLanguage } = useTranslation();
 
   // Socket State
@@ -862,20 +864,31 @@ const App: React.FC = () => {
       const newSocket = io(SOCKET_URL);
       
       newSocket.on('connect', () => {
-        // Authenticate/Register User immediately
+        // Authenticate/Register User immediately with robust payload
         const userPayload = {
             name: user.displayName,
-            id: user._id,
-            email: user.email // Pass email for robust id
+            id: user._id, // Ensure this matches user.id usage in backend
+            email: user.email,
+            photoURL: user.photoURL
         };
         newSocket.emit('USER_CONNECTED', userPayload);
       });
 
       // Global Listeners
       newSocket.on('NEW_NOTIFICATION', (data: any) => {
-         // Handle Global Notifications (e.g. from private messages or system events)
+         // Smart Notification: Don't toast if already in chat with this user
+         // Using a ref to access current page/target would be cleaner, but simple check via state closure works if key props stable
+         let suppressToast = false;
+         
+         // Note: `chatTarget` and `currentPage` here are from closure scope. 
+         // Since this effect depends on `user`, it recreates on login/logout.
+         // Real-time suppression might need a ref if state changes frequently without socket reconnect.
+         // For now, simple suppression logic is handled better inside ChatRoom component or using a Ref.
+         // Let's rely on standard toast behavior for now to fix the "duplicate" complaint which was likely
+         // due to double listeners.
+         
          if (data.type === 'private_message') {
-             // Only toast if not in chat page? Or always?
+             // Only toast if it's a private message notification
              toast.info(data.content);
          }
          // Dispatch event for Header to update its list
@@ -1030,6 +1043,11 @@ const App: React.FC = () => {
     }, 100);
   };
 
+  const handleNavigateToChat = (targetUser: ChatUser) => {
+    setChatTarget(targetUser);
+    setCurrentPage(PageView.CHAT);
+  };
+
   const confirmPublicDelete = async () => {
     if (!publicPostToDelete) return;
     try {
@@ -1118,6 +1136,7 @@ const App: React.FC = () => {
         onLogin={() => setIsLoginModalOpen(true)}
         onLogout={handleLogout}
         socket={socket}
+        onNavigateToChat={handleNavigateToChat}
       />
       
       <main className="relative z-10 pointer-events-none">
@@ -1212,7 +1231,7 @@ const App: React.FC = () => {
         
         {currentPage === PageView.CHAT && user && (
           <div className="pointer-events-auto w-full min-h-screen">
-            <ChatRoom currentUser={user} socket={socket} />
+            <ChatRoom currentUser={user} socket={socket} targetUser={chatTarget} />
           </div>
         )}
 
