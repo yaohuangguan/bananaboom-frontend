@@ -1,9 +1,9 @@
-
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { User, PaginationData } from '../types';
 import { useTranslation } from '../i18n/LanguageContext';
 import { apiService } from '../services/api';
 import { toast } from './Toast';
+import { DeleteModal } from './DeleteModal';
 
 interface UserProfileProps {
   user: User;
@@ -32,6 +32,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
   const [adminLoading, setAdminLoading] = useState(false);
   const [targetUser, setTargetUser] = useState<User | null>(null);
   const [isProcessingVip, setIsProcessingVip] = useState(false);
+  
+  // VIP Verification Modal State
+  const [showVipModal, setShowVipModal] = useState(false);
 
   // Export Log State
   const [isExporting, setIsExporting] = useState(false);
@@ -66,10 +69,20 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
     }
   };
 
-  const handleToggleVip = async () => {
+  const handleVipActionClick = () => {
     if (!targetUser) return;
+    setShowVipModal(true);
+  };
+
+  const handleVipActionConfirm = async (secret?: string) => {
+    if (!targetUser || !secret) return;
     setIsProcessingVip(true);
+    
     try {
+      // 1. Verify Secret
+      await apiService.verifySecret(secret);
+      
+      // 2. Perform VIP Action
       if (targetUser.vip) {
          await apiService.revokeVip(targetUser.email);
          toast.success(`VIP revoked for ${targetUser.displayName}`);
@@ -77,12 +90,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
          await apiService.grantVip(targetUser.email);
          toast.success(`VIP granted to ${targetUser.displayName}`);
       }
-      // Refresh list to update UI
+      
+      // 3. Refresh and Cleanup
       fetchAdminUsers(adminPage);
       setTargetUser(null);
-    } catch (e) {
+      setShowVipModal(false);
+    } catch (e: any) {
       console.error(e);
-      toast.error("Operation failed");
+      // Ensure modal doesn't close on error so they can retry, or rely on toast
+      // Usually error handling is in apiService but verifySecret might throw specific error
     } finally {
       setIsProcessingVip(false);
     }
@@ -183,6 +199,19 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
 
   return (
     <div className="container mx-auto px-6 py-24 pt-32 max-w-4xl animate-fade-in relative z-10">
+      
+      {/* Verification Modal for VIP Actions */}
+      <DeleteModal 
+        isOpen={showVipModal}
+        onClose={() => setShowVipModal(false)}
+        onConfirm={handleVipActionConfirm}
+        title="Security Verification"
+        message="Please enter the system secret key to authorize this privilege escalation."
+        isSecret={true}
+        confirmKeyword=""
+        buttonText="Verify & Execute"
+      />
+
       <div className="mb-12 border-b border-slate-200 dark:border-slate-800 pb-8">
         <h1 className="text-4xl font-display font-bold text-slate-900 dark:text-white mb-2">
           {t.profile.title}
@@ -474,7 +503,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
                             </div>
 
                             <button 
-                              onClick={handleToggleVip}
+                              onClick={handleVipActionClick}
                               disabled={isProcessingVip}
                               className={`w-full py-3 rounded-xl font-bold uppercase tracking-wider text-xs shadow-lg transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
                                  targetUser.vip 

@@ -169,11 +169,19 @@ export interface Comment {
   _userid?: string;
 }
 
+// Updated Bucket List / Todo Model
 export interface Todo {
   _id: string;
-  todo: string;
-  done: boolean;
-  timestamp: number;
+  todo: string; // The Title
+  description?: string;
+  status?: 'todo' | 'in_progress' | 'done';
+  images?: string[];
+  targetDate?: string;
+  order?: number;
+  done: boolean; // Legacy field for compatibility
+  timestamp: number | string;
+  create_date?: string;
+  complete_date?: string;
 }
 
 // Fitness Types (Refactored)
@@ -215,6 +223,8 @@ export interface FitnessStats {
   dates: string[];
   weights: (number | null)[];
   durations: number[];
+  water: (number | null)[];
+  sleep: (number | null)[];
 }
 
 export enum Theme {

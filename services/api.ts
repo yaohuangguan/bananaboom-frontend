@@ -1,4 +1,3 @@
-
 import { BlogPost, User, Comment, Project, ResumeItem, Log, Todo, Photo, PaginatedResponse, PaginationData, AuditLog, ChatMessage, FitnessRecord, FitnessStats, PortfolioProject, ResumeData } from '../types';
 import { toast } from '../components/Toast';
 
@@ -145,7 +144,7 @@ const compressImage = (file: File, quality = 0.7, maxWidth = 1600): Promise<stri
   });
 };
 
-// Helper: Upload to Cloudinary directly
+// Helper to upload to Cloudinary directly
 const uploadToCloudinary = async (file: File): Promise<string> => {
   // 1. Get Public Config
   const config = await fetchClient<{cloudName: string, apiKey: string}>('/cloudinary/config');
@@ -229,6 +228,14 @@ export const apiService = {
     });
     toast.success('Subscribed successfully!');
     return res;
+  },
+
+  verifySecret: async (secret: string): Promise<boolean> => {
+    const res = await fetchClient<{ success: boolean, code: number, message: string }>('/auth/verify-secret', {
+      method: 'POST',
+      body: JSON.stringify({ secret })
+    });
+    return res.success;
   },
 
   // --- Users ---
@@ -741,24 +748,49 @@ export const apiService = {
   getPrivateChatHistory: async (targetUserId: string): Promise<ChatMessage[]> => {
     try {
       const res = await fetchClient<any[]>(`/chat/private/${targetUserId}`);
-      // Robust mapping for varied backend structures
+      // Robust mapping for varied backend structures to ensure private history loads correctly
       return res.map(msg => {
-        // Handle User Object vs ID String
-        const userObj = typeof msg.user === 'object' && msg.user !== null ? msg.user : {};
-        const userId = userObj.id || userObj._id || msg.fromUserId || msg.userId;
-        const author = userObj.displayName || userObj.name || msg.author || 'Unknown';
+        // Flatten the sender user object
+        // Backend might return populated user as `user` or `fromUser`
+        // It might be populated (object) or just an ID (string)
         
-        // Handle Receiver
-        const toUserObj = typeof msg.toUser === 'object' && msg.toUser !== null ? msg.toUser : {};
-        const receiverId = toUserObj.id || toUserObj._id || msg.toUserId || msg.toUser;
+        let sender: any = {};
+        let senderId = '';
+        
+        // Handle 'user' field (often sender)
+        if (msg.user && typeof msg.user === 'object') {
+            // Case: msg.user is populated object
+            sender = msg.user;
+            senderId = sender._id || sender.id;
+            
+            // Nested population case (user.id.displayName) - Handle double nesting
+            if (sender.id && typeof sender.id === 'object') {
+                sender = sender.id;
+                senderId = sender._id || sender.id;
+            }
+        } else if (msg.fromUser && typeof msg.fromUser === 'object') {
+             sender = msg.fromUser;
+             senderId = sender._id || sender.id;
+        } else {
+            // Fallback if flat
+            senderId = msg.fromUserId || msg.userId || (typeof msg.user === 'string' ? msg.user : '');
+        }
+
+        // Determine Receiver ID
+        let receiverId = '';
+        if (msg.toUser && typeof msg.toUser === 'object') {
+             receiverId = msg.toUser._id || msg.toUser.id;
+        } else {
+             receiverId = msg.toUserId || msg.toUser || msg.receiver;
+        }
 
         return {
           message: msg.content || msg.message,
           timestamp: msg.createdDate || msg.date || msg.timestamp,
-          author: author,
-          userId: userId,
-          email: userObj.email || msg.email,
-          photoURL: userObj.photoURL || msg.photoURL,
+          author: sender.displayName || sender.name || msg.author || 'Unknown',
+          userId: senderId,
+          email: sender.email || msg.email,
+          photoURL: sender.photoURL || msg.photoURL,
           isPrivate: true,
           receiver: receiverId
         };
@@ -769,7 +801,7 @@ export const apiService = {
     }
   },
 
-  // --- Todos ---
+  // --- Bucket List (Todos) ---
   getTodos: async (): Promise<Todo[]> => {
     try {
       return await fetchClient<Todo[]>('/todo');
@@ -778,27 +810,56 @@ export const apiService = {
     }
   },
 
-  addTodo: async (todo: string): Promise<Todo[]> => {
+  addTodo: async (todo: string, description?: string, targetDate?: string, images?: string[]): Promise<Todo[]> => {
     try {
       const res = await fetchClient<Todo[]>('/todo', {
         method: 'POST',
-        body: JSON.stringify({ todo })
+        body: JSON.stringify({ todo, description, targetDate, images })
       });
-      toast.success('Task added.');
+      toast.success('Wish added to the bucket list!');
       return res;
     } catch (e) {
       throw e;
     }
   },
 
-  toggleTodo: async (id: string): Promise<Todo[]> => {
+  // Generic Update function for Todos (Handles Status, Edits, Images)
+  updateTodo: async (id: string, updates: Partial<Todo>): Promise<Todo[]> => {
     try {
+      // Map to backend fields if necessary (frontend 'done' vs backend logic)
+      // The backend expects `done` or `status` in body
+      const payload: any = { ...updates };
+      
       return await fetchClient<Todo[]>(`/todo/done/${id}`, {
-        method: 'POST'
+        method: 'POST', // Backend uses POST for updates
+        body: JSON.stringify(payload)
       });
     } catch (e) {
       throw e;
     }
+  },
+
+  deleteTodo: async (id: string): Promise<void> => {
+    await fetchClient(`/todo/${id}`, {
+      method: 'DELETE'
+    });
+    toast.success('Wish removed.');
+  },
+
+  // Legacy support for simple toggle
+  toggleTodo: async (id: string): Promise<Todo[]> => {
+    // We map simple toggle to setting status='done' (legacy done=true)
+    // But since we want to toggle, we first need to know current state.
+    // Ideally, the caller should handle the toggle state and call updateTodo.
+    // For backward compatibility, let's assume this makes it done.
+    // Better yet, redirect to updateTodo with specific legacy param if needed, 
+    // or rely on caller to pass `done: !current.done` to `updateTodo`.
+    
+    // For specific legacy backend endpoint if it exists:
+    // return await fetchClient<Todo[]>(`/todo/done/${id}`, { method: 'POST' });
+    
+    // We will defer to updateTodo in components
+    throw new Error("Use updateTodo instead"); 
   },
 
   // --- Homepage & Projects (Legacy) ---

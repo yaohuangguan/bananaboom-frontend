@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Theme, PageView, User, AuditLog, ChatUser } from '../types';
 import { useTranslation } from '../i18n/LanguageContext';
@@ -269,6 +268,36 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <i className={`fas ${theme === Theme.DARK ? 'fa-sun' : 'fa-moon'}`}></i>
           </button>
+
+          {/* Improved Language Toggle: Larger Text, Clear Separation, Bold Active */}
+          <button
+            onClick={toggleLanguage}
+            className={`
+              flex items-center justify-center gap-2 px-4 py-2 rounded-full border transition-all duration-300
+              text-xs font-mono tracking-widest leading-none
+              ${isPrivate 
+                ? 'bg-rose-50 border-rose-200 hover:border-rose-300' 
+                : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-primary-500/50 dark:hover:border-primary-400/50'
+              }
+            `}
+            title="Toggle Language"
+          >
+            <span className={`transition-all duration-300 ${language === 'zh' 
+              ? (isPrivate ? 'text-rose-600 font-extrabold' : 'text-primary-600 dark:text-primary-400 font-extrabold scale-110') 
+              : (isPrivate ? 'text-rose-400 font-bold' : 'text-slate-500 dark:text-slate-400 font-bold')
+            }`}>
+              中
+            </span>
+            
+            <span className={`text-[10px] pb-[1px] ${isPrivate ? 'text-rose-300' : 'text-slate-300 dark:text-slate-600'}`}>|</span>
+            
+            <span className={`transition-all duration-300 ${language === 'en' 
+              ? (isPrivate ? 'text-rose-600 font-extrabold' : 'text-primary-600 dark:text-primary-400 font-extrabold scale-110') 
+              : (isPrivate ? 'text-rose-400 font-bold' : 'text-slate-500 dark:text-slate-400 font-bold')
+            }`}>
+              EN
+            </span>
+          </button>
           
           {/* Notification Bell (Everyone sees bell, but only VIPs get realtime alerts) */}
           {currentUser && (
@@ -328,7 +357,7 @@ export const Header: React.FC<HeaderProps> = ({
           {currentUser ? (
             // Logged In Dropdown Menu - Keep XL breakpoint
             <div className={`hidden xl:block relative group border-l pl-4 ${isPrivate ? 'border-rose-200' : 'border-slate-200 dark:border-white/10'}`}>
-              <button className="flex items-center gap-3 py-1 outline-none">
+              <button className="flex items-center gap-3 py-1 outline-none min-w-[120px] justify-end">
                  <div className={`w-8 h-8 rounded-full p-[1px] ${isPrivate ? 'bg-gradient-to-tr from-rose-300 to-pink-500' : 'bg-gradient-to-tr from-primary-400 to-primary-600'}`}>
                    <img 
                      src={currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName)}&background=random`} 
@@ -390,29 +419,13 @@ export const Header: React.FC<HeaderProps> = ({
             // Keep XL breakpoint for login button
             <button 
               onClick={onLogin}
-              className="hidden xl:flex items-center gap-2 px-6 py-2 rounded-full border border-primary-500/30 bg-primary-500/10 text-primary-600 dark:text-primary-400 text-xs font-bold uppercase tracking-widest hover:bg-primary-500 hover:text-white transition-all duration-300 hover:shadow-[0_0_20px_rgba(14,165,233,0.4)]"
+              // Added min-w-[110px] and justify-center to prevent layout shift between "Connect" and "接入"
+              className="hidden xl:flex items-center justify-center gap-2 px-6 py-2 rounded-full border border-primary-500/30 bg-primary-500/10 text-primary-600 dark:text-primary-400 text-xs font-bold uppercase tracking-widest hover:bg-primary-500 hover:text-white transition-all duration-300 hover:shadow-[0_0_20px_rgba(14,165,233,0.4)] min-w-[110px]"
             >
               <i className="fas fa-terminal text-[10px]"></i>
               {t.header.signIn}
             </button>
           )}
-
-          {/* Language Toggle - Moved to Right of User Profile/Login */}
-          <button
-            onClick={toggleLanguage}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 group
-              ${isPrivate 
-                ? 'bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100 hover:border-rose-300' 
-                : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-white hover:border-primary-500 dark:hover:border-primary-400 hover:text-primary-600 dark:hover:text-primary-400 shadow-sm'
-              }
-            `}
-            title={language === 'en' ? 'Switch to Chinese' : 'Switch to English'}
-          >
-            <i className={`fas fa-globe text-xs ${isPrivate ? 'text-rose-500' : 'text-slate-400 group-hover:text-primary-500'}`}></i>
-            <span className="text-xs font-bold font-mono uppercase tracking-wider">
-              {language === 'en' ? 'English' : '中文'}
-            </span>
-          </button>
 
           {/* Mobile Toggle - Keep XL breakpoint */}
           <button 

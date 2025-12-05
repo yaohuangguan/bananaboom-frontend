@@ -5,6 +5,8 @@
 
 
 
+
+
 import { BlogPost } from "../types";
 
 export const resources = {
@@ -319,6 +321,27 @@ export const resources = {
       years: "Years",
       days: "Days",
       loveMsg: "Love You Forever! ❤",
+      bucketList: {
+        title: "Bucket List",
+        subtitle: "Dreams & Goals",
+        tabs: {
+          todo: "Wishlist",
+          in_progress: "In Progress",
+          done: "Achieved"
+        },
+        add: "Make a Wish",
+        edit: "Edit Wish",
+        placeholder: "What's your dream?",
+        description: "Plan / Description",
+        targetDate: "Target Date",
+        evidence: "Evidence / Memories",
+        uploadEvidence: "Upload Photo",
+        empty: "No wishes here yet. Dream big!",
+        status: "Status",
+        save: "Save Wish",
+        update: "Update Wish",
+        delete: "Delete Wish"
+      },
       tasks: "Tasks",
       newTask: "New task...",
       caughtUp: "All caught up!",
@@ -677,6 +700,27 @@ export const resources = {
       years: "年",
       days: "天",
       loveMsg: "永远爱你! ❤",
+      bucketList: {
+        title: "愿望清单",
+        subtitle: "梦想与目标",
+        tabs: {
+          todo: "心愿单",
+          in_progress: "进行中",
+          done: "已达成"
+        },
+        add: "许下愿望",
+        edit: "编辑愿望",
+        placeholder: "你的梦想是什么？",
+        description: "计划 / 攻略 / 描述",
+        targetDate: "目标日期",
+        evidence: "打卡 / 证据",
+        uploadEvidence: "上传照片",
+        empty: "这里还没有愿望。大胆做梦吧！",
+        status: "当前状态",
+        save: "保存愿望",
+        update: "更新愿望",
+        delete: "删除愿望"
+      },
       tasks: "待办事项",
       newTask: "新任务...",
       caughtUp: "全部完成了！",

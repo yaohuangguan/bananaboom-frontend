@@ -1,8 +1,3 @@
-
-
-
-
-
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../i18n/LanguageContext';
 
@@ -15,6 +10,7 @@ interface DeleteModalProps {
   confirmKeyword?: string;
   isSecret?: boolean;
   message?: string;
+  buttonText?: string;
 }
 
 export const DeleteModal: React.FC<DeleteModalProps> = ({ 
@@ -24,7 +20,8 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
   title,
   confirmKeyword,
   isSecret = false,
-  message
+  message,
+  buttonText
 }) => {
   const [inputValue, setInputValue] = useState('');
   const { t, language } = useTranslation();
@@ -109,7 +106,7 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
               disabled={isButtonDisabled}
               className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-red-900 text-sm shadow-lg shadow-red-900/20"
             >
-              {t.delete.button}
+              {buttonText || t.delete.button}
             </button>
           </div>
         </div>

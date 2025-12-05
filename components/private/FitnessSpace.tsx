@@ -4,9 +4,10 @@ import { useTranslation } from '../../i18n/LanguageContext';
 import { apiService } from '../../services/api';
 import { FitnessRecord, User } from '../../types';
 import { toast } from '../Toast';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ComposedChart, CartesianGrid } from 'recharts';
+import { Line, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ComposedChart, CartesianGrid, Area, ReferenceLine } from 'recharts';
 
 type FitnessTab = 'WORKOUT' | 'STATUS' | 'DIET' | 'PHOTOS';
+type MetricType = 'WEIGHT' | 'DURATION' | 'WATER' | 'SLEEP';
 
 // Priority Users to Pin
 const PRIORITY_EMAILS = ['yaob@miamioh.edu', 'cft_cool@hotmail.com'];
@@ -83,6 +84,14 @@ const getSpecialDay = (year: number, month: number, day: number) => {
   return null;
 };
 
+// Chart Configuration
+const CHART_CONFIG = {
+  WEIGHT: { color: '#f43f5e', fill: '#fecdd3', unit: 'kg', name: 'Weight' },
+  DURATION: { color: '#a855f7', fill: '#e9d5ff', unit: 'min', name: 'Workout' },
+  WATER: { color: '#3b82f6', fill: '#bfdbfe', unit: 'ml', name: 'Water' },
+  SLEEP: { color: '#6366f1', fill: '#c7d2fe', unit: 'hr', name: 'Sleep' },
+};
+
 export const FitnessSpace: React.FC = () => {
   const { t } = useTranslation();
   
@@ -104,6 +113,9 @@ export const FitnessSpace: React.FC = () => {
 
   // Tab State
   const [activeTab, setActiveTab] = useState<FitnessTab>('WORKOUT');
+  
+  // Chart Metric State
+  const [activeMetric, setActiveMetric] = useState<MetricType>('WEIGHT');
   
   // Form Data State (Active Record)
   const [record, setRecord] = useState<FitnessRecord>({});
@@ -242,10 +254,14 @@ export const FitnessSpace: React.FC = () => {
     const loadStats = async () => {
       try {
         const data = await apiService.getFitnessStats(30, selectedUser.email);
+        // Correctly map backend arrays to Recharts objects
+        // Backend returns: dates[], weights[], durations[], water[], sleep[]
         const chartData = data.dates.map((dateStr, index) => ({
-          date: dateStr.substring(5), // MM-DD
+          date: dateStr.substring(5), // Remove Year (YYYY-MM-DD -> MM-DD)
           weight: data.weights[index],
-          duration: data.durations[index]
+          duration: data.durations[index],
+          water: data.water[index],
+          sleep: data.sleep[index]
         }));
         setStats(chartData);
       } catch (e) {
@@ -485,31 +501,118 @@ export const FitnessSpace: React.FC = () => {
       </div>
 
       {/* 2. MIDDLE: Chart (Stats) & User Selector */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-auto">
-         {/* Stats Chart */}
-         <div className="md:col-span-2 bg-white/80 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/50 flex flex-col h-72 md:h-auto">
-            <div className="flex justify-between items-center mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+         
+         {/* Stats Chart - Fixed Height to prevent explosion */}
+         <div className="md:col-span-2 bg-white/80 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/50 flex flex-col h-[24rem]">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 shrink-0">
                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-widest flex items-center gap-2">
                   <i className="fas fa-chart-area text-rose-400"></i> {selectedUser ? `${selectedUser.displayName}'s Progress` : 'Progress'}
                </h3>
+               
+               {/* Metric Switcher */}
+               <div className="flex flex-wrap gap-2 bg-slate-100/50 p-1 rounded-xl">
+                  {Object.keys(CHART_CONFIG).map((metric) => {
+                     const m = metric as MetricType;
+                     const config = CHART_CONFIG[m];
+                     const isActive = activeMetric === m;
+                     
+                     return (
+                        <button
+                           key={m}
+                           onClick={() => setActiveMetric(m)}
+                           className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border ${
+                              isActive 
+                                 ? 'bg-white shadow-sm scale-105' 
+                                 : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'
+                           }`}
+                           style={{
+                              color: isActive ? config.color : undefined,
+                              borderColor: isActive ? config.color : 'transparent'
+                           }}
+                        >
+                           {config.name}
+                        </button>
+                     )
+                  })}
+               </div>
             </div>
-            <div className="flex-1 w-full min-h-0">
-               <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={stats}>
-                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                     <XAxis dataKey="date" tick={{fontSize: 9}} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                     <YAxis yAxisId="left" domain={['auto', 'auto']} tick={{fontSize: 9}} tickLine={false} axisLine={false} hide />
-                     <YAxis yAxisId="right" orientation="right" tick={{fontSize: 9}} tickLine={false} axisLine={false} hide />
-                     <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }} />
-                     <Bar yAxisId="right" dataKey="duration" fill="#fbcfe8" radius={[4, 4, 0, 0]} barSize={12} />
-                     <Line yAxisId="left" type="monotone" dataKey="weight" stroke="#f43f5e" strokeWidth={3} dot={{r: 3, fill: '#f43f5e'}} activeDot={{r: 5}} />
-                  </ComposedChart>
-               </ResponsiveContainer>
+            
+            <div className="flex-1 w-full min-h-0 relative">
+               {stats.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                     <ComposedChart data={stats} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <defs>
+                           <linearGradient id={`color-${activeMetric}`} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={CHART_CONFIG[activeMetric].color} stopOpacity={0.2}/>
+                              <stop offset="95%" stopColor={CHART_CONFIG[activeMetric].color} stopOpacity={0}/>
+                           </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="date" tick={{fontSize: 10, fill: '#94a3b8'}} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={30} />
+                        <YAxis domain={['auto', 'auto']} tick={{fontSize: 10, fill: '#94a3b8'}} tickLine={false} axisLine={false} />
+                        <Tooltip 
+                           contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                           formatter={(value: any) => [`${value} ${CHART_CONFIG[activeMetric].unit}`, CHART_CONFIG[activeMetric].name]}
+                           labelStyle={{ color: '#64748b', fontSize: '12px', marginBottom: '4px' }}
+                        />
+                        
+                        {/* Dynamic Render based on Active Metric */}
+                        {activeMetric === 'WEIGHT' && (
+                           <Line 
+                              type="monotone" 
+                              dataKey="weight" 
+                              stroke={CHART_CONFIG.WEIGHT.color} 
+                              strokeWidth={3} 
+                              dot={{r: 3, fill: CHART_CONFIG.WEIGHT.color, strokeWidth: 0}} 
+                              activeDot={{r: 6}} 
+                              connectNulls={true}
+                           />
+                        )}
+                        
+                        {activeMetric === 'DURATION' && (
+                           <Bar 
+                              dataKey="duration" 
+                              fill={CHART_CONFIG.DURATION.color} 
+                              radius={[4, 4, 0, 0]} 
+                              barSize={16}
+                           />
+                        )}
+
+                        {activeMetric === 'WATER' && (
+                           <Area 
+                              type="monotone" 
+                              dataKey="water" 
+                              stroke={CHART_CONFIG.WATER.color} 
+                              fill={`url(#color-${activeMetric})`}
+                              strokeWidth={3}
+                              connectNulls={true}
+                           />
+                        )}
+
+                        {activeMetric === 'SLEEP' && (
+                           <Area 
+                              type="step" 
+                              dataKey="sleep" 
+                              stroke={CHART_CONFIG.SLEEP.color} 
+                              fill={`url(#color-${activeMetric})`}
+                              strokeWidth={3}
+                              connectNulls={true}
+                           />
+                        )}
+                     </ComposedChart>
+                  </ResponsiveContainer>
+               ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                     <i className="fas fa-chart-line text-4xl mb-2 opacity-50"></i>
+                     <p className="text-xs font-mono uppercase tracking-widest">No data collected yet</p>
+                  </div>
+               )}
             </div>
          </div>
 
-         {/* Target User Switcher (Dynamic List) */}
-         <div className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-3xl p-6 shadow-xl shadow-rose-200 flex flex-col text-white h-72 relative overflow-hidden">
+         {/* Target User Switcher - Fixed Height Matching Chart */}
+         <div className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-3xl p-6 shadow-xl shadow-rose-200 flex flex-col text-white h-[24rem] relative overflow-hidden">
             {/* Decoration */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
             
@@ -553,7 +656,7 @@ export const FitnessSpace: React.FC = () => {
 
       {/* 3. BOTTOM: Input Form */}
       <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl border border-white/50 overflow-hidden flex flex-col lg:flex-row min-h-[400px]">
-         
+         {/* ... (Existing code for input form remains unchanged) ... */}
          {/* Tabs Sidebar */}
          <div className="lg:w-48 bg-rose-50/50 border-b lg:border-b-0 lg:border-r border-rose-100 flex lg:flex-col overflow-x-auto lg:overflow-visible">
             {(['WORKOUT', 'STATUS', 'DIET', 'PHOTOS'] as FitnessTab[]).map(tab => (

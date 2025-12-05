@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { apiService } from '../../services/api';
 import { PortfolioProject, User } from '../../types';
@@ -19,6 +19,10 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
   const [isEditing, setIsEditing] = useState(false);
   const [currentProject, setCurrentProject] = useState<Partial<PortfolioProject>>({});
   const [projectToDelete, setProjectToDelete] = useState<PortfolioProject | null>(null);
+  
+  // Upload State
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const isVip = currentUser?.vip && currentUser?.private_token === 'ilovechenfangting';
 
@@ -90,6 +94,24 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
       ...prev,
       techStack: val.split(',').map(s => s.trim()).filter(s => s)
     }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const url = await apiService.uploadImage(file);
+      setCurrentProject(prev => ({ ...prev, coverImage: url }));
+      toast.success("Image uploaded successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to upload image");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   if (isLoading) {
@@ -208,12 +230,31 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
                       value={currentProject.repoUrl || ''}
                       onChange={e => setCurrentProject(p => ({...p, repoUrl: e.target.value}))}
                     />
-                    <input 
-                      className={inputClass}
-                      placeholder="Cover Image URL"
-                      value={currentProject.coverImage || ''}
-                      onChange={e => setCurrentProject(p => ({...p, coverImage: e.target.value}))}
-                    />
+                    
+                    <div className="flex gap-2">
+                      <input 
+                        className={inputClass}
+                        placeholder="Cover Image URL"
+                        value={currentProject.coverImage || ''}
+                        onChange={e => setCurrentProject(p => ({...p, coverImage: e.target.value}))}
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                        className="px-4 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg text-slate-600 dark:text-slate-300 transition-colors flex items-center justify-center min-w-[3rem]"
+                        title="Upload Image"
+                      >
+                        {isUploading ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-upload"></i>}
+                      </button>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        className="hidden" 
+                        accept="image/*"
+                        onChange={handleImageUpload} 
+                      />
+                    </div>
                  </div>
               </div>
 
