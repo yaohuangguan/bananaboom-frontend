@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Theme, PageView, User, AuditLog, ChatUser } from '../types';
 import { useTranslation } from '../i18n/LanguageContext';
@@ -154,7 +155,8 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   if (currentUser) {
-    navLinks.push({ label: t.header.chat, value: PageView.CHAT, code: '04' });
+    navLinks.push({ label: t.header.footprint, value: PageView.FOOTPRINT, code: '04' });
+    navLinks.push({ label: t.header.chat, value: PageView.CHAT, code: '05' });
   }
 
   if (canAccessPrivateSpace) {
@@ -164,7 +166,8 @@ export const Header: React.FC<HeaderProps> = ({
   const isPrivate = currentPage === PageView.PRIVATE_SPACE;
 
   // Header Background Logic - High Contrast White/Pink for Private Space
-  let headerClasses = `fixed w-full top-0 z-50 transition-all duration-500 `;
+  // Increased Z-Index to 2000 to be above Leaflet/ECharts maps (which often use 1000+)
+  let headerClasses = `fixed w-full top-0 z-[2000] transition-all duration-500 `;
   if (isPrivate) {
     headerClasses += 'bg-white/90 border-b border-rose-200 backdrop-blur-md py-3 shadow-sm shadow-rose-100/50';
   } else {
@@ -263,13 +266,13 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-4 relative z-50">
           <button 
             onClick={toggleTheme} 
-            className={`w-8 h-8 flex items-center justify-center transition-colors ${isPrivate ? 'text-rose-700 hover:text-rose-900' : 'text-slate-600 dark:text-slate-500 hover:text-primary-600 dark:hover:text-primary-400'}`}
+            className={`w-8 h-8 flex items-center justify-center transition-colors ${isPrivate ? 'text-rose-700 hover:text-rose-900' : 'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400'}`}
             aria-label="Toggle Theme"
           >
             <i className={`fas ${theme === Theme.DARK ? 'fa-sun' : 'fa-moon'}`}></i>
           </button>
 
-          {/* Improved Language Toggle: Larger Text, Clear Separation, Bold Active */}
+          {/* Improved Language Toggle */}
           <button
             onClick={toggleLanguage}
             className={`
@@ -299,12 +302,12 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
           
-          {/* Notification Bell (Everyone sees bell, but only VIPs get realtime alerts) */}
+          {/* Notification Bell */}
           {currentUser && (
              <div className="relative">
                 <button 
                   onClick={() => setIsNotifOpen(!isNotifOpen)}
-                  className={`w-8 h-8 flex items-center justify-center transition-colors relative ${isPrivate ? 'text-rose-700 hover:text-rose-900' : 'text-slate-600 dark:text-slate-500 hover:text-primary-600 dark:hover:text-primary-400'}`}
+                  className={`w-8 h-8 flex items-center justify-center transition-colors relative ${isPrivate ? 'text-rose-700 hover:text-rose-900' : 'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400'}`}
                 >
                    <i className="fas fa-bell"></i>
                    {unreadCount > 0 && (
@@ -368,7 +371,7 @@ export const Header: React.FC<HeaderProps> = ({
                  <span className={`text-xs font-mono max-w-[100px] truncate ${isPrivate ? 'text-rose-800 font-bold' : 'text-slate-700 dark:text-primary-500/80 group-hover:text-primary-600 dark:group-hover:text-primary-400'}`}>
                    {currentUser.displayName}
                  </span>
-                 <i className={`fas fa-chevron-down text-[10px] transition-transform group-hover:rotate-180 ${isPrivate ? 'text-rose-600' : 'text-slate-400'}`}></i>
+                 <i className={`fas fa-chevron-down text-[10px] transition-transform group-hover:rotate-180 ${isPrivate ? 'text-rose-600' : 'text-slate-400 dark:text-slate-300'}`}></i>
               </button>
 
               {/* Hover Dropdown */}

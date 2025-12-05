@@ -1,3 +1,5 @@
+
+
 import { BlogPost } from "../types";
 
 export const resources = {
@@ -15,7 +17,8 @@ export const resources = {
       audit: 'System Audit',
       notifications: 'Alerts',
       clearAll: 'Clear All',
-      emptyNotifications: 'No new alerts'
+      emptyNotifications: 'No new alerts',
+      footprint: 'Star Map'
     },
     hero: {
       status: 'System Online',
@@ -120,6 +123,37 @@ export const resources = {
       dark: 'Dark Mode',
       en: 'English',
       zh: 'Chinese'
+    },
+    footprint: {
+      title: 'Star Map',
+      subtitle: 'Tracking footprints across the galaxy.',
+      intro: "Light up the provinces you've explored and pin your memories on the global grid.",
+      tabs: {
+        china: 'China Sector',
+        world: 'Global Markers'
+      },
+      stats: {
+        total: 'Total Footprints',
+        countries: 'Countries Visited',
+        provinces: 'Provinces Lit',
+        cities: 'Cities Reached'
+      },
+      add: 'Add Footprint',
+      edit: 'Edit Footprint',
+      form: {
+        name: 'Location Name',
+        province: 'Province',
+        city: 'City',
+        date: 'Visit Date',
+        mood: 'Mood',
+        content: 'Memory / Note',
+        photos: 'Photos',
+        status: 'Status',
+        visited: 'Visited',
+        planned: 'Planned',
+        save: 'Save Footprint'
+      },
+      mapTip: 'Click map to set coordinates'
     },
     resume: {
       role: 'Engineer / Voyager',
@@ -476,7 +510,8 @@ export const resources = {
       audit: '系统审计',
       notifications: '警报',
       clearAll: '清除',
-      emptyNotifications: '无新警报'
+      emptyNotifications: '无新警报',
+      footprint: '星图'
     },
     hero: {
       status: '系统在线',
@@ -581,6 +616,37 @@ export const resources = {
       dark: '夜间模式',
       en: 'English',
       zh: '中文'
+    },
+    footprint: {
+      title: '星图计划',
+      subtitle: '追踪跨越星系的足迹。',
+      intro: '点亮你探索过的省份，在全球坐标上钉住你的独家记忆。',
+      tabs: {
+        china: '中国扇区',
+        world: '全球坐标'
+      },
+      stats: {
+        total: '足迹总数',
+        countries: '探索国家',
+        provinces: '点亮省份',
+        cities: '抵达城市'
+      },
+      add: '记录足迹',
+      edit: '编辑足迹',
+      form: {
+        name: '地点名称',
+        province: '省份 / 区域',
+        city: '城市',
+        date: '抵达日期',
+        mood: '心情指数',
+        content: '探索笔记',
+        photos: '影像记录',
+        status: '状态',
+        visited: '已抵达',
+        planned: '计划中',
+        save: '保存记录'
+      },
+      mapTip: '点击地图选取坐标'
     },
     resume: {
       role: '工程师 / 旅行者',

@@ -15,11 +15,14 @@
 
     <title>Sam | Engineering & Design</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sen:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet" />
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
     <!-- Highlight.js for Syntax Highlighting -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -211,13 +214,14 @@
         "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
         "quill": "https://cdn.jsdelivr.net/npm/quill@2.0.3/+esm",
         "socket.io-client": "https://cdn.socket.io/4.7.4/socket.io.esm.min.js",
-        "recharts": "https://esm.sh/recharts@2.12.0?external=react,react-dom"
+        "recharts": "https://esm.sh/recharts@2.12.0?external=react,react-dom",
+        "echarts": "https://esm.sh/echarts@5.5.0",
+        "leaflet": "https://esm.sh/leaflet@1.9.4"
       }
     }
     </script>
   </head>
   <body class="bg-milky-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-500 overflow-x-hidden">
-    <script type="module" src="index.tsx"></script>
     <div id="root"></div>
     <script>
       if ('serviceWorker' in navigator) {

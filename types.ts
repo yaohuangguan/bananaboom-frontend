@@ -256,6 +256,39 @@ export interface FitnessStats {
   sleep: (number | null)[];
 }
 
+// --- Footprint (Map/Travel) Types ---
+export interface FootprintLocation {
+  country?: string;
+  province?: string;
+  city?: string;
+  district?: string;
+  name: string; // POI name
+  address?: string;
+  coordinates: [number, number]; // [lng, lat]
+  adcode?: string;
+}
+
+export interface Footprint {
+  _id: string;
+  user: User;
+  location: FootprintLocation;
+  content?: string;
+  images?: string[];
+  rating?: number;
+  mood?: 'happy' | 'excited' | 'peaceful' | 'tired' | 'sad' | 'romantic' | 'adventurous';
+  cost?: number;
+  visitDate: string;
+  status: 'visited' | 'planned';
+  isHighlight?: boolean;
+}
+
+export interface FootprintStats {
+  totalCount: number;
+  countries: string[];
+  provinces: string[];
+  citiesCount: number;
+}
+
 export enum Theme {
   LIGHT = 'light',
   DARK = 'dark'
@@ -273,7 +306,8 @@ export enum PageView {
   SETTINGS = 'SETTINGS',
   CHAT = 'CHAT',
   AUDIT_LOG = 'AUDIT_LOG',
-  ARCHIVES = 'ARCHIVES' // Deprecated, but keeping enum to avoid breaks if any
+  ARCHIVES = 'ARCHIVES', // Deprecated, but keeping enum to avoid breaks if any
+  FOOTPRINT = 'FOOTPRINT' // New Page
 }
 
 export interface PaginationData {

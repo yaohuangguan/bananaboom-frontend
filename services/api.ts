@@ -1,5 +1,7 @@
 
-import { BlogPost, User, Comment, Project, ResumeItem, Log, Todo, Photo, PaginatedResponse, PaginationData, AuditLog, ChatMessage, FitnessRecord, FitnessStats, PortfolioProject, ResumeData, PeriodRecord, PeriodResponse } from '../types';
+
+
+import { BlogPost, User, Comment, Project, ResumeItem, Log, Todo, Photo, PaginatedResponse, PaginationData, AuditLog, ChatMessage, FitnessRecord, FitnessStats, PortfolioProject, ResumeData, PeriodRecord, PeriodResponse, Footprint, FootprintStats } from '../types';
 import { toast } from '../components/Toast';
 
 const API_BASE_URL = 'https://bananaboom-api-242273127238.asia-east1.run.app/api';
@@ -948,5 +950,37 @@ export const apiService = {
     await fetchClient(`/period/${id}`, {
       method: 'DELETE'
     });
+  },
+
+  // --- Footprint / Star Map ---
+  getFootprints: async (status?: string): Promise<{ stats: FootprintStats, data: Footprint[] }> => {
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    return await fetchClient<{ stats: FootprintStats, data: Footprint[] }>(`/footprints?${params.toString()}`);
+  },
+
+  createFootprint: async (data: Partial<Footprint>): Promise<Footprint> => {
+    const res = await fetchClient<Footprint>('/footprints', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    toast.success('Footprint added!');
+    return res;
+  },
+
+  updateFootprint: async (id: string, data: Partial<Footprint>): Promise<Footprint> => {
+    const res = await fetchClient<Footprint>(`/footprints/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+    toast.success('Footprint updated!');
+    return res;
+  },
+
+  deleteFootprint: async (id: string): Promise<void> => {
+    await fetchClient(`/footprints/${id}`, {
+      method: 'DELETE'
+    });
+    toast.success('Footprint deleted.');
   }
 };

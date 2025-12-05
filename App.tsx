@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, Suspense, lazy, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Header } from './components/Header';
@@ -21,6 +20,7 @@ import { LanguageProvider, useTranslation } from './i18n/LanguageContext';
 
 // Lazy Load Heavy Components to reduce initial bundle size and improve TBT (Total Blocking Time)
 const PrivateSpaceDashboard = lazy(() => import('./components/private/PrivateSpaceDashboard').then(module => ({ default: module.PrivateSpaceDashboard })));
+const FootprintSpace = lazy(() => import('./components/FootprintSpace').then(module => ({ default: module.FootprintSpace })));
 
 const SOCKET_URL = 'https://bananaboom-api-242273127238.asia-east1.run.app';
 
@@ -1141,6 +1141,10 @@ const App: React.FC = () => {
             alert("Access Denied: VIP Only.");
             return;
           }
+          if (page === PageView.FOOTPRINT && !user) {
+             alert("Access Denied: Please Login.");
+             return;
+          }
           setCurrentPage(page);
           window.scrollTo(0, 0);
         }}
@@ -1263,6 +1267,15 @@ const App: React.FC = () => {
               language={language}
               toggleLanguage={toggleLanguage}
             />
+          </div>
+        )}
+
+        {/* Footprint Space (New) */}
+        {currentPage === PageView.FOOTPRINT && user && (
+          <div className="pointer-events-auto w-full min-h-screen">
+             <Suspense fallback={<PageLoader />}>
+                <FootprintSpace theme={theme} />
+             </Suspense>
           </div>
         )}
       </main>
