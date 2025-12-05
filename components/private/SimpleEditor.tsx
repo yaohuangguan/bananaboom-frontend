@@ -1,6 +1,4 @@
 
-
-
 import React, { useReducer, useEffect, useRef, useState } from 'react';
 import { apiService } from '../../services/api';
 import { User, BlogPost } from '../../types';
@@ -13,6 +11,7 @@ interface SimpleEditorProps {
   onPostCreated?: () => void;
   editingPost?: BlogPost | null;
   onCancelEdit?: () => void;
+  onPreviewChange?: (data: { title: string, content: string, tags: string[], date: string }) => void;
 }
 
 // Constants for Reducer
@@ -68,7 +67,7 @@ const reducer = (state: any, action: any) => {
   }
 };
 
-export const SimpleEditor: React.FC<SimpleEditorProps> = ({ user, onPostCreated, editingPost, onCancelEdit }) => {
+export const SimpleEditor: React.FC<SimpleEditorProps> = ({ user, onPostCreated, editingPost, onCancelEdit, onPreviewChange }) => {
   const { t } = useTranslation();
   const editorRef = useRef<HTMLDivElement>(null);
   const quillInstance = useRef<any>(null);
@@ -113,6 +112,18 @@ export const SimpleEditor: React.FC<SimpleEditorProps> = ({ user, onPostCreated,
     isPrivate,
     loading,
   } = state;
+
+  // Broadcast changes for Preview
+  useEffect(() => {
+    if (onPreviewChange) {
+      onPreviewChange({
+        title,
+        content,
+        tags: tags.split(' ').filter((t: string) => t),
+        date: editingPost?.date || new Date().toISOString()
+      });
+    }
+  }, [title, content, tags, editingPost, onPreviewChange]);
 
   // Initialize Quill
   useEffect(() => {

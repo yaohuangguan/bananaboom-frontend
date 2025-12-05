@@ -1,4 +1,5 @@
-import { BlogPost, User, Comment, Project, ResumeItem, Log, Todo, Photo, PaginatedResponse, PaginationData, AuditLog, ChatMessage, FitnessRecord, FitnessStats, PortfolioProject, ResumeData } from '../types';
+
+import { BlogPost, User, Comment, Project, ResumeItem, Log, Todo, Photo, PaginatedResponse, PaginationData, AuditLog, ChatMessage, FitnessRecord, FitnessStats, PortfolioProject, ResumeData, PeriodRecord, PeriodResponse } from '../types';
 import { toast } from '../components/Toast';
 
 const API_BASE_URL = 'https://bananaboom-api-242273127238.asia-east1.run.app/api';
@@ -171,22 +172,6 @@ const uploadToCloudinary = async (file: File): Promise<string> => {
 
   const data = await res.json();
   return data.secure_url;
-};
-
-// Define the featured post separately to ensure it's always included
-const FEATURED_POST: BlogPost = {
-  _id: 'quant-guide-vpts',
-  name: 'VPTS Quant Trader Guide',
-  info: 'A comprehensive interactive dashboard and guide for quantitative trading strategies, backtesting results, and market analysis tools.',
-  author: 'Sam',
-  tags: ['Quant', 'Trading', 'Dashboard', 'Tools'],
-  date: '2024-01-15',
-  createdDate: '2024-01-15',
-  likes: 342,
-  // Reliable finance/trading abstract image
-  image: 'https://images.unsplash.com/photo-1611974765270-ca12586343bb?q=80&w=1000&auto=format&fit=crop', 
-  iframeUrl: 'https://vpts-quant-trader-guide-177446715054.us-west1.run.app/',
-  isPrivate: false
 };
 
 // Fallback data in case the real API is cold or restricted in this environment
@@ -470,14 +455,7 @@ export const apiService = {
 
       const response = await fetchClient<PaginatedResponse<BlogPost>>(`/posts?${queryParams.toString()}`);
       
-      let posts = response.data || [];
-      // Filter out duplicate featured post if it comes from backend
-      posts = posts.filter(p => p._id !== FEATURED_POST._id);
-
-      // Inject Feature Post on Page 1 if no search query active
-      if (page === 1 && !search && !tag) {
-         posts = [FEATURED_POST, ...posts];
-      }
+      const posts = response.data || [];
 
       const backendPagination = response.pagination as any;
       const pagination: PaginationData = {
@@ -493,11 +471,11 @@ export const apiService = {
     } catch (e) {
       console.warn('API unavailable, falling back to mock');
       return {
-        data: [FEATURED_POST, ...MOCK_BLOGS],
+        data: [...MOCK_BLOGS],
         pagination: { 
           currentPage: 1, 
           totalPages: 1, 
-          totalItems: MOCK_BLOGS.length + 1, 
+          totalItems: MOCK_BLOGS.length, 
           itemsPerPage: 10, 
           hasNextPage: false, 
           hasPrevPage: false 
@@ -545,12 +523,11 @@ export const apiService = {
   },
 
   getPostById: async (id: string): Promise<BlogPost | undefined> => {
-    if (id === FEATURED_POST._id) return FEATURED_POST;
     try {
       const result = await fetchClient<BlogPost[]>(`/posts/${id}`);
       return result[0];
     } catch (e) {
-      return [FEATURED_POST, ...MOCK_BLOGS].find(b => b._id === id);
+      return MOCK_BLOGS.find(b => b._id === id);
     }
   },
 
@@ -580,12 +557,10 @@ export const apiService = {
   },
 
   likePost: async (id: string): Promise<void> => {
-    if (id === FEATURED_POST._id) return;
     await fetchClient(`/posts/likes/${id}/add`, { method: 'POST' });
   },
 
   unlikePost: async (id: string): Promise<void> => {
-    if (id === FEATURED_POST._id) return;
     await fetchClient(`/posts/likes/${id}/remove`, { method: 'POST' });
   },
 
@@ -946,5 +921,32 @@ export const apiService = {
     params.append('days', days.toString());
     if (email) params.append('email', email);
     return await fetchClient<FitnessStats>(`/fitness/stats?${params.toString()}`);
+  },
+
+  // --- Period / Cycle Tracker ---
+  getPeriodData: async (): Promise<PeriodResponse> => {
+    return await fetchClient<PeriodResponse>('/period');
+  },
+
+  savePeriodRecord: async (data: Partial<PeriodRecord>): Promise<PeriodResponse> => {
+    if (data._id) {
+      // Update existing
+      return await fetchClient<PeriodResponse>(`/period/${data._id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      });
+    } else {
+      // Create new
+      return await fetchClient<PeriodResponse>('/period', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+    }
+  },
+
+  deletePeriodRecord: async (id: string): Promise<void> => {
+    await fetchClient(`/period/${id}`, {
+      method: 'DELETE'
+    });
   }
 };

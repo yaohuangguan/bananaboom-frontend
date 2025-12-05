@@ -184,6 +184,35 @@ export interface Todo {
   complete_date?: string;
 }
 
+// Period / Cycle Types
+export interface PeriodRecord {
+  _id?: string;
+  startDate: string; // ISO Date String
+  endDate?: string;  // ISO Date String
+  duration?: number;
+  cycleLength?: number;
+  symptoms?: string[];
+  flow?: 'light' | 'medium' | 'heavy';
+  note?: string;
+  operator?: string; // ID of the user who logged this record
+}
+
+export interface PeriodResponse {
+  records: PeriodRecord[];
+  avgCycle: number;
+  avgDuration: number;
+  lastStart: string;
+  prediction: {
+    nextPeriodStart: string;
+    ovulationDate: string;
+    fertileWindow: {
+      start: string;
+      end: string;
+    };
+    desc: string;
+  };
+}
+
 // Fitness Types (Refactored)
 export interface FitnessBody {
   weight?: number; // kg

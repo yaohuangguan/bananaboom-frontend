@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { apiService } from '../../services/api';
@@ -123,10 +124,10 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ currentUser }) =
 
   // Styles for the "Kraft Paper" vs "Star Chart" theme in editor
   const modalBaseClass = "fixed z-[9999] inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4";
-  const editorClass = "w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden rounded-2xl border bg-[#f2e8d5] text-[#1a1a1a] border-[#d1c7b7] dark:bg-[#020617] dark:text-slate-100 dark:border-slate-700 animate-slide-up";
-  const inputClass = "w-full p-2 rounded outline-none border bg-[#fffef0] border-[#dcd0c0] dark:bg-[#1e293b] dark:border-slate-700";
+  const editorClass = "w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden rounded-2xl border bg-white text-slate-900 border-slate-200 dark:bg-[#020617] dark:text-slate-100 dark:border-slate-700 animate-slide-up";
+  const inputClass = "w-full p-2 rounded outline-none border bg-slate-50 border-slate-200 dark:bg-[#1e293b] dark:border-slate-700";
   const tabClassBase = "px-6 py-4 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap";
-  const activeTabClass = "text-primary-600 border-b-2 border-primary-600 bg-[#fffef0] dark:bg-[#0B1120] dark:text-amber-400 dark:border-amber-400";
+  const activeTabClass = "text-primary-600 border-b-2 border-primary-600 bg-slate-50 dark:bg-[#0B1120] dark:text-amber-400 dark:border-amber-400";
   const inactiveTabClass = "opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5";
 
   return (
@@ -288,7 +289,7 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ currentUser }) =
 
               <div className="p-4 border-t border-current/20 bg-black/5 dark:bg-white/5 flex justify-end gap-3">
                  <button onClick={() => setIsEditing(false)} className="px-6 py-2 rounded-lg font-bold hover:bg-black/10 dark:hover:bg-white/10 transition-colors">Cancel</button>
-                 <button onClick={handleSave} className="px-8 py-2 bg-primary-600 hover:bg-primary-700 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-black rounded-lg font-bold shadow-lg shadow-primary-500/20 dark:shadow-amber-500/20 transition-all">Save Changes</button>
+                 <button onClick={handleSave} className="px-8 py-2 bg-primary-500 hover:bg-primary-600 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-black rounded-lg font-bold shadow-lg shadow-primary-500/20 dark:shadow-amber-500/20 transition-all">Save Changes</button>
               </div>
            </div>
         </div>,

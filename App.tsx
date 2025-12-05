@@ -27,6 +27,7 @@ const SOCKET_URL = 'https://bananaboom-api-242273127238.asia-east1.run.app';
 declare global {
   interface Window {
     marked: any;
+    hljs: any;
   }
 }
 
@@ -229,50 +230,50 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Dark backdrop with blur */}
-      <div className="absolute inset-0 bg-[#02040a]/80 backdrop-blur-md" onClick={onClose}></div>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
       
-      {/* Star Chart Modal Card */}
-      <div className="relative bg-[#050914] border border-primary-500/30 rounded-3xl w-full max-w-md p-8 animate-fade-in shadow-[0_0_50px_rgba(245,158,11,0.1)] overflow-hidden">
+      {/* Modal Card - Adaptive Light/Dark Theme */}
+      <div className="relative bg-white dark:bg-[#050914] border border-slate-200 dark:border-primary-500/30 rounded-3xl w-full max-w-md p-8 animate-fade-in shadow-2xl dark:shadow-[0_0_50px_rgba(245,158,11,0.1)] overflow-hidden transition-colors duration-300">
         
         {/* Decorative Grid Background */}
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay"></div>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/10 rounded-full blur-[50px]"></div>
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary-600/10 rounded-full blur-[50px]"></div>
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/10 rounded-full blur-[50px] pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary-600/10 rounded-full blur-[50px] pointer-events-none"></div>
 
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-slate-500 hover:text-primary-400 hover:bg-primary-900/20 transition-colors z-10"
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-primary-400 dark:hover:bg-primary-900/20 transition-colors z-10"
         >
           <i className="fas fa-times"></i>
         </button>
         
         <div className="mb-8 text-center relative z-10">
-          <div className="inline-block mb-4 p-3 rounded-full bg-primary-500/10 border border-primary-500/20">
-             <i className={`fas ${isReset ? 'fa-key' : 'fa-fingerprint'} text-primary-400 text-xl`}></i>
+          <div className="inline-block mb-4 p-3 rounded-full bg-primary-50 dark:bg-primary-500/10 border border-primary-100 dark:border-primary-500/20 text-primary-600 dark:text-primary-400">
+             <i className={`fas ${isReset ? 'fa-key' : 'fa-fingerprint'} text-xl`}></i>
           </div>
-          <h2 className="text-2xl font-bold text-primary-50 font-display tracking-wide">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-primary-50 font-display tracking-wide">
             {title}
           </h2>
-          <p className="text-slate-400 mt-2 text-sm font-mono">
+          <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm font-mono">
             {subtitle}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
           {error && (
-            <div className="p-3 bg-red-900/20 border border-red-500/30 text-red-300 text-sm rounded-xl text-center font-mono">
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-300 text-sm rounded-xl text-center font-mono">
               <i className="fas fa-exclamation-triangle mr-2"></i>{error}
             </div>
           )}
           
           {isRegister && (
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 pl-1">{t.login.name}</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2 pl-1">{t.login.name}</label>
               <input 
                 type="text" 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-[#0a0f1e] border border-slate-800 focus:border-primary-500/50 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-white placeholder-slate-600 font-mono text-sm"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-[#0a0f1e] border border-slate-200 dark:border-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 font-mono text-sm"
                 placeholder="Ident: John Doe"
                 required={isRegister}
               />
@@ -280,26 +281,26 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
           )}
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 pl-1">{t.login.email}</label>
+            <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2 pl-1">{t.login.email}</label>
             <input 
               type="email" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-[#0a0f1e] border border-slate-800 focus:border-primary-500/50 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-white placeholder-slate-600 font-mono text-sm"
+              className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-[#0a0f1e] border border-slate-200 dark:border-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 font-mono text-sm"
               placeholder="link@example.com"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 pl-1">
+            <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2 pl-1">
               {isReset ? t.login.newPassword : t.login.password}
             </label>
             <input 
               type="password" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-[#0a0f1e] border border-slate-800 focus:border-primary-500/50 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-white placeholder-slate-600 font-mono text-sm"
+              className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-[#0a0f1e] border border-slate-200 dark:border-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 font-mono text-sm"
               placeholder="••••••••"
               required
             />
@@ -307,12 +308,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
           
           {isRegister && (
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 pl-1">{t.login.confirmPassword}</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2 pl-1">{t.login.confirmPassword}</label>
               <input 
                 type="password" 
                 value={passwordConfirm}
                 onChange={(e) => setPasswordConfirm(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-[#0a0f1e] border border-slate-800 focus:border-primary-500/50 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-white placeholder-slate-600 font-mono text-sm"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-[#0a0f1e] border border-slate-200 dark:border-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 font-mono text-sm"
                 placeholder="••••••••"
                 required={isRegister}
               />
@@ -321,12 +322,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
 
           {isReset && (
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 pl-1">{t.login.secretKey}</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2 pl-1">{t.login.secretKey}</label>
               <input 
                 type="password" 
                 value={secretKey}
                 onChange={(e) => setSecretKey(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-[#0a0f1e] border border-red-900/50 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 outline-none transition-all text-white placeholder-slate-600 font-mono text-sm"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-[#0a0f1e] border border-red-200 dark:border-red-900/50 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 outline-none transition-all text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 font-mono text-sm"
                 placeholder="Secret Protocol Key"
                 required={isReset}
               />
@@ -336,7 +337,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
           <button 
             type="submit" 
             disabled={isLoading}
-            className="w-full py-3 bg-primary-500 text-black rounded-xl font-bold uppercase tracking-widest hover:bg-primary-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+            className="w-full py-3 bg-primary-500 dark:bg-primary-500 text-white dark:text-black rounded-xl font-bold uppercase tracking-widest hover:bg-primary-600 dark:hover:bg-primary-400 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4"
           >
             {isLoading 
               ? <i className="fas fa-circle-notch fa-spin"></i> 
@@ -345,11 +346,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
           </button>
         </form>
         
-        <div className="mt-8 flex flex-col items-center gap-3 relative z-10 border-t border-white/5 pt-4 text-xs font-medium uppercase tracking-wider">
+        <div className="mt-8 flex flex-col items-center gap-3 relative z-10 border-t border-slate-100 dark:border-white/5 pt-4 text-xs font-medium uppercase tracking-wider">
           {!isReset && (
             <button 
               onClick={toggleRegister}
-              className="text-slate-400 hover:text-primary-400 transition-colors"
+              className="text-slate-500 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
             >
               {isRegister ? t.login.toLogin : t.login.toRegister}
             </button>
@@ -358,7 +359,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
           {!isRegister && (
             <button 
               onClick={toggleReset}
-              className="text-slate-500 hover:text-red-400 transition-colors"
+              className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
             >
               {isReset ? t.login.backToLogin : t.login.forgotPassword}
             </button>
@@ -453,6 +454,16 @@ const ArticleView: React.FC<ArticleViewProps> = ({ blog, allBlogs, onBack, onNav
     return content;
   }, [content, isLoading]);
 
+  // Effect to trigger syntax highlighting when content changes
+  useEffect(() => {
+    if (window.hljs) {
+      // Small timeout to ensure DOM update is complete
+      setTimeout(() => {
+        window.hljs.highlightAll();
+      }, 50);
+    }
+  }, [renderedContent]);
+
   return (
     <article className={containerClass}>
       <button 
@@ -535,7 +546,9 @@ const ArticleView: React.FC<ArticleViewProps> = ({ blog, allBlogs, onBack, onNav
             prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-a:no-underline hover:prose-a:underline
             prose-img:rounded-xl prose-img:shadow-lg prose-img:my-12
             prose-blockquote:border-l-4 prose-blockquote:border-primary-500 prose-blockquote:pl-6 prose-blockquote:italic
-            prose-li:text-slate-600 dark:prose-li:text-slate-300"
+            prose-li:text-slate-600 dark:prose-li:text-slate-300
+            prose-pre:bg-[#282c34] prose-pre:shadow-2xl prose-pre:rounded-xl prose-pre:border prose-pre:border-slate-700 prose-pre:text-slate-100
+            prose-code:text-rose-600 dark:prose-code:text-rose-400 prose-code:bg-slate-100 dark:prose-code:bg-slate-800/50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:before:content-none prose-code:after:content-none"
             dangerouslySetInnerHTML={{ __html: renderedContent }} 
           />
         </div>

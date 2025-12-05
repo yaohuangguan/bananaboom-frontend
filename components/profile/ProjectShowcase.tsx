@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { apiService } from '../../services/api';
@@ -126,8 +127,8 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
 
   // Styles for the "Kraft Paper" vs "Star Chart" theme in editor
   const modalBaseClass = "fixed z-[9999] inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4";
-  const editorClass = "w-full max-w-4xl p-8 max-h-[90vh] overflow-y-auto shadow-2xl rounded-2xl border bg-[#f2e8d5] text-[#1a1a1a] border-[#d1c7b7] dark:bg-[#020617] dark:text-slate-100 dark:border-slate-700 animate-slide-up";
-  const inputClass = "w-full p-3 rounded-lg outline-none border focus:border-primary-500 bg-[#fffef0] border-[#dcd0c0] dark:bg-[#1e293b] dark:border-slate-700";
+  const editorClass = "w-full max-w-4xl p-8 max-h-[90vh] overflow-y-auto shadow-2xl rounded-2xl border bg-white text-slate-900 border-slate-200 dark:bg-[#020617] dark:text-slate-100 dark:border-slate-700 animate-slide-up";
+  const inputClass = "w-full p-3 rounded-lg outline-none border focus:border-primary-500 bg-slate-50 border-slate-200 dark:bg-[#1e293b] dark:border-slate-700";
 
   return (
     <div className="relative pb-20">
@@ -289,7 +290,7 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
                 </button>
                 <button 
                   type="submit"
-                  className="px-8 py-2.5 bg-primary-600 hover:bg-primary-700 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-black rounded-lg font-bold shadow-lg shadow-primary-500/20 dark:shadow-amber-500/20 transition-all"
+                  className="px-8 py-2.5 bg-primary-500 hover:bg-primary-600 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-black rounded-lg font-bold shadow-lg shadow-primary-500/20 dark:shadow-amber-500/20 transition-all"
                 >
                   Save Project
                 </button>

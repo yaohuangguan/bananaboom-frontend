@@ -328,7 +328,7 @@ export const PhotoGallery: React.FC = () => {
       {/* Upload Modal Overlay */}
       {pendingFile && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-slate-200">
               <h3 className="text-xl font-bold text-slate-800 mb-4">{t.privateSpace.gallery.pinTitle}</h3>
               
               <div className="space-y-4">
@@ -338,7 +338,7 @@ export const PhotoGallery: React.FC = () => {
                       type="text" 
                       value={uploadName} 
                       onChange={(e) => setUploadName(e.target.value)}
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-amber-500 font-handwriting text-lg"
+                      className="w-full border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 font-handwriting text-lg text-slate-800"
                       placeholder={t.privateSpace.gallery.captionPlaceholder}
                       autoFocus
                     />
@@ -350,21 +350,21 @@ export const PhotoGallery: React.FC = () => {
                       type="date" 
                       value={uploadDate} 
                       onChange={(e) => setUploadDate(e.target.value)}
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-amber-500 text-slate-600"
+                      className="w-full border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 text-slate-600"
                     />
                  </div>
 
                  <div className="flex gap-3 pt-2">
                     <button 
                       onClick={cancelUpload}
-                      className="flex-1 py-2 text-slate-500 font-bold hover:bg-slate-50 rounded-lg transition-colors"
+                      className="flex-1 py-2 text-slate-500 font-bold bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
                     >
                       {t.comments.cancel}
                     </button>
                     <button 
                       onClick={confirmUpload}
                       disabled={isUploading || !uploadName}
-                      className="flex-1 py-2 bg-amber-500 text-white font-bold rounded-lg hover:bg-amber-600 shadow-lg shadow-amber-500/20 disabled:opacity-50"
+                      className="flex-1 py-2 bg-primary-500 text-white font-bold rounded-lg hover:bg-primary-600 shadow-lg disabled:opacity-50"
                     >
                       {isUploading ? <i className="fas fa-circle-notch fa-spin"></i> : t.privateSpace.gallery.pinButton}
                     </button>

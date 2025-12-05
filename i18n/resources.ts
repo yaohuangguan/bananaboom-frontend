@@ -1,12 +1,3 @@
-
-
-
-
-
-
-
-
-
 import { BlogPost } from "../types";
 
 export const resources = {
@@ -243,6 +234,88 @@ export const resources = {
         clock: {
           title: "Smart Hub",
           subtitle: "Shenzhen Live"
+        },
+        cycle: {
+          title: "Moon Cycle",
+          subtitle: "Bio-Tracker",
+          prediction: "Prediction",
+          nextPeriod: "Next Period",
+          inDays: "in {days} days",
+          log: "Log Period",
+          save: "Save Log",
+          flow: "Flow",
+          symptoms: "Symptoms",
+          note: "Note",
+          delete: "Delete Record",
+          flows: {
+            light: "Light",
+            medium: "Medium",
+            heavy: "Heavy"
+          },
+          symptomList: {
+            cramps: "Cramps",
+            headache: "Headache",
+            backpain: "Back Pain",
+            fatigue: "Fatigue",
+            bloating: "Bloating",
+            acne: "Acne",
+            moody: "Moody"
+          },
+          legend: {
+            period: "Period",
+            predicted: "Predicted",
+            fertile: "Fertile",
+            ovulation: "Ovulation"
+          }
+        },
+        chefWheel: {
+          title: "Chef's Decision",
+          subtitle: "What to eat today?",
+          spin: "SPIN",
+          spinning: "...",
+          cooking: "Chef is thinking...",
+          selectIngredients: "Select Ingredients",
+          instruction: "Pick ingredients & Spin for recipes",
+          reset: "Reset",
+          ingredients: {
+            beef: "Beef",
+            pork: "Pork",
+            chicken: "Chicken",
+            lamb: "Lamb",
+            duck: "Duck",
+            fish: "Fish",
+            shrimp: "Shrimp",
+            oyster: "Oyster",
+            crab: "Crab",
+            clam: "Clam",
+            egg: "Egg",
+            tofu: "Tofu",
+            tomato: "Tomato",
+            potato: "Potato",
+            cucumber: "Cucumber",
+            broccoli: "Broccoli",
+            cabbage: "Cabbage",
+            napa: "Napa Cabbage",
+            bokchoy: "Bok Choy",
+            lettuce: "Lettuce",
+            carrot: "Carrot",
+            eggplant: "Eggplant",
+            pepper: "Pepper",
+            mushroom: "Mushroom"
+          },
+          styles: {
+            home: "Homestyle",
+            spicy: "Spicy",
+            sweet: "Sweet & Sour",
+            braised: "Braised",
+            steam: "Steamed",
+            fry: "Stir-fry"
+          },
+          cats: {
+            meat: "Meat",
+            seafood: "Seafood",
+            veggie: "Veggie"
+          }
         },
         pirate: {
           title: "The Four Pirate Lords",
@@ -622,6 +695,88 @@ export const resources = {
         clock: {
           title: "智能中枢",
           subtitle: "深圳实时"
+        },
+        cycle: {
+          title: "月相周期",
+          subtitle: "生理记录",
+          prediction: "周期预测",
+          nextPeriod: "下次经期",
+          inDays: "{days} 天后",
+          log: "记录经期",
+          save: "保存记录",
+          flow: "流量",
+          symptoms: "症状",
+          note: "备注",
+          delete: "删除记录",
+          flows: {
+            light: "少量",
+            medium: "中等",
+            heavy: "大量"
+          },
+          symptomList: {
+            cramps: "痛经",
+            headache: "头痛",
+            backpain: "腰酸",
+            fatigue: "疲乏",
+            bloating: "腹胀",
+            acne: "痘痘",
+            moody: "情绪波动"
+          },
+          legend: {
+            period: "经期",
+            predicted: "预测经期",
+            fertile: "易孕期",
+            ovulation: "排卵日"
+          }
+        },
+        chefWheel: {
+          title: "大厨转盘",
+          subtitle: "今天吃什么？",
+          spin: "开始转动",
+          spinning: "...",
+          cooking: "大厨正在思考...",
+          selectIngredients: "选择食材 (可多选)",
+          instruction: "选好食材，点击转动生成食谱",
+          reset: "重置",
+          ingredients: {
+            beef: "牛肉",
+            pork: "猪肉",
+            chicken: "鸡肉",
+            lamb: "羊肉",
+            duck: "鸭肉",
+            fish: "鱼肉",
+            shrimp: "虾",
+            oyster: "生蚝",
+            crab: "螃蟹",
+            clam: "蛤蜊",
+            egg: "鸡蛋",
+            tofu: "豆腐",
+            tomato: "西红柿",
+            potato: "土豆",
+            cucumber: "黄瓜",
+            broccoli: "西兰花",
+            cabbage: "圆白菜",
+            napa: "娃娃菜/白菜",
+            bokchoy: "青菜/杭白菜",
+            lettuce: "生菜",
+            carrot: "胡萝卜",
+            eggplant: "茄子",
+            pepper: "青椒",
+            mushroom: "蘑菇"
+          },
+          styles: {
+            home: "家常",
+            spicy: "麻辣",
+            sweet: "酸甜",
+            braised: "红烧",
+            steam: "清蒸",
+            fry: "煎炸"
+          },
+          cats: {
+            meat: "肉类",
+            seafood: "海鲜",
+            veggie: "素菜"
+          }
         },
         pirate: {
           title: "四皇海战 (华容道)",
