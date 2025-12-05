@@ -154,19 +154,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket, targetU
       try {
         if (activeUser) {
            // Private History
-           const raw = await apiService.getPrivateChatHistory(activeUser.id);
-           history = raw.map((m: any) => {
-             // Normalized history object
-             return {
-                message: m.message || m.content,
-                timestamp: m.timestamp || m.createdDate,
-                author: m.author,
-                userId: m.userId,
-                email: m.email,
-                isPrivate: true,
-                receiver: m.receiver // This usually contains the target User ID from backend
-             };
-           });
+           history = await apiService.getPrivateChatHistory(activeUser.id);
         } else {
            // Public History
            const raw = await apiService.getPublicChatHistory("public");
@@ -177,25 +165,18 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket, targetU
            }));
         }
         
-        if (history.length > 0) {
-            setMessages(prev => {
-                // Merge History with existing messages (deduplicating by timestamp + author + content)
-                const existingSigs = new Set(prev.map(p => `${p.timestamp}-${p.author}-${p.message}`));
-                const newHistory = history.filter(h => !existingSigs.has(`${h.timestamp}-${h.author}-${h.message}`));
-                
-                // Prepend history, keep existing real-time messages
-                const combined = [...newHistory, ...prev];
-                // Sort by time just to be safe
-                return combined.sort((a,b) => new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime());
-            });
-        }
+        // Replace current messages state with history to prevent duplicates and ensure clean slate on switch
+        // Sorting by timestamp to ensure order
+        const sortedHistory = history.sort((a,b) => new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime());
+        setMessages(sortedHistory);
+        
       } catch (e) {
         console.error("History load error", e);
       }
     };
     
-    // Trigger load whenever active room/user changes
-    setMessages([]); // Clear previous messages when switching rooms
+    // Clear previous messages when switching rooms, then load
+    setMessages([]);
     loadHistory();
   }, [activeUser, currentUser]);
 
@@ -219,12 +200,16 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket, targetU
 
     // 3. Receive Public Messages (Normalized)
     const handleMessageReceived = (rawMsg: any) => {
+      // Check if this is truly a public message
+      // Allow if room is explicitly public OR undefined/null (some backends broadcast generally)
+      if (rawMsg.room && rawMsg.room !== 'public') return;
+
       // Normalize: Backend sends { user: { displayName, id... }, message: "..." }
       const normalizedMsg: ChatMessage = {
         message: rawMsg.message || rawMsg.content,
         timestamp: rawMsg.createdDate || rawMsg.timestamp || new Date().toISOString(),
         isPrivate: false,
-        room: rawMsg.room || 'public',
+        room: 'public',
         // Critical: extract from nested user object if present
         author: rawMsg.user?.displayName || rawMsg.user?.name || rawMsg.author || 'Unknown',
         userId: rawMsg.user?.id || rawMsg.user?._id || rawMsg.userId,
@@ -232,38 +217,53 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket, targetU
         photoURL: rawMsg.user?.photoURL || rawMsg.photoURL
       };
 
-      setMessages(prev => {
-        const lastMsg = prev[prev.length - 1];
-        
-        // Dedupe logic
-        const isMe = (normalizedMsg.userId === currentUser._id);
-        const isDuplicate = isMe && lastMsg && 
-            lastMsg.message === normalizedMsg.message && 
-            (new Date().getTime() - new Date(lastMsg.timestamp || 0).getTime() < 5000);
-
-        if (isDuplicate) return prev;
-        
-        return [...prev, normalizedMsg];
-      });
+      setMessages(prev => [...prev, normalizedMsg]);
     };
 
-    // 4. Receive Private Messages (Normalized)
+    // 4. Receive Private Messages (Normalized & Filtered)
     const handlePrivateMessage = (rawMsg: any) => {
+       const myId = currentUser._id;
+       
+       // Identify Sender and Receiver IDs for robust filtering
+       const senderObj = rawMsg.user || {};
+       // Handle varied structure (sender might be flat id or object)
+       const senderId = senderObj.id || senderObj._id || rawMsg.fromUserId || rawMsg.userId;
+       
+       // OPTIMISTIC UPDATE HANDLING:
+       // The backend echoes the message back to the sender.
+       // However, the echo payload does NOT contain the receiver ID.
+       // Without receiver ID, we can't incorrectly route the echo to the active chat window (which might be for a different user).
+       // Therefore, we use Optimistic Updates in `handleSendMessage` and IGNORE the echo from ourselves here.
+       if (senderId === myId) {
+           return;
+       }
+
+       // For Incoming Messages (from others):
+       // The backend sends to our room. Receiver ID is implicitly ME if not present.
+       let receiverId = rawMsg.receiver || rawMsg.toUserId || rawMsg.toUser;
+       if (!receiverId) {
+           receiverId = myId;
+       }
+
+       // CRITICAL: Security & Relevance Filter
+       // We only accept messages sent TO us (from others).
+       if (receiverId !== myId) {
+           return;
+       }
+
        // Normalize backend payload
        const msg: ChatMessage = {
            message: rawMsg.message || rawMsg.content,
            timestamp: rawMsg.timestamp || rawMsg.createdDate || new Date().toISOString(),
            isPrivate: true,
-           author: rawMsg.user?.displayName || rawMsg.user?.name || rawMsg.author || 'Unknown',
-           userId: rawMsg.user?.id || rawMsg.user?._id || rawMsg.fromUserId || rawMsg.userId,
-           email: rawMsg.user?.email || rawMsg.email,
-           photoURL: rawMsg.user?.photoURL || rawMsg.photoURL,
-           receiver: rawMsg.receiver || rawMsg.toUser || rawMsg.receiverName
+           author: senderObj.displayName || senderObj.name || rawMsg.author || 'Unknown',
+           userId: senderId,
+           email: senderObj.email || rawMsg.email,
+           photoURL: senderObj.photoURL || rawMsg.photoURL,
+           receiver: receiverId
        };
 
-       // Ignore own messages echoed from backend to prefer optimistic version
-       if (msg.userId === currentUser._id) return;
-
+       // Add message to state. Display filtering happens in render/filteredMessages.
        setMessages(prev => [...prev, msg]);
     };
 
@@ -301,52 +301,40 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket, targetU
       socket.off(EVENTS.TYPING, handleTyping);
       socket.off(EVENTS.STOP_TYPING, handleStopTyping);
     };
-  }, [socket, currentUser, activeUser]);
+  }, [socket, currentUser]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim() || !socket || !currentUser) return;
 
-    const timestamp = new Date().toISOString();
-
     if (activeUser) {
-      // Send Private
+      // 1. Optimistic Update (Immediate Display)
+      const optimisticMsg: ChatMessage = {
+        message: inputText,
+        author: currentUser.displayName,
+        userId: currentUser._id,
+        email: currentUser.email,
+        photoURL: currentUser.photoURL,
+        timestamp: new Date().toISOString(),
+        isPrivate: true,
+        receiver: activeUser.id // Important for filtering in UI
+      };
+      setMessages(prev => [...prev, optimisticMsg]);
+
+      // 2. Send to Backend
       socket.emit(EVENTS.PRIVATE_MESSAGE, {
-        receiverName: activeUser.name,
+        receiverName: activeUser.name, // Backend uses this to find socket
+        toUserId: activeUser.id,
         message: inputText,
         room: 'private'
       });
-      
-      // Optimistic Update for Private
-      const optimisticMsg: ChatMessage = {
-          message: inputText,
-          author: currentUser.displayName,
-          userId: currentUser._id,
-          email: currentUser.email,
-          timestamp,
-          isPrivate: true,
-          // Store receiver ID for robust filtering
-          receiver: activeUser.id 
-      };
-      setMessages(prev => [...prev, optimisticMsg]);
     } else {
       // Send Public
       socket.emit(EVENTS.MESSAGE_SENT, {
         message: inputText,
         room: "public"
       });
-      
-      // OPTIMISTIC UPDATE for Public
-      const optimisticMsg: ChatMessage = {
-          message: inputText,
-          author: currentUser.displayName,
-          userId: currentUser._id,
-          email: currentUser.email,
-          room: "public",
-          timestamp,
-          isPrivate: false
-      };
-      setMessages(prev => [...prev, optimisticMsg]);
+      // Public usually echoes back via MESSAGE_RECEIVED with full data, so no optimistic needed
     }
 
     // Stop typing status immediately
@@ -381,13 +369,22 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser, socket, targetU
   const filteredMessages = messages.filter(msg => {
     if (activeUser) {
       // Private Channel Filtering
-      const isMsgFromMe = (String(msg.userId) === String(currentUser._id));
-      const isMsgFromActive = (String(msg.userId) === String(activeUser.id));
-      
-      // If I sent it, check if I sent it TO the active user (check ID, fallback to Name for older msgs)
-      const sentToActive = isMsgFromMe && (msg.receiver === activeUser.id || msg.receiver === activeUser.name);
+      if (!msg.isPrivate) return false;
 
-      return msg.isPrivate && (isMsgFromActive || sentToActive);
+      const myId = String(currentUser._id);
+      const partnerId = String(activeUser.id);
+      const msgUserId = String(msg.userId); // Sender ID
+      const msgReceiver = String(msg.receiver); // Receiver ID (or name in legacy)
+
+      // 1. Incoming: Message is FROM activeUser
+      // Check both ID equality and if message was meant for me
+      const isFromPartner = (msgUserId === partnerId);
+
+      // 2. Outgoing: Message is FROM me AND TO activeUser
+      const isFromMe = (msgUserId === myId);
+      const isToPartner = (msgReceiver === partnerId || msgReceiver === activeUser.name);
+
+      return isFromPartner || (isFromMe && isToPartner);
     } else {
       // Public Channel Filtering
       return !msg.isPrivate;

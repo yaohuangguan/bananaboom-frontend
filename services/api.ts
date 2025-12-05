@@ -1,5 +1,4 @@
 
-
 import { BlogPost, User, Comment, Project, ResumeItem, Log, Todo, Photo, PaginatedResponse, PaginationData, AuditLog, ChatMessage, FitnessRecord, FitnessStats, PortfolioProject, ResumeData } from '../types';
 import { toast } from '../components/Toast';
 
@@ -742,15 +741,28 @@ export const apiService = {
   getPrivateChatHistory: async (targetUserId: string): Promise<ChatMessage[]> => {
     try {
       const res = await fetchClient<any[]>(`/chat/private/${targetUserId}`);
-      return res.map(msg => ({
-        message: msg.content || msg.message, // Use content
-        author: msg.user?.name || msg.user?.displayName || 'Unknown',
-        userId: msg.user?.id || msg.user?._id,
-        email: msg.user?.email || msg.email, // Map email
-        timestamp: msg.createdDate || msg.date,
-        isPrivate: true,
-        receiver: msg.toUser 
-      }));
+      // Robust mapping for varied backend structures
+      return res.map(msg => {
+        // Handle User Object vs ID String
+        const userObj = typeof msg.user === 'object' && msg.user !== null ? msg.user : {};
+        const userId = userObj.id || userObj._id || msg.fromUserId || msg.userId;
+        const author = userObj.displayName || userObj.name || msg.author || 'Unknown';
+        
+        // Handle Receiver
+        const toUserObj = typeof msg.toUser === 'object' && msg.toUser !== null ? msg.toUser : {};
+        const receiverId = toUserObj.id || toUserObj._id || msg.toUserId || msg.toUser;
+
+        return {
+          message: msg.content || msg.message,
+          timestamp: msg.createdDate || msg.date || msg.timestamp,
+          author: author,
+          userId: userId,
+          email: userObj.email || msg.email,
+          photoURL: userObj.photoURL || msg.photoURL,
+          isPrivate: true,
+          receiver: receiverId
+        };
+      });
     } catch (e) {
       console.warn("Private chat history fetch failed", e);
       return [];
