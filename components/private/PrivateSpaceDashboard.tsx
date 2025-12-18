@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { CountDateWidget, TabType } from './CountDateWidget';
 import { JournalSpace } from './JournalSpace';
 import { LeisureSpace } from './LeisureSpace';
@@ -6,6 +7,10 @@ import { PhotoGallery } from './PhotoGallery';
 import { FitnessSpace } from './FitnessSpace';
 import { BlogPost, User, PaginationData } from '../../types';
 import { useTranslation } from '../../i18n/LanguageContext';
+
+// Import Theme Components (Static)
+import { ChristmasTheme } from './themes/ChristmasTheme';
+import { NewYearTheme } from './themes/NewYearTheme';
 
 interface PrivateSpaceDashboardProps {
   user: User | null;
@@ -22,6 +27,8 @@ interface PrivateSpaceDashboardProps {
   initialSearch?: string;
 }
 
+type HolidayMode = 'CHRISTMAS' | 'CNY' | 'OFF';
+
 export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({ 
   user, 
   blogs, 
@@ -34,36 +41,78 @@ export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({
 }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('JOURNAL');
+  
+  // Manual Override State
+  const [manualHoliday, setManualHoliday] = useState<HolidayMode | null>(null);
+
+  // --- Auto Holiday Logic ---
+  const autoHoliday = useMemo<HolidayMode>(() => {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+
+    // Christmas: Dec 15 - Dec 30
+    if (month === 12 && day >= 15 && day <= 30) return 'CHRISTMAS';
+    
+    // CNY: Dec 31 - Feb 20 (Covers until approx Lantern Festival)
+    if ((month === 12 && day >= 31) || month === 1 || (month === 2 && day <= 20)) return 'CNY';
+
+    return 'OFF';
+  }, []);
+
+  // Determine active holiday (Manual takes precedence, else Auto)
+  const activeHoliday = manualHoliday !== null ? manualHoliday : autoHoliday;
+  const effectsEnabled = activeHoliday !== 'OFF';
+
+  // Toggle Handler: Cycle through CHRISTMAS -> CNY -> OFF -> CHRISTMAS
+  const handleToggleEffects = () => {
+    if (activeHoliday === 'CHRISTMAS') setManualHoliday('CNY');
+    else if (activeHoliday === 'CNY') setManualHoliday('OFF');
+    else setManualHoliday('CHRISTMAS'); // If OFF, start with Christmas
+  };
 
   // Fitness tab should scroll with the page, others have fixed internal layouts on desktop
   const isFixedLayout = activeTab !== 'FITNESS';
 
+  // --- Theme Background Logic ---
+  const getBackgroundClass = () => {
+    if (activeHoliday !== 'OFF') return ''; // Theme component handles it
+    return 'bg-gradient-to-br from-pink-200 via-rose-200 to-pink-200 text-slate-900';
+  };
+
   return (
     <div className={`
-      min-h-screen pt-24 pb-6 px-4 md:px-6 relative flex flex-col gap-6 text-slate-900
+      min-h-screen pt-24 pb-6 px-4 md:px-6 relative flex flex-col gap-6 transition-colors duration-1000
       ${isFixedLayout ? 'lg:h-screen lg:overflow-hidden overflow-y-auto' : 'overflow-y-auto'}
+      ${getBackgroundClass()}
     `}>
       
-      {/* Floating Hearts Effect */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        {[...Array(12)].map((_, i) => (
-          <div 
-            key={i}
-            className="absolute animate-rise-slow opacity-60 will-change-transform"
-            style={{
-              left: `${Math.random() * 100}%`,
-              bottom: `-50px`,
-              fontSize: `${Math.random() * 30 + 15}px`,
-              animationDuration: `${Math.random() * 10 + 10}s`,
-              animationDelay: `${Math.random() * 5}s`,
-              color: Math.random() > 0.5 ? '#f43f5e' : '#fb7185', // rose-500 or rose-400
-              textShadow: '0 0 10px rgba(244,63,94,0.3)'
-            }}
-          >
-            ❤
-          </div>
-        ))}
-      </div>
+      {/* --- RENDER THEMES --- */}
+      {activeHoliday === 'CHRISTMAS' && <ChristmasTheme />}
+      {activeHoliday === 'CNY' && <NewYearTheme />}
+
+      {/* Default Floating Hearts Effect (Only when holiday effects are OFF) */}
+      {activeHoliday === 'OFF' && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+            {[...Array(12)].map((_, i) => (
+            <div 
+                key={i}
+                className="absolute animate-rise-slow opacity-60 will-change-transform"
+                style={{
+                left: `${Math.random() * 100}%`,
+                bottom: `-50px`,
+                fontSize: `${Math.random() * 30 + 15}px`,
+                animationDuration: `${Math.random() * 10 + 10}s`,
+                animationDelay: `${Math.random() * 5}s`,
+                color: Math.random() > 0.5 ? '#f43f5e' : '#fb7185',
+                textShadow: '0 0 10px rgba(244,63,94,0.3)'
+                }}
+            >
+                ❤
+            </div>
+            ))}
+        </div>
+      )}
 
       {/* Top Section: Integrated Together Bar */}
       <div className="container mx-auto max-w-[1600px] shrink-0 relative z-10">
@@ -71,6 +120,10 @@ export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({
           fromDate="2020-02-14" 
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          // Pass the calculated active holiday (or null if OFF) for widget styling
+          holidayType={activeHoliday === 'OFF' ? null : activeHoliday}
+          effectsEnabled={effectsEnabled}
+          onToggleEffects={handleToggleEffects}
         />
       </div>
 
