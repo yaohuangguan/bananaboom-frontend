@@ -290,7 +290,15 @@ export const AIChef: React.FC = () => {
   };
 
   const openEdit = (m?: Menu) => {
-    setEditMenu(m ? { ...m } : { name: '', category: '晚餐', tags: [], weight: 5, caloriesLevel: 'medium', isActive: true });
+    setEditMenu(m ? { ...m } : { 
+      name: '', 
+      category: '晚餐', 
+      tags: [], 
+      weight: 1, // Default weight
+      caloriesLevel: 'medium', // Default cal level
+      isActive: true, // Default active
+      image: '' 
+    });
     setIsEditing(true);
   };
 
@@ -841,6 +849,45 @@ export const AIChef: React.FC = () => {
                               </div>
                            </div>
 
+                           {/* Added Weight (Priority) & Calories & Active Status */}
+                           <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                 <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{t.privateSpace.leisure.chefWheel.menu.weight}</label>
+                                 <input 
+                                    type="number" 
+                                    min="1" 
+                                    max="10" 
+                                    className="w-full border border-slate-200 rounded-xl px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-200" 
+                                    value={editMenu.weight || 1} 
+                                    onChange={e => setEditMenu({...editMenu, weight: parseInt(e.target.value)})} 
+                                 />
+                              </div>
+                              <div>
+                                 <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{t.privateSpace.leisure.chefWheel.menu.calories}</label>
+                                 <select 
+                                    className="w-full border border-slate-200 rounded-xl px-3 py-3 text-sm outline-none bg-white" 
+                                    value={editMenu.caloriesLevel || 'medium'} 
+                                    onChange={e => setEditMenu({...editMenu, caloriesLevel: e.target.value as any})}
+                                 >
+                                    <option value="low">{t.privateSpace.leisure.chefWheel.filters.options.low}</option>
+                                    <option value="medium">{t.privateSpace.leisure.chefWheel.filters.options.medium}</option>
+                                    <option value="high">{t.privateSpace.leisure.chefWheel.filters.options.high}</option>
+                                 </select>
+                              </div>
+                           </div>
+
+                           <div className="flex items-center gap-2 mt-2">
+                              <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-slate-50 transition-colors w-full border border-slate-100">
+                                 <input 
+                                    type="checkbox" 
+                                    className="w-5 h-5 accent-amber-500 rounded cursor-pointer"
+                                    checked={editMenu.isActive ?? true}
+                                    onChange={e => setEditMenu({...editMenu, isActive: e.target.checked})}
+                                 />
+                                 <span className="text-sm font-bold text-slate-700">Active (Visible in Wheel)</span>
+                              </label>
+                           </div>
+
                            <div>
                               <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">{t.privateSpace.leisure.chefWheel.form.image}</label>
                               <div className="flex gap-2">
@@ -859,15 +906,22 @@ export const AIChef: React.FC = () => {
                      <div className="space-y-3">
                         {menuList.length === 0 && <div className="text-center text-slate-400 py-10">No dishes yet.</div>}
                         {menuList.map(m => (
-                           <div key={m._id} className="bg-white border border-slate-100 p-3 rounded-xl flex gap-3 items-center group shadow-sm hover:shadow-md transition-all">
-                              <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0">
+                           <div key={m._id} className={`bg-white border border-slate-100 p-3 rounded-xl flex gap-3 items-center group shadow-sm hover:shadow-md transition-all ${!m.isActive ? 'opacity-60 grayscale' : ''}`}>
+                              <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0 relative">
                                  <img src={m.image || 'https://via.placeholder.com/150'} className="w-full h-full object-cover" alt={m.name} onError={(e) => (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150?text=Food'} />
+                                 {!m.isActive && <div className="absolute inset-0 bg-black/30 flex items-center justify-center"><i className="fas fa-ban text-white"></i></div>}
                               </div>
                               <div className="flex-1 min-w-0">
-                                 <div className="text-sm font-bold text-slate-800 truncate">{m.name}</div>
-                                 <div className="flex gap-2 mt-1">
+                                 <div className="flex items-center gap-2">
+                                    <span className="text-sm font-bold text-slate-800 truncate">{m.name}</span>
+                                    {!m.isActive && <span className="text-[8px] bg-slate-200 text-slate-500 px-1.5 rounded uppercase font-bold">Inactive</span>}
+                                 </div>
+                                 <div className="flex gap-2 mt-1 flex-wrap">
                                     <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded">{m.category}</span>
-                                    {m.tags.slice(0,2).map(tag => <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded">#{tag}</span>)}
+                                    <span className="text-[10px] px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded font-mono">W:{m.weight}</span>
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded text-white ${m.caloriesLevel === 'high' ? 'bg-red-400' : m.caloriesLevel === 'low' ? 'bg-green-400' : 'bg-amber-400'}`}>
+                                       {m.caloriesLevel}
+                                    </span>
                                  </div>
                               </div>
                               <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
