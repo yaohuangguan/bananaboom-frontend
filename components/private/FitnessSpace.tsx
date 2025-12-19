@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { apiService } from '../../services/api';
@@ -38,6 +37,10 @@ export const FitnessSpace: React.FC = () => {
   const [record, setRecord] = useState<FitnessRecord>({});
   const [stats, setStats] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Specific Loading State for Photo Upload
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
   // Photo Wall State
@@ -236,16 +239,23 @@ export const FitnessSpace: React.FC = () => {
      }
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const processUploadFile = async (file: File) => {
+    setIsUploadingPhoto(true);
     try {
       const url = await apiService.uploadImage(file);
       setRecord(prev => ({ ...prev, photos: [...(prev.photos || []), url] }));
       toast.success("Photo uploaded");
     } catch (e) {
       toast.error("Photo upload failed");
+    } finally {
+      setIsUploadingPhoto(false);
     }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processUploadFile(file);
   };
 
   // Summary Data Logic
@@ -410,12 +420,15 @@ export const FitnessSpace: React.FC = () => {
          onSave={handleSave}
          isSaving={isSaving}
          onPhotoUpload={handlePhotoUpload}
+         onUploadFile={processUploadFile}
          onPhotoSelect={setSelectedPhoto}
          onPhotoDelete={(idx) => {
             const newPhotos = [...(record.photos || [])];
             newPhotos.splice(idx, 1);
             setRecord(prev => ({ ...prev, photos: newPhotos }));
          }}
+         // Pass loading state down
+         isUploadingPhoto={isUploadingPhoto}
       />
     </div>
   );

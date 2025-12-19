@@ -8,6 +8,10 @@
 
 
 
+
+
+
+
 import { BlogPost } from "../types";
 
 export const resources = {
@@ -266,16 +270,25 @@ export const resources = {
     },
     privateSpace: {
       tabs: {
+        secondBrain: "Second Brain",
         journal: "Journal",
         leisure: "Leisure",
         gallery: "Gallery",
         fitness: "Fitness"
+      },
+      secondBrain: {
+        title: "Digital Twin",
+        subtitle: "Omniscient AI Core",
+        welcome: "Hello. I am your Second Brain. I have access to your journal, fitness logs, and project data. How can I assist you?",
+        placeholder: "Ask me anything about your data..."
       },
       hotSearch: {
         title: "News Center",
         hot: "Hot Trends",
         finance: "Finance",
         game: "Gaming",
+        guonei: "Domestic",
+        world: "World",
         updated: "Updated",
         loading: "Scanning network..."
       },
@@ -843,16 +856,25 @@ export const resources = {
     },
     privateSpace: {
       tabs: {
+        secondBrain: "第二大脑",
         journal: "日志空间",
         leisure: "休闲空间",
         gallery: "胶囊相册",
         fitness: "运动空间"
+      },
+      secondBrain: {
+        title: "数字孪生",
+        subtitle: "全知 AI 核心",
+        welcome: "你好。我是你的第二大脑。我已经接入了你的日志、运动数据和项目记录。请问有什么可以帮你？",
+        placeholder: "问我关于你数据的任何事..."
       },
       hotSearch: {
         title: "资讯中心",
         hot: "热搜榜",
         finance: "财经快讯",
         game: "游戏电竞",
+        guonei: "国内新闻",
+        world: "国际新闻",
         updated: "已更新",
         loading: "正在扫描网络..."
       },

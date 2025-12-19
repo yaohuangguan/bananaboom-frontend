@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from '../../i18n/LanguageContext';
 
-export type TabType = 'JOURNAL' | 'LEISURE' | 'GALLERY' | 'FITNESS';
+export type TabType = 'SECOND_BRAIN' | 'JOURNAL' | 'LEISURE' | 'GALLERY' | 'FITNESS';
 
 interface CountDateWidgetProps {
   fromDate: string;
@@ -65,6 +65,7 @@ export const CountDateWidget: React.FC<CountDateWidgetProps> = ({
 
   const getTabIcon = (tab: TabType) => {
     switch (tab) {
+      case 'SECOND_BRAIN': return 'fa-brain';
       case 'JOURNAL': return 'fa-heart';
       case 'LEISURE': return 'fa-gamepad';
       case 'GALLERY': return 'fa-camera-retro';
@@ -145,7 +146,7 @@ export const CountDateWidget: React.FC<CountDateWidgetProps> = ({
         {/* Center/Right: Navigation Tabs (Integrated) */}
         <div className="flex items-center gap-3">
             <div className="flex items-center bg-black/10 backdrop-blur-sm rounded-full p-1 overflow-x-auto max-w-full custom-scrollbar">
-            {(['JOURNAL', 'GALLERY', 'LEISURE', 'FITNESS'] as TabType[]).map((tab) => {
+            {(['SECOND_BRAIN', 'JOURNAL', 'GALLERY', 'LEISURE', 'FITNESS'] as TabType[]).map((tab) => {
                 const isActive = activeTab === tab;
                 return (
                 <button
@@ -158,7 +159,7 @@ export const CountDateWidget: React.FC<CountDateWidgetProps> = ({
                     }`}
                 >
                     <i className={`fas ${getTabIcon(tab)} text-[10px]`}></i>
-                    <span className="hidden sm:inline">{t.privateSpace.tabs[tab.toLowerCase() as keyof typeof t.privateSpace.tabs]}</span>
+                    <span className="hidden sm:inline">{t.privateSpace.tabs[tab === 'SECOND_BRAIN' ? 'secondBrain' : tab.toLowerCase() as keyof typeof t.privateSpace.tabs]}</span>
                 </button>
                 );
             })}

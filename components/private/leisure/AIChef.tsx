@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from '../../../i18n/LanguageContext';
@@ -95,6 +96,17 @@ export const AIChef: React.FC = () => {
   useEffect(() => {
     if (isManageModalOpen) fetchMenuList();
   }, [isManageModalOpen]);
+
+  // --- Confirm Dish Logic (New) ---
+  const handleConfirmDish = async (dishName: string) => {
+    try {
+      // Backend handles dishName as ID in this route as per requirements
+      const res = await apiService.confirmMenu(dishName, filterCategory || 'Meal');
+      toast.success(res.msg || `Selected ${dishName} for your meal!`);
+    } catch (e) {
+      toast.error("Failed to confirm selection.");
+    }
+  };
 
   // --- Wheel Logic ---
   const handleDraw = async () => {
@@ -353,6 +365,14 @@ export const AIChef: React.FC = () => {
                <p className="text-xs text-yellow-700 leading-relaxed">{activeRecipe.recipe.tips}</p>
             </div>
          </div>
+
+         {/* Selection Button */}
+         <button 
+            onClick={() => handleConfirmDish(activeRecipe.recipe.title)}
+            className="w-full py-3 mt-2 bg-emerald-500 text-white rounded-xl font-bold uppercase shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2"
+         >
+            <i className="fas fa-check"></i> Select This Dish
+         </button>
       </div>
     );
   };
@@ -389,6 +409,14 @@ export const AIChef: React.FC = () => {
                     dangerouslySetInnerHTML={{ __html: activeExternalRecipe.steps || 'No steps provided.' }}
                 />
             </div>
+
+            {/* Selection Button */}
+            <button 
+               onClick={() => handleConfirmDish(activeExternalRecipe.title)}
+               className="w-full py-3 mt-2 bg-emerald-500 text-white rounded-xl font-bold uppercase shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2"
+            >
+               <i className="fas fa-check"></i> Select This Dish
+            </button>
         </div>
       );
   };
@@ -444,7 +472,7 @@ export const AIChef: React.FC = () => {
              </div>
           </div>
 
-          {/* Dish Recommendations */}
+          {/* Dish Recommendations - Select Button Removed Here */}
           <div className="space-y-4 mb-8">
              {recommendation.dishes.map((dish, i) => (
                 <div key={i} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-2 relative group hover:border-indigo-200 transition-colors">
@@ -461,9 +489,12 @@ export const AIChef: React.FC = () => {
                    <div className="flex gap-2">
                       {dish.tags.map(t => <span key={t} className="text-[10px] bg-slate-50 text-slate-500 px-2 py-0.5 rounded border border-slate-100">{t}</span>)}
                    </div>
-                   <p className="text-xs text-slate-500 leading-relaxed border-t border-slate-50 pt-2 mt-1">
-                      {dish.reason}
-                   </p>
+                   
+                   <div className="flex justify-between items-start gap-3 border-t border-slate-50 pt-2 mt-1">
+                      <p className="text-xs text-slate-500 leading-relaxed">
+                          {dish.reason}
+                      </p>
+                   </div>
                 </div>
              ))}
           </div>

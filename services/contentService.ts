@@ -221,6 +221,22 @@ export const contentService = {
     return photos[0];
   },
 
+  getRecentImages: async (): Promise<string[]> => {
+    try {
+      const res = await fetchClient<any>('/cloudinary/resources');
+      // Support both { data: [...] } (New) and { resources: [...] } (Legacy)
+      const list = res.data || res.resources;
+      
+      if (list && Array.isArray(list)) {
+        return list.map((r: any) => r.secure_url);
+      }
+      return [];
+    } catch (e) {
+      console.error("Failed to fetch library", e);
+      return [];
+    }
+  },
+
   // --- Comments ---
   getComments: async (postId: string): Promise<Comment[]> => {
     try {

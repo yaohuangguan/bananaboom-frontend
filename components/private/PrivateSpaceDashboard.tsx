@@ -1,13 +1,12 @@
 
-
-
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { CountDateWidget, TabType } from './CountDateWidget';
 import { JournalSpace } from './JournalSpace';
 import { LeisureSpace } from './LeisureSpace';
 import { PhotoGallery } from './PhotoGallery';
 import { FitnessSpace } from './FitnessSpace';
-import { HotSearchWidget } from './HotSearchWidget';
+import { SecondBrainSpace } from './SecondBrainSpace';
+import { NewsWidget } from './HotSearchWidget';
 import { BlogPost, User, PaginationData } from '../../types';
 import { useTranslation } from '../../i18n/LanguageContext';
 
@@ -88,6 +87,7 @@ export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({
   };
 
   // Fitness tab should scroll with the page, others have fixed internal layouts on desktop
+  // Second Brain also has internal scroll
   const isFixedLayout = activeTab !== 'FITNESS';
 
   // --- Theme Background Logic ---
@@ -104,7 +104,7 @@ export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({
     `}>
       
       {/* Floating News Widget - Persistent across tabs */}
-      <HotSearchWidget />
+      <NewsWidget />
 
       {/* --- RENDER THEMES --- */}
       {activeHoliday === 'CHRISTMAS' && <ChristmasTheme />}
@@ -148,6 +148,12 @@ export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({
 
       {/* Main Content Area */}
       <div className={`container mx-auto flex-1 max-w-[1600px] relative z-10 ${isFixedLayout ? 'lg:min-h-0 pb-10 lg:pb-0' : 'pb-20'}`}>
+        {activeTab === 'SECOND_BRAIN' && (
+          <div className="h-full animate-fade-in lg:overflow-hidden">
+             <SecondBrainSpace user={user} />
+          </div>
+        )}
+
         {activeTab === 'JOURNAL' && (
           <JournalSpace 
             user={user} 

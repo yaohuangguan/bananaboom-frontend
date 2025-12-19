@@ -1,5 +1,4 @@
 
-
 export interface BlogPost {
   _id: string;
   name: string;
@@ -346,7 +345,7 @@ export interface HotSearchItem {
 }
 
 // Unified API Response
-export type DailyListType = 'hotsearch' | 'finance' | 'game';
+export type DailyListType = 'hotsearch' | 'finance' | 'game' | 'guonei' | 'world';
 
 export interface DailyListResponse {
   type: DailyListType;

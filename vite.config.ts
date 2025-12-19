@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     server: {
-      port: 3000,
+      port: 5173,
       host: "0.0.0.0",
       // 🔥🔥🔥 核心：反向代理配置 🔥🔥🔥
       proxy: {

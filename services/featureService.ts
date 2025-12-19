@@ -1,6 +1,5 @@
 
-
-import { fetchClient } from './core';
+import { fetchClient, API_BASE_URL } from './core';
 import { toast } from '../components/Toast';
 import { ChatMessage, Todo, FitnessRecord, FitnessStats, PeriodRecord, PeriodResponse, Footprint, FootprintStats, Menu, DrawResponse, DailyListResponse, DailyListType, SmartMenuResponse } from '../types';
 
@@ -66,6 +65,64 @@ export const featureService = {
     } catch (e) {
       console.warn("Private chat history fetch failed", e);
       return [];
+    }
+  },
+
+  // --- AI Chat History (New) ---
+  getAiChatHistory: async (page = 1, limit = 20): Promise<any[]> => {
+    return await fetchClient<any[]>(`/chat/ai?page=${page}&limit=${limit}`);
+  },
+
+  saveAiChatMessage: async (text: string, role: 'user' | 'ai'): Promise<any> => {
+    return await fetchClient('/chat/ai/save', {
+      method: 'POST',
+      body: JSON.stringify({ text, role })
+    });
+  },
+
+  clearAiChatHistory: async (): Promise<any> => {
+    return await fetchClient('/chat/ai', {
+      method: 'DELETE'
+    });
+  },
+
+  // --- Second Brain (God Mode) Streaming ---
+  askLifeStream: async (
+    prompt: string, 
+    history: { role: 'user' | 'assistant', content: string }[], 
+    onChunk: (text: string) => void
+  ): Promise<void> => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) throw new Error("No auth token");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/ask-life/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token
+        },
+        body: JSON.stringify({ prompt, history })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      if (!response.body) return;
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        onChunk(chunk);
+      }
+    } catch (e) {
+      console.error("Streaming error:", e);
+      throw e;
     }
   },
 
