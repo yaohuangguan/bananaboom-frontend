@@ -390,6 +390,12 @@ export const Header: React.FC<HeaderProps> = ({
                          <i className="fas fa-id-card w-4 text-center"></i> {t.header.profile}
                       </button>
                       <button 
+                        onClick={() => setPage(PageView.SYSTEM)}
+                        className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${isPrivate ? 'text-rose-700 hover:bg-rose-50 font-medium' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary-600 dark:hover:text-primary-400'}`}
+                      >
+                         <i className="fas fa-server w-4 text-center"></i> {t.header.system}
+                      </button>
+                      <button 
                         onClick={() => setPage(PageView.SETTINGS)}
                         className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${isPrivate ? 'text-rose-700 hover:bg-rose-50 font-medium' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary-600 dark:hover:text-primary-400'}`}
                       >
@@ -470,6 +476,12 @@ export const Header: React.FC<HeaderProps> = ({
                     className={`text-left text-lg font-mono uppercase tracking-widest flex items-center gap-2 ${isPrivate ? 'text-slate-600' : 'text-slate-500 dark:text-slate-400'}`}
                   >
                     <i className="fas fa-id-card text-xs"></i> {t.header.profile}
+                  </button>
+                  <button
+                    onClick={() => { setPage(PageView.SYSTEM); setIsMobileMenuOpen(false); }}
+                    className={`text-left text-lg font-mono uppercase tracking-widest flex items-center gap-2 ${isPrivate ? 'text-slate-600' : 'text-slate-500 dark:text-slate-400'}`}
+                  >
+                    <i className="fas fa-server text-xs"></i> {t.header.system}
                   </button>
                   <button
                     onClick={() => { setPage(PageView.SETTINGS); setIsMobileMenuOpen(false); }}

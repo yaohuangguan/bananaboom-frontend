@@ -12,6 +12,8 @@ interface DeleteModalProps {
   isSecret?: boolean;
   message?: string;
   buttonText?: string;
+  requireInput?: boolean;
+  zIndexClass?: string;
 }
 
 export const DeleteModal: React.FC<DeleteModalProps> = ({ 
@@ -22,7 +24,9 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
   confirmKeyword,
   isSecret = false,
   message,
-  buttonText
+  buttonText,
+  requireInput = true,
+  zIndexClass = "z-[100]"
 }) => {
   const [inputValue, setInputValue] = useState('');
   const { t, language } = useTranslation();
@@ -46,19 +50,22 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
       if (inputValue.trim().length > 0) {
         onConfirm(inputValue);
       }
-    } else {
+    } else if (requireInput) {
       if (inputValue === TARGET_KEYWORD) {
         onConfirm();
       }
+    } else {
+      // Simple confirmation without input
+      onConfirm();
     }
   };
 
   const isButtonDisabled = isSecret 
     ? inputValue.trim().length === 0 
-    : inputValue !== TARGET_KEYWORD;
+    : (requireInput ? inputValue !== TARGET_KEYWORD : false);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className={`fixed inset-0 flex items-center justify-center p-4 ${zIndexClass}`}>
       {/* Dark backdrop with blur */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
       
@@ -80,20 +87,25 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
           ) : (
              <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
                {t.delete.confirmMessage} <br/>
-               <span className="font-mono font-bold text-red-500 dark:text-red-400 select-all bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded mt-1 inline-block">
-                 {TARGET_KEYWORD}
-               </span>
+               {requireInput && (
+                 <span className="font-mono font-bold text-red-500 dark:text-red-400 select-all bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded mt-1 inline-block">
+                   {TARGET_KEYWORD}
+                 </span>
+               )}
              </p>
           )}
           
-          <input 
-            type={isSecret ? "password" : "text"}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            className="w-full px-4 py-2.5 bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-center focus:border-red-500 focus:ring-1 focus:ring-red-500/50 outline-none mb-6 placeholder-slate-400 dark:placeholder-slate-600 font-mono transition-colors"
-            placeholder={isSecret ? (language === 'zh' ? '输入密钥' : 'Enter Secret Key') : TARGET_KEYWORD}
-            autoFocus
-          />
+          {/* Conditional Input */}
+          {(requireInput || isSecret) && (
+            <input 
+              type={isSecret ? "password" : "text"}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-center focus:border-red-500 focus:ring-1 focus:ring-red-500/50 outline-none mb-6 placeholder-slate-400 dark:placeholder-slate-600 font-mono transition-colors"
+              placeholder={isSecret ? (language === 'zh' ? '输入密钥' : 'Enter Secret Key') : TARGET_KEYWORD}
+              autoFocus
+            />
+          )}
           
           <div className="flex gap-3">
             <button 

@@ -23,6 +23,7 @@ import { ArticleView } from './components/ArticleView';
 import { ResumeView } from './components/ResumeView';
 import { Footer } from './components/Footer';
 import { PageLoader } from './components/PageLoader';
+import { SystemManagement } from './components/SystemManagement';
 
 // Lazy Load Heavy Components
 const PrivateSpaceDashboard = lazy(() => import('./components/private/PrivateSpaceDashboard').then(module => ({ default: module.PrivateSpaceDashboard })));
@@ -49,20 +50,6 @@ const App: React.FC = () => {
     }
     return Theme.LIGHT;
   });
-
-  useEffect(() => {
-    // 区分构建工具
-    const ver = import.meta.env?.VITE_APP_VERSION
-    
-    if (ver) {
-      console.log(
-        `%c ✅ Deployed Version: ${ver.substring(0, 7)} `,
-        'background:#333; color:#bada55; border-radius:4px; padding:4px;'
-      );
-    }
-  }, []);
-
-
   const [currentPage, setCurrentPage] = useState<PageView>(PageView.HOME);
   const [user, setUser] = useState<User | null>(null);
   const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
@@ -97,6 +84,18 @@ const App: React.FC = () => {
 
   // Socket State
   const [socket, setSocket] = useState<Socket | null>(null);
+
+  useEffect(() => {
+    // 区分构建工具
+    const ver = import.meta.env?.VITE_APP_VERSION
+    
+    if (ver) {
+      console.log(
+        `%c ✅ Deployed Version: ${ver.substring(0, 7)} `,
+        'background:#333; color:#bada55; border-radius:4px; padding:4px;'
+      );
+    }
+  }, []);
 
   useEffect(() => {
     // Load liked posts from localStorage
@@ -396,6 +395,10 @@ const App: React.FC = () => {
              alert("Access Denied: Please Login.");
              return;
           }
+          if (page === PageView.SYSTEM && !user) {
+             alert("Access Denied: Please Login.");
+             return;
+          }
           setCurrentPage(page);
           window.scrollTo(0, 0);
         }}
@@ -513,6 +516,12 @@ const App: React.FC = () => {
               language={language}
               toggleLanguage={toggleLanguage}
             />
+          </div>
+        )}
+
+        {currentPage === PageView.SYSTEM && user && (
+          <div className="pointer-events-auto w-full min-h-screen">
+            <SystemManagement />
           </div>
         )}
 

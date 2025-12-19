@@ -358,6 +358,20 @@ export interface DailyListResponse {
 export type HotSearchResponse = DailyListResponse;
 export type FinanceNewsResponse = DailyListResponse;
 
+// --- Cloudinary Usage Types ---
+export interface CloudinaryUsage {
+  plan: string;
+  last_updated: string;
+  transformations: { usage: number; credits_usage: number; };
+  objects: { usage: number; };
+  bandwidth: { usage: number; credits_usage: number; };
+  storage: { usage: number; credits_usage: number; };
+  credits: { usage: number; limit: number; used_percent: number; };
+  requests: number;
+  resources: number;
+  derived_resources: number;
+}
+
 export enum Theme {
   LIGHT = 'light',
   DARK = 'dark'
@@ -373,6 +387,7 @@ export enum PageView {
   PRIVATE_SPACE = 'PRIVATE_SPACE',
   PROFILE = 'PROFILE',
   SETTINGS = 'SETTINGS',
+  SYSTEM = 'SYSTEM', // New System Management Page
   CHAT = 'CHAT',
   AUDIT_LOG = 'AUDIT_LOG',
   ARCHIVES = 'ARCHIVES', // Deprecated, but keeping enum to avoid breaks if any

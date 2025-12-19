@@ -1,7 +1,7 @@
 
 import { fetchClient, API_BASE_URL } from './core';
 import { toast } from '../components/Toast';
-import { ChatMessage, Todo, FitnessRecord, FitnessStats, PeriodRecord, PeriodResponse, Footprint, FootprintStats, Menu, DrawResponse, DailyListResponse, DailyListType, SmartMenuResponse } from '../types';
+import { ChatMessage, Todo, FitnessRecord, FitnessStats, PeriodRecord, PeriodResponse, Footprint, FootprintStats, Menu, DrawResponse, DailyListResponse, DailyListType, SmartMenuResponse, CloudinaryUsage } from '../types';
 
 export const featureService = {
   // --- Chat ---
@@ -319,5 +319,10 @@ export const featureService = {
       method: 'POST',
       body: JSON.stringify({ dishName })
     });
+  },
+
+  // --- Cloudinary Usage ---
+  getCloudinaryUsage: async (): Promise<CloudinaryUsage> => {
+    return await fetchClient<CloudinaryUsage>('/cloudinary/usage');
   }
 };

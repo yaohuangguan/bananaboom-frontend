@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from '../../../i18n/LanguageContext';
 import { FitnessRecord, User } from '../../../types';
 import { apiService } from '../../../services/api';
+import { DeleteModal } from '../../DeleteModal';
 
 type FitnessTab = 'WORKOUT' | 'STATUS' | 'DIET' | 'PHOTOS';
 
@@ -42,8 +43,12 @@ export const FitnessInputForm: React.FC<FitnessInputFormProps> = ({
   
   // Library Modal State
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
-  const [libraryImages, setLibraryImages] = useState<string[]>([]);
+  // Updated to store objects instead of just strings
+  const [libraryImages, setLibraryImages] = useState<{ url: string, public_id: string }[]>([]);
   const [isLoadingLibrary, setIsLoadingLibrary] = useState(false);
+  
+  // Delete Modal State
+  const [imageToDelete, setImageToDelete] = useState<string | null>(null);
 
   const updateWorkout = (field: string, value: any) => updateRecord({ workout: { ...record.workout, isDone: record.workout?.isDone ?? false, [field]: value } });
   const updateStatus = (field: string, value: any) => updateRecord({ status: { ...record.status, [field]: value } });
@@ -145,6 +150,22 @@ export const FitnessInputForm: React.FC<FitnessInputFormProps> = ({
   const handleSelectFromLibrary = (url: string) => {
     updateRecord({ photos: [...(record.photos || []), url] });
     setIsLibraryOpen(false);
+  };
+
+  const confirmDeleteImage = async () => {
+      if (!imageToDelete) return;
+      const id = imageToDelete;
+      
+      // Optimistic
+      setLibraryImages(prev => prev.filter(img => img.public_id !== id));
+      setImageToDelete(null);
+
+      try {
+          await apiService.deleteCloudinaryImage(id);
+      } catch (e) {
+          console.error(e);
+          // Optional: revert if failed
+      }
   };
 
   return (
@@ -343,7 +364,7 @@ export const FitnessInputForm: React.FC<FitnessInputFormProps> = ({
        {/* --- PHOTO LIBRARY MODAL --- */}
        {isLibraryOpen && createPortal(
           <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
-             <div className="bg-white w-full max-w-3xl h-[80vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+             <div className="bg-white w-full max-w-3xl h-[80vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden relative">
                 <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                    <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                       <i className="fas fa-images text-rose-500"></i> Cloud Library
@@ -366,15 +387,22 @@ export const FitnessInputForm: React.FC<FitnessInputFormProps> = ({
                       </div>
                    ) : (
                       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-                         {libraryImages.map((url, idx) => (
-                            <div key={idx} className="flex flex-col gap-1">
+                         {libraryImages.map((item, idx) => (
+                            <div key={idx} className="flex flex-col gap-1 group/item">
                                 <div 
                                    className="aspect-square bg-slate-200 rounded-xl overflow-hidden cursor-default border border-slate-200 shadow-sm relative"
                                 >
-                                   <img src={url} className="w-full h-full object-cover" loading="lazy" />
+                                   <img src={item.url} className="w-full h-full object-cover" loading="lazy" />
+                                   <button 
+                                      onClick={(e) => { e.stopPropagation(); setImageToDelete(item.public_id); }}
+                                      className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-opacity z-10 shadow-sm hover:scale-110"
+                                      title="Delete Image"
+                                   >
+                                      <i className="fas fa-trash text-[10px]"></i>
+                                   </button>
                                 </div>
                                 <button 
-                                  onClick={() => handleSelectFromLibrary(url)}
+                                  onClick={() => handleSelectFromLibrary(item.url)}
                                   className="w-full py-1.5 bg-white text-rose-500 text-xs font-bold uppercase rounded-lg border border-rose-200 hover:bg-rose-500 hover:text-white transition-colors"
                                 >
                                   Select
@@ -384,6 +412,18 @@ export const FitnessInputForm: React.FC<FitnessInputFormProps> = ({
                       </div>
                    )}
                 </div>
+
+                {/* Delete Modal inside Portal Context */}
+                <DeleteModal
+                  isOpen={!!imageToDelete}
+                  onClose={() => setImageToDelete(null)}
+                  onConfirm={confirmDeleteImage}
+                  title="Delete Image"
+                  message="Permanently remove this image from Cloudinary?"
+                  requireInput={false}
+                  buttonText="Delete"
+                  zIndexClass="z-[10000]"
+                />
              </div>
           </div>,
           document.body

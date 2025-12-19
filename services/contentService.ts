@@ -221,20 +221,38 @@ export const contentService = {
     return photos[0];
   },
 
-  getRecentImages: async (): Promise<string[]> => {
+  getRecentImages: async (): Promise<{ url: string; public_id: string }[]> => {
     try {
       const res = await fetchClient<any>('/cloudinary/resources');
-      // Support both { data: [...] } (New) and { resources: [...] } (Legacy)
-      const list = res.data || res.resources;
       
+      let list: any[] = [];
+      
+      // Handle both direct array and object wrapper responses
+      if (Array.isArray(res)) {
+         list = res;
+      } else {
+         list = res.data || res.resources || [];
+      }
+
       if (list && Array.isArray(list)) {
-        return list.map((r: any) => r.secure_url);
+        return list.map((r: any) => ({
+            url: r.secure_url,
+            public_id: r.public_id
+        }));
       }
       return [];
     } catch (e) {
       console.error("Failed to fetch library", e);
       return [];
     }
+  },
+
+  deleteCloudinaryImage: async (public_id: string): Promise<void> => {
+    await fetchClient('/cloudinary/delete', {
+      method: 'POST',
+      body: JSON.stringify({ public_id })
+    });
+    toast.success('Image deleted from cloud.');
   },
 
   // --- Comments ---

@@ -1,17 +1,4 @@
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { BlogPost } from "../types";
 
 export const resources = {
@@ -30,7 +17,8 @@ export const resources = {
       notifications: 'Alerts',
       clearAll: 'Clear All',
       emptyNotifications: 'No new alerts',
-      footprint: 'Star Map'
+      footprint: 'Star Map',
+      system: 'System Management'
     },
     hero: {
       status: 'System Online',
@@ -143,6 +131,21 @@ export const resources = {
       dark: 'Dark Mode',
       en: 'English',
       zh: 'Chinese'
+    },
+    system: {
+      title: 'System Management',
+      subtitle: 'Dashboard for monitoring system resources and external services.',
+      cloudinary: {
+        title: 'Cloudinary Image Library',
+        credits: 'Credits Used',
+        plan: 'Current Plan',
+        storage: 'Storage',
+        bandwidth: 'Bandwidth',
+        objects: 'Objects',
+        transformations: 'Transformations',
+        resources: 'Total Resources',
+        lastUpdated: 'Last Updated'
+      }
     },
     footprint: {
       title: 'Star Map',
@@ -616,7 +619,8 @@ export const resources = {
       notifications: '警报',
       clearAll: '清除',
       emptyNotifications: '无新警报',
-      footprint: '星图'
+      footprint: '星图',
+      system: '系统管理'
     },
     hero: {
       status: '系统在线',
@@ -729,6 +733,21 @@ export const resources = {
       dark: '夜间模式',
       en: 'English',
       zh: '中文'
+    },
+    system: {
+      title: '系统管理',
+      subtitle: '系统资源和外部服务监控仪表盘。',
+      cloudinary: {
+        title: 'Cloudinary 图片库',
+        credits: '信用点数使用',
+        plan: '当前方案',
+        storage: '存储空间',
+        bandwidth: '带宽',
+        objects: '对象数量',
+        transformations: '图像转换',
+        resources: '资源总数',
+        lastUpdated: '最后更新'
+      }
     },
     footprint: {
       title: '星图计划',
