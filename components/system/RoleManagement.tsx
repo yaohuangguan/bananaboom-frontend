@@ -158,9 +158,9 @@ export const RoleManagement: React.FC = () => {
                                             <h5 className="text-xs font-bold uppercase text-primary-500 mb-2">{category}</h5>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {perms.map((p: Permission) => {
-                                                    // Fix 3: Robust check for checkbox state
+                                                    // Fix Echo Problem: Check includes CASE-INSENSITIVELY to verify against existing data
                                                     const currentPerms = editingRole.permissions || [];
-                                                    const isChecked = currentPerms.includes(p.key);
+                                                    const isChecked = currentPerms.some(cp => cp.toUpperCase() === p.key.toUpperCase());
                                                     
                                                     return (
                                                         <label key={p.key} className={`flex items-center gap-2 p-2 rounded-lg border transition-all cursor-pointer ${isChecked ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-slate-300'}`}>
@@ -172,10 +172,19 @@ export const RoleManagement: React.FC = () => {
                                                                     const checked = e.target.checked;
                                                                     const current = editingRole.permissions || [];
                                                                     let newPerms;
+                                                                    
                                                                     if (checked) {
-                                                                        newPerms = [...current, p.key];
+                                                                        // STRICT REQUIREMENT: Add Uppercase Key Only (Core Key)
+                                                                        const keyToAdd = p.key.toUpperCase();
+                                                                        // Prevent duplicates if case mismatch exists
+                                                                        if (!current.some(cp => cp.toUpperCase() === keyToAdd)) {
+                                                                            newPerms = [...current, keyToAdd];
+                                                                        } else {
+                                                                            newPerms = current;
+                                                                        }
                                                                     } else {
-                                                                        newPerms = current.filter(k => k !== p.key);
+                                                                        // Remove case-insensitively to ensure clean up of legacy data
+                                                                        newPerms = current.filter(k => k.toUpperCase() !== p.key.toUpperCase());
                                                                     }
                                                                     setEditingRole(prev => prev ? ({...prev, permissions: newPerms}) : null);
                                                                 }}

@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Theme, PageView, User, AuditLog, ChatUser, PERM_KEYS, can, Language } from '../types';
 import { useTranslation } from '../i18n/LanguageContext';
 import { Socket } from 'socket.io-client';
@@ -8,7 +8,7 @@ import { toast } from './Toast';
 interface HeaderProps {
   theme: Theme;
   toggleTheme: () => void;
-  setPage: (page: PageView) => void;
+  setPage: (page: PageView) => void; // Deprecated but kept for type compat if needed temporarily
   currentPage: PageView;
   currentUser: User | null;
   onLogin: () => void;
@@ -34,14 +34,15 @@ const LANGUAGES: { code: Language; label: string; flags: string[] }[] = [
 export const Header: React.FC<HeaderProps> = ({ 
   theme, 
   toggleTheme,
-  setPage, 
-  currentPage: currentPage,
+  currentPage,
   currentUser,
   onLogin,
   onLogout,
   socket,
   onNavigateToChat
 }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
@@ -173,21 +174,21 @@ export const Header: React.FC<HeaderProps> = ({
   const canAccessPrivateSpace = can(currentUser, PERM_KEYS.PRIVATE_ACCESS);
 
   const navLinks = [
-    { label: t.header.home, value: PageView.HOME, code: '01' },
-    { label: t.header.blog, value: PageView.BLOG, code: '02' },
-    { label: t.header.about, value: PageView.RESUME, code: '03' },
+    { label: t.header.home, value: PageView.HOME, path: '/', code: '01' },
+    { label: t.header.blog, value: PageView.BLOG, path: '/blogs', code: '02' },
+    { label: t.header.about, value: PageView.RESUME, path: '/profile', code: '03' },
   ];
 
   if (currentUser) {
-    navLinks.push({ label: t.header.footprint, value: PageView.FOOTPRINT, code: '04' });
-    navLinks.push({ label: t.header.chat, value: PageView.CHAT, code: '05' });
+    navLinks.push({ label: t.header.footprint, value: PageView.FOOTPRINT, path: '/footprints', code: '04' });
+    navLinks.push({ label: t.header.chat, value: PageView.CHAT, path: '/chatroom', code: '05' });
   }
 
   if (canAccessPrivateSpace) {
-    navLinks.push({ label: t.header.privateSpace, value: PageView.PRIVATE_SPACE, code: '00' });
+    navLinks.push({ label: t.header.privateSpace, value: PageView.PRIVATE_SPACE, path: '/captain-cabin/journal-space', code: '00' });
   }
 
-  const isPrivate = currentPage === PageView.PRIVATE_SPACE;
+  const isPrivate = location.pathname.startsWith('/captain-cabin');
 
   let headerClasses = `fixed w-full top-0 z-[2000] transition-all duration-500 `;
   if (isPrivate) {
@@ -213,9 +214,9 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         {/* Logo */}
-        <div 
+        <Link 
+          to="/"
           className="flex items-center gap-3 cursor-pointer group z-20 relative mr-auto"
-          onClick={() => setPage(PageView.HOME)}
         >
           <div className="relative w-10 h-10 flex items-center justify-center">
             <div className={`absolute inset-0 rounded-full blur-md transition-all duration-500 ${isPrivate ? 'bg-rose-400/60 group-hover:bg-rose-500/80' : 'bg-primary-500/20 group-hover:bg-primary-500/40'}`}></div>
@@ -229,7 +230,7 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
             {!isPrivate && <span className="text-[8px] font-mono text-slate-500 dark:text-slate-600 uppercase tracking-widest hidden sm:block">Deep Space Network</span>}
           </div>
-        </div>
+        </Link>
 
         {/* Desktop Nav */}
         <nav className="hidden xl:flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
@@ -239,9 +240,9 @@ export const Header: React.FC<HeaderProps> = ({
               
               if (link.value === PageView.PRIVATE_SPACE) {
                 return (
-                   <button
+                   <Link
                     key={link.value}
-                    onClick={() => setPage(link.value)}
+                    to={link.path}
                     className={`relative px-5 py-2 rounded-full transition-all duration-300 group ${
                       isActive 
                         ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white font-bold shadow-lg shadow-rose-400/30 transform scale-105' 
@@ -251,14 +252,14 @@ export const Header: React.FC<HeaderProps> = ({
                      <span className="text-[10px] font-bold tracking-widest uppercase flex items-center gap-2">
                        <i className="fas fa-heart text-[8px]"></i> {link.label}
                      </span>
-                   </button>
+                   </Link>
                 );
               }
 
               return (
-                <button
+                <Link
                   key={link.value}
-                  onClick={() => setPage(link.value)}
+                  to={link.path}
                   className={`relative px-4 py-2 group rounded-full transition-all duration-300 overflow-hidden flex flex-col items-center justify-center min-w-[100px] ${
                     isActive 
                       ? 'bg-primary-500/10 dark:bg-primary-900/20' 
@@ -284,7 +285,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
 
                   <span className={`absolute bottom-0.5 w-1 h-1 rounded-full bg-primary-500 dark:bg-primary-400 transition-all duration-300 ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-0 group-hover:opacity-50 group-hover:scale-75'}`}></span>
-                </button>
+                </Link>
               );
             })}
           </div>
@@ -449,36 +450,36 @@ export const Header: React.FC<HeaderProps> = ({
                     </div>
                     
                     <div className="p-1">
-                      <button 
-                        onClick={() => setPage(PageView.PROFILE)}
+                      <Link 
+                        to="/user-profile"
                         className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${isPrivate ? 'text-rose-700 hover:bg-rose-50 font-medium' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary-600 dark:hover:text-primary-400'}`}
                       >
                          <i className="fas fa-id-card w-4 text-center"></i> {t.header.profile}
-                      </button>
+                      </Link>
                       
                       {can(currentUser, PERM_KEYS.SYSTEM_LOGS) && (
-                        <button 
-                          onClick={() => setPage(PageView.SYSTEM)}
+                        <Link 
+                          to="/system-management"
                           className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${isPrivate ? 'text-rose-700 hover:bg-rose-50 font-medium' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary-600 dark:hover:text-primary-400'}`}
                         >
                            <i className="fas fa-server w-4 text-center"></i> {t.header.system}
-                        </button>
+                        </Link>
                       )}
                       
-                      <button 
-                        onClick={() => setPage(PageView.SETTINGS)}
+                      <Link 
+                        to="/system-settings"
                         className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${isPrivate ? 'text-rose-700 hover:bg-rose-50 font-medium' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary-600 dark:hover:text-primary-400'}`}
                       >
                          <i className="fas fa-cog w-4 text-center"></i> {t.header.settings}
-                      </button>
+                      </Link>
                       
                       {can(currentUser, PERM_KEYS.SYSTEM_LOGS) && (
-                         <button 
-                            onClick={() => setPage(PageView.AUDIT_LOG)}
+                         <Link 
+                            to="/audit-log"
                             className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${isPrivate ? 'text-rose-700 hover:bg-rose-50 font-medium' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary-600 dark:hover:text-primary-400'}`}
                          >
                             <i className="fas fa-shield-alt w-4 text-center"></i> {t.header.audit}
-                         </button>
+                         </Link>
                       )}
                     </div>
 
@@ -510,12 +511,10 @@ export const Header: React.FC<HeaderProps> = ({
         <div className={`xl:hidden absolute top-full left-0 w-full p-6 shadow-2xl animate-fade-in backdrop-blur-xl h-screen overflow-y-auto pb-32 ${isPrivate ? 'bg-white/95 border-b border-rose-200' : 'bg-[#fdfbf7] dark:bg-[#050914] border-b border-slate-200 dark:border-white/10'}`}>
           <div className="flex flex-col space-y-4">
             {navLinks.map((link) => (
-              <button
+              <Link
                 key={link.value}
-                onClick={() => {
-                  setPage(link.value);
-                  setIsMobileMenuOpen(false);
-                }}
+                to={link.path}
+                onClick={() => setIsMobileMenuOpen(false)}
                 className={`text-left text-lg font-mono uppercase tracking-widest ${
                   currentPage === link.value
                     ? (isPrivate ? 'text-rose-500 font-bold' : 'text-primary-600 dark:text-primary-400')
@@ -523,43 +522,47 @@ export const Header: React.FC<HeaderProps> = ({
                 }`}
               >
                 <span className="opacity-50 mr-2">{link.code}</span> {link.label}
-              </button>
+              </Link>
             ))}
             
             {/* Mobile User Options */}
             {currentUser && (
                <>
                  <div className={`border-t my-4 ${isPrivate ? 'border-rose-100' : 'border-slate-200 dark:border-white/10'}`}></div>
-                 <button
-                    onClick={() => { setPage(PageView.PROFILE); setIsMobileMenuOpen(false); }}
+                 <Link
+                    to="/user-profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
                     className={`text-left text-lg font-mono uppercase tracking-widest flex items-center gap-2 ${isPrivate ? 'text-slate-600' : 'text-slate-500 dark:text-slate-400'}`}
                   >
                     <i className="fas fa-id-card text-xs"></i> {t.header.profile}
-                  </button>
+                  </Link>
                   
                   {can(currentUser, PERM_KEYS.SYSTEM_LOGS) && (
-                    <button
-                      onClick={() => { setPage(PageView.SYSTEM); setIsMobileMenuOpen(false); }}
+                    <Link
+                      to="/system-management"
+                      onClick={() => setIsMobileMenuOpen(false)}
                       className={`text-left text-lg font-mono uppercase tracking-widest flex items-center gap-2 ${isPrivate ? 'text-slate-600' : 'text-slate-500 dark:text-slate-400'}`}
                     >
                       <i className="fas fa-server text-xs"></i> {t.header.system}
-                    </button>
+                    </Link>
                   )}
                   
-                  <button
-                    onClick={() => { setPage(PageView.SETTINGS); setIsMobileMenuOpen(false); }}
+                  <Link
+                    to="/system-settings"
+                    onClick={() => setIsMobileMenuOpen(false)}
                     className={`text-left text-lg font-mono uppercase tracking-widest flex items-center gap-2 ${isPrivate ? 'text-slate-600' : 'text-slate-500 dark:text-slate-400'}`}
                   >
                     <i className="fas fa-cog text-xs"></i> {t.header.settings}
-                  </button>
+                  </Link>
                   
                   {can(currentUser, PERM_KEYS.SYSTEM_LOGS) && (
-                    <button
-                      onClick={() => { setPage(PageView.AUDIT_LOG); setIsMobileMenuOpen(false); }}
+                    <Link
+                      to="/audit-log"
+                      onClick={() => setIsMobileMenuOpen(false)}
                       className={`text-left text-lg font-mono uppercase tracking-widest flex items-center gap-2 ${isPrivate ? 'text-slate-600' : 'text-primary-600 dark:text-primary-400'}`}
                     >
                       <i className="fas fa-shield-alt text-xs"></i> {t.header.audit}
-                    </button>
+                    </Link>
                   )}
                </>
             )}

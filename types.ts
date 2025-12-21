@@ -69,36 +69,37 @@ export interface User {
 }
 
 // --- PERMISSIONS CONFIG ---
+// Values standardized to UPPERCASE to match system core keys
 export const PERM_KEYS = {
   // --- User Basis ---
-  USER_UPDATE: 'user:update_self',
-  BLOG_INTERACT: 'blog:interact',
+  USER_UPDATE: 'USER:UPDATE_SELF',
+  BLOG_INTERACT: 'BLOG:INTERACT',
 
   // --- Private Domain ---
-  PRIVATE_ACCESS: 'private_domain:access',
+  PRIVATE_ACCESS: 'PRIVATE_DOMAIN:ACCESS',
   
   // --- Private Logs ---
-  PRIVATE_POST_USE: 'private_post:use',
-  PRIVATE_POST_READ: 'private_post:read',
+  PRIVATE_POST_USE: 'PRIVATE_POST:USE',
+  PRIVATE_POST_READ: 'PRIVATE_POST:READ',
 
   // --- Second Brain ---
-  BRAIN_USE: 'brain:use',
+  BRAIN_USE: 'BRAIN:USE',
 
   // --- Capsule Gallery ---
-  CAPSULE_USE: 'capsule:use',
+  CAPSULE_USE: 'CAPSULE:USE',
 
   // --- Leisure Space ---
-  LEISURE_READ: 'leisure:read',
-  LEISURE_MANAGE: 'leisure:manage',
+  LEISURE_READ: 'LEISURE:READ',
+  LEISURE_MANAGE: 'LEISURE:MANAGE',
 
   // --- Fitness Space ---
-  FITNESS_USE: 'fitness:use',       // Self check-in
-  FITNESS_READ_ALL: 'fitness:read_all', // Admin View
-  FITNESS_EDIT_ALL: 'fitness:edit_all', // Admin Edit
+  FITNESS_USE: 'FITNESS:USE',       // Self check-in
+  FITNESS_READ_ALL: 'FITNESS:READ_ALL', // Admin View
+  FITNESS_EDIT_ALL: 'FITNESS:EDIT_ALL', // Admin Edit
 
   // --- System/Logs (Top Secret) ---
-  SYSTEM_LOGS: 'system:logs',
-  USER_MANAGE: 'system:user_manage', // Implied for managing users
+  SYSTEM_LOGS: 'SYSTEM:LOGS',
+  USER_MANAGE: 'SYSTEM:USER_MANAGE', // Implied for managing users
 };
 
 /**
@@ -108,8 +109,8 @@ export const can = (user: User | null | undefined, permission: string): boolean 
   if (!user || !user.permissions) return false;
   // 1. Super Admin Wildcard
   if (user.permissions.includes('*')) return true;
-  // 2. Exact Match
-  return user.permissions.includes(permission);
+  // 2. Exact Match (Case-insensitive check for robustness)
+  return user.permissions.some(p => p.toUpperCase() === permission.toUpperCase());
 };
 
 export interface AuditLog {
@@ -461,6 +462,7 @@ export enum Theme {
 
 export type Language = 'en' | 'zh' | 'fr' | 'zh-HK' | 'ja' | 'ru' | 'de' | 'es';
 
+// Used mostly for Header Highlighting logic now
 export enum PageView {
   HOME = 'HOME',
   BLOG = 'BLOG',

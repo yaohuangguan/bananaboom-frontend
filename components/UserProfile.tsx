@@ -229,10 +229,20 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
     setIsSubmittingPerm(true);
     try {
       if (requestType === 'ROLE') {
+         if (permRequest.role === 'super_admin') {
+             toast.error("Cannot request Super Admin role.");
+             setIsSubmittingPerm(false);
+             return;
+         }
          await apiService.submitRoleRequest(permRequest.role, permRequest.reason);
       } else {
          if (!permRequest.permission.trim()) {
              toast.error("Please select a permission key.");
+             setIsSubmittingPerm(false);
+             return;
+         }
+         if (permRequest.permission.trim() === '*') {
+             toast.error("Cannot request root permission (*).");
              setIsSubmittingPerm(false);
              return;
          }
@@ -469,7 +479,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
                 <div className="flex gap-3 pt-2">
                    {user.role !== 'admin' && user.role !== 'super_admin' && (
                       <button 
-                        onClick={() => openPermissionModal('ROLE', 'role:admin')} 
+                        onClick={() => openPermissionModal('ROLE', 'admin')} 
                         className="flex-1 px-4 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-bold uppercase text-xs tracking-widest transition-all shadow-lg shadow-indigo-500/20"
                       >
                          {t.profile.applyAdmin}
@@ -608,13 +618,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
                              onChange={(e) => setPermRequest({...permRequest, role: e.target.value})}
                           >
                              {availableRoles.length > 0 ? (
-                                availableRoles.map(role => (
+                                availableRoles.filter(r => r.name !== 'super_admin').map(role => (
                                    <option key={role._id} value={role.name}>{role.name}</option>
                                 ))
                              ) : (
                                 <>
                                    <option value="admin">admin</option>
-                                   <option value="super_admin">super_admin</option>
                                    <option value="user">user</option>
                                 </>
                              )}
@@ -632,7 +641,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
                               placeholder="e.g. system:logs"
                            />
                            <datalist id="perms-list">
-                              {backendPermissions.map(p => (
+                              {backendPermissions.filter(p => p.key !== '*').map(p => (
                                  <option key={p.key} value={p.key}>{p.name}</option>
                               ))}
                            </datalist>
