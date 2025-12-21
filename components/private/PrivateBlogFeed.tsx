@@ -1,8 +1,4 @@
 
-
-
-
-
 import React from 'react';
 import { BlogPost, PaginationData } from '../../types';
 import { useTranslation } from '../../i18n/LanguageContext';
@@ -31,7 +27,17 @@ export const PrivateBlogFeed: React.FC<PrivateBlogFeedProps> = ({
   const formatDate = (dateString?: string) => {
     if (!dateString) return t.privateSpace.unknownDate;
     try {
-      return new Date(dateString).toLocaleDateString();
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+
+      return date.toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
     } catch {
       return dateString;
     }

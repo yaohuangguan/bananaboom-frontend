@@ -5,7 +5,7 @@ import { HotSearchItem, DailyListType } from '../../types';
 import { toast } from '../Toast';
 import { useTranslation } from '../../i18n/LanguageContext';
 
-export const NewsWidget: React.FC = () => {
+const NewsWidgetComponent: React.FC = () => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<DailyListType>('guonei');
@@ -270,3 +270,5 @@ export const NewsWidget: React.FC = () => {
     </div>
   );
 };
+
+export const NewsWidget = React.memo(NewsWidgetComponent);

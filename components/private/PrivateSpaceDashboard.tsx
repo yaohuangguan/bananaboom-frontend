@@ -1,14 +1,9 @@
-
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { CountDateWidget, TabType } from './CountDateWidget';
-import { JournalSpace } from './JournalSpace';
-import { LeisureSpace } from './LeisureSpace';
-import { PhotoGallery } from './PhotoGallery';
-import { FitnessSpace } from './FitnessSpace';
-import { SecondBrainSpace } from './SecondBrainSpace';
 import { NewsWidget } from './HotSearchWidget';
 import { AccessRestricted } from '../AccessRestricted';
-import { BlogPost, User, PaginationData, PERM_KEYS, can } from '../../types';
+import { User, PERM_KEYS, can } from '../../types';
 import { useTranslation } from '../../i18n/LanguageContext';
 
 // Import Theme Components (Static)
@@ -17,33 +12,41 @@ import { NewYearTheme } from './themes/NewYearTheme';
 
 interface PrivateSpaceDashboardProps {
   user: User | null;
-  blogs: BlogPost[];
-  onSelectBlog: (blog: BlogPost) => void;
-  onRefresh?: () => void;
-  
-  // Pagination Props
-  pagination?: PaginationData | null;
-  onPageChange?: (page: number) => void;
-  
-  // Search/Filter Props
-  onFilterChange?: (search: string, tag: string | null) => void;
-  initialSearch?: string;
 }
 
 type HolidayMode = 'CHRISTMAS' | 'CNY' | 'OFF';
 
 export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({ 
-  user, 
-  blogs, 
-  onSelectBlog, 
-  onRefresh,
-  pagination,
-  onPageChange,
-  onFilterChange,
-  initialSearch
+  user
 }) => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<TabType>('JOURNAL');
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Determine active tab based on URL path
+  const currentPath = location.pathname.split('/').pop();
+  const activeTab: TabType = useMemo(() => {
+      switch(currentPath) {
+          case 'ai-space': return 'SECOND_BRAIN';
+          case 'journal-space': return 'JOURNAL';
+          case 'leisure-space': return 'LEISURE';
+          case 'capsule-gallery': return 'GALLERY';
+          case 'fitness-space': return 'FITNESS';
+          default: return 'JOURNAL';
+      }
+  }, [currentPath]);
+
+  const handleTabChange = (tab: TabType) => {
+      let path = 'journal-space';
+      switch(tab) {
+          case 'SECOND_BRAIN': path = 'ai-space'; break;
+          case 'JOURNAL': path = 'journal-space'; break;
+          case 'LEISURE': path = 'leisure-space'; break;
+          case 'GALLERY': path = 'capsule-gallery'; break;
+          case 'FITNESS': path = 'fitness-space'; break;
+      }
+      navigate(`/captain-cabin/${path}`);
+  };
   
   // --- Auto Holiday Logic ---
   const autoHoliday = useMemo<HolidayMode>(() => {
@@ -97,8 +100,6 @@ export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({
     return 'bg-gradient-to-br from-pink-200 via-rose-200 to-pink-200 text-slate-900';
   };
 
-  const hasPrivateAccess = can(user, PERM_KEYS.PRIVATE_ACCESS);
-  
   // Permission Check for Together Time Widget
   // Only VIP users or Super Admins can see the special timer. Everyone else sees System Time.
   const canViewTogetherTime = !!(user?.vip || user?.role === 'super_admin');
@@ -145,7 +146,7 @@ export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({
         <CountDateWidget 
           fromDate="2020-02-14" 
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
           // Pass the calculated active holiday (or null if OFF) for widget styling
           holidayType={activeHoliday === 'OFF' ? null : activeHoliday}
           effectsEnabled={effectsEnabled}
@@ -155,55 +156,28 @@ export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({
         />
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Content Area - Render Outlet for Child Routes */}
       <div className={`container mx-auto flex-1 max-w-[1600px] relative z-10 ${isFixedLayout ? 'lg:min-h-0 pb-10 lg:pb-0' : 'pb-20'}`}>
-        
-        {activeTab === 'SECOND_BRAIN' && (
-          can(user, PERM_KEYS.BRAIN_USE) ? (
-            <div className="h-full animate-fade-in lg:overflow-hidden">
-               <SecondBrainSpace user={user} />
-            </div>
-          ) : <AccessRestricted permission={PERM_KEYS.BRAIN_USE} className="bg-white/80 backdrop-blur shadow-xl border-white/50" onSuccess={() => window.location.reload()} />
-        )}
+         {/* Check specific permissions for specific routes before rendering outlet content */}
+         {activeTab === 'SECOND_BRAIN' && !can(user, PERM_KEYS.BRAIN_USE) && (
+             <AccessRestricted permission={PERM_KEYS.BRAIN_USE} className="bg-white/80 backdrop-blur shadow-xl border-white/50" onSuccess={() => window.location.reload()} />
+         )}
+         {activeTab === 'LEISURE' && !can(user, PERM_KEYS.LEISURE_READ) && (
+             <AccessRestricted permission={PERM_KEYS.LEISURE_READ} className="bg-white/80 backdrop-blur shadow-xl border-white/50" onSuccess={() => window.location.reload()} />
+         )}
+         {activeTab === 'GALLERY' && !can(user, PERM_KEYS.CAPSULE_USE) && (
+             <AccessRestricted permission={PERM_KEYS.CAPSULE_USE} className="bg-white/80 backdrop-blur shadow-xl border-white/50" onSuccess={() => window.location.reload()} />
+         )}
+         {activeTab === 'FITNESS' && !(can(user, PERM_KEYS.FITNESS_USE) || can(user, PERM_KEYS.FITNESS_READ_ALL)) && (
+             <AccessRestricted permission={PERM_KEYS.FITNESS_READ_ALL} className="bg-white/80 backdrop-blur shadow-xl border-white/50" onSuccess={() => window.location.reload()} />
+         )}
 
-        {activeTab === 'JOURNAL' && (
-          // Journal base access implied by Private Space, but individual actions might need check
-          // We assume if they can see private space, they can see the list at least.
-          <JournalSpace 
-            user={user} 
-            blogs={blogs} 
-            onSelectBlog={onSelectBlog} 
-            onRefresh={onRefresh}
-            pagination={pagination}
-            onPageChange={onPageChange}
-            onFilterChange={onFilterChange}
-            initialSearch={initialSearch}
-          />
-        )}
-        
-        {activeTab === 'LEISURE' && (
-          can(user, PERM_KEYS.LEISURE_READ) ? (
-            <div className="h-full animate-fade-in lg:overflow-hidden">
-               <LeisureSpace user={user} />
-            </div>
-          ) : <AccessRestricted permission={PERM_KEYS.LEISURE_READ} className="bg-white/80 backdrop-blur shadow-xl border-white/50" onSuccess={() => window.location.reload()} />
-        )}
-
-        {activeTab === 'GALLERY' && (
-          can(user, PERM_KEYS.CAPSULE_USE) ? (
-            <div className="h-full animate-fade-in lg:overflow-hidden">
-               <PhotoGallery />
-            </div>
-          ) : <AccessRestricted permission={PERM_KEYS.CAPSULE_USE} className="bg-white/80 backdrop-blur shadow-xl border-white/50" onSuccess={() => window.location.reload()} />
-        )}
-
-        {activeTab === 'FITNESS' && (
-          can(user, PERM_KEYS.FITNESS_USE) || can(user, PERM_KEYS.FITNESS_READ_ALL) ? (
-            <div className="animate-fade-in w-full">
-               <FitnessSpace currentUser={user} />
-            </div>
-          ) : <AccessRestricted permission={PERM_KEYS.FITNESS_READ_ALL} className="bg-white/80 backdrop-blur shadow-xl border-white/50" onSuccess={() => window.location.reload()} />
-        )}
+         {/* Render actual content if permissions pass (or if route is public within private space like journal list) */}
+         {/* Note: The JournalSpace itself does checking on actions but viewing list is generally allowed if you have Private Space Access */}
+         
+         <div className="h-full animate-fade-in lg:overflow-hidden w-full">
+            <Outlet context={{ user }} />
+         </div>
       </div>
       
       <style>{`

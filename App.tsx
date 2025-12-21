@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { Routes, Route, Navigate, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { BlogList } from './components/BlogList';
@@ -14,7 +15,7 @@ import { ChatRoom } from './components/ChatRoom';
 import { AuditLogViewer } from './components/AuditLogViewer';
 import { PortfolioPage } from './components/PortfolioPage';
 import { apiService } from './services/api';
-import { Theme, PageView, User, BlogPost, PaginationData, ChatUser, PERM_KEYS, can } from './types';
+import { Theme, PageView, User, BlogPost, ChatUser, PERM_KEYS, can } from './types';
 import { useTranslation } from './i18n/LanguageContext';
 
 // New Component Imports
@@ -24,10 +25,18 @@ import { ResumeView } from './components/ResumeView';
 import { Footer } from './components/Footer';
 import { PageLoader } from './components/PageLoader';
 import { SystemManagement } from './components/SystemManagement';
+import { AccessRestricted } from './components/AccessRestricted';
 
 // Lazy Load Heavy Components
 const PrivateSpaceDashboard = lazy(() => import('./components/private/PrivateSpaceDashboard').then(module => ({ default: module.PrivateSpaceDashboard })));
 const FootprintSpace = lazy(() => import('./components/FootprintSpace').then(module => ({ default: module.FootprintSpace })));
+
+// Lazy Load Private Sub-Spaces for explicit routing
+const JournalSpace = lazy(() => import('./components/private/JournalSpace').then(m => ({ default: m.JournalSpace })));
+const SecondBrainSpace = lazy(() => import('./components/private/SecondBrainSpace').then(m => ({ default: m.SecondBrainSpace })));
+const LeisureSpace = lazy(() => import('./components/private/LeisureSpace').then(m => ({ default: m.LeisureSpace })));
+const PhotoGallery = lazy(() => import('./components/private/PhotoGallery').then(m => ({ default: m.PhotoGallery })));
+const FitnessSpace = lazy(() => import('./components/private/FitnessSpace').then(m => ({ default: m.FitnessSpace })));
 
 const SOCKET_URL = 'https://bananaboom-api-242273127238.asia-east1.run.app';
 
@@ -38,7 +47,86 @@ declare global {
   }
 }
 
-// --- App Content Component ---
+// Layout Wrapper Component to handle common elements like Header, Background, Footer
+const Layout: React.FC<{
+  user: User | null;
+  socket: Socket | null;
+  theme: Theme;
+  toggleTheme: () => void;
+  onLogin: () => void;
+  onLogout: () => void;
+  onNavigateToChat: (user: ChatUser) => void;
+}> = ({ user, socket, theme, toggleTheme, onLogin, onLogout, onNavigateToChat }) => {
+  const location = useLocation();
+  const isPrivateSpace = location.pathname.startsWith('/captain-cabin');
+  const mainBgClass = isPrivateSpace
+    ? 'bg-gradient-to-br from-pink-200 via-rose-200 to-pink-200' 
+    : theme === Theme.DARK ? 'bg-slate-950' : 'bg-transparent';
+
+  // Helper to map path to PageView enum for Header highlight
+  const getCurrentPageView = (path: string): PageView => {
+    if (path.startsWith('/blogs')) return PageView.BLOG;
+    if (path.startsWith('/profile')) return PageView.RESUME;
+    if (path.startsWith('/user-profile')) return PageView.PROFILE;
+    if (path.startsWith('/system-management')) return PageView.SYSTEM;
+    if (path.startsWith('/system-settings')) return PageView.SETTINGS;
+    if (path.startsWith('/footprints')) return PageView.FOOTPRINT;
+    if (path.startsWith('/chatroom')) return PageView.CHAT;
+    if (path.startsWith('/captain-cabin')) return PageView.PRIVATE_SPACE;
+    return PageView.HOME;
+  };
+
+  return (
+    <div className={`min-h-screen relative overflow-hidden transition-colors duration-500 selection:bg-primary-500/30 ${mainBgClass}`}>
+      <ToastContainer />
+      
+      {!isPrivateSpace && (
+        <>
+          {theme === Theme.DARK ? <CosmicBackground theme={theme} /> : <ScenicBackground />}
+        </>
+      )}
+
+      <Header 
+        theme={theme}
+        toggleTheme={toggleTheme}
+        setPage={() => {}} // Not used with Router Links in Header
+        currentPage={getCurrentPageView(location.pathname)}
+        currentUser={user}
+        onLogin={onLogin}
+        onLogout={onLogout}
+        socket={socket}
+        onNavigateToChat={onNavigateToChat}
+      />
+
+      <main className="relative z-10 pointer-events-none w-full">
+        <div className="pointer-events-auto w-full min-h-screen">
+           <Outlet />
+        </div>
+      </main>
+
+      <Footer currentPage={getCurrentPageView(location.pathname)} currentUser={user} />
+    </div>
+  );
+};
+
+interface ProtectedRouteProps {
+  user: User | null;
+  element: React.ReactNode;
+  requiredPerm?: string;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ user, element, requiredPerm }) => {
+  if (!user) {
+      // Not logged in -> Redirect to home (or could show login modal trigger)
+      return <Navigate to="/" replace />;
+  }
+  if (requiredPerm && !can(user, requiredPerm)) {
+      // Logged in but no permission -> Show Restricted Component
+      return <div className="pt-32 container mx-auto px-6"><AccessRestricted permission={requiredPerm} /></div>;
+  }
+  return <>{element}</>;
+};
+
 const App: React.FC = () => {
   const [theme, setTheme] = useState<Theme>(() => {
     const savedTheme = localStorage.getItem('app_theme');
@@ -50,53 +138,24 @@ const App: React.FC = () => {
     }
     return Theme.LIGHT;
   });
-  const [currentPage, setCurrentPage] = useState<PageView>(PageView.HOME);
   const [user, setUser] = useState<User | null>(null);
-  const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   
-  const [publicBlogs, setPublicBlogs] = useState<BlogPost[]>([]);
-  const [privateBlogs, setPrivateBlogs] = useState<BlogPost[]>([]);
-  
+  // Public Blog State
   const [isLoadingBlogs, setIsLoadingBlogs] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  
-  // State for public blog deletion
   const [publicPostToDelete, setPublicPostToDelete] = useState<BlogPost | null>(null);
   
-  // Server-Side Pagination & Filtering State for Public Blogs
-  const [pagination, setPagination] = useState<PaginationData | null>(null);
-  const [publicSearch, setPublicSearch] = useState('');
-  const [publicTag, setPublicTag] = useState<string | null>(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [socket, setSocket] = useState<Socket | null>(null);
   
-  // Like State Management (Persisted locally for anonymous usage)
-  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
-
-  // Server-Side Pagination for Private Blogs
-  const [privatePagination, setPrivatePagination] = useState<PaginationData | null>(null);
-  // Search state for Private Blogs
-  const [privateSearch, setPrivateSearch] = useState('');
-  const [privateTag, setPrivateTag] = useState<string | null>(null);
-
-  // Chat Target State
+  // Chat Navigation State
   const [chatTarget, setChatTarget] = useState<ChatUser | null>(null);
 
   const { t, language, toggleLanguage } = useTranslation();
+  const navigate = useNavigate();
 
-  // Socket State
-  const [socket, setSocket] = useState<Socket | null>(null);
-
+  // Initial Auth Check
   useEffect(() => {
-    // Load liked posts from localStorage
-    const savedLikes = localStorage.getItem('liked_posts');
-    if (savedLikes) {
-      try {
-        setLikedPosts(new Set(JSON.parse(savedLikes)));
-      } catch (e) {
-        console.error("Failed to parse liked posts", e);
-      }
-    }
-    
-    // Check for existing session
     const checkAuth = async () => {
       const token = localStorage.getItem('auth_token');
       if (token) {
@@ -108,133 +167,12 @@ const App: React.FC = () => {
           apiService.logout();
         }
       }
+      setIsAuthChecking(false);
     };
-
     checkAuth();
-    fetchPublicBlogs(1);
   }, []);
 
-  // Listen for global logout events (from api.ts)
-  useEffect(() => {
-    const handleLogoutEvent = () => {
-      handleLogoutCleanup();
-    };
-
-    window.addEventListener('auth:logout', handleLogoutEvent);
-    return () => window.removeEventListener('auth:logout', handleLogoutEvent);
-  }, []);
-
-  // Socket Connection Effect
-  useEffect(() => {
-    if (user && !socket) {
-      const newSocket = io(SOCKET_URL);
-      
-      newSocket.on('connect', () => {
-        // Authenticate/Register User immediately with robust payload
-        const userPayload = {
-            name: user.displayName,
-            id: user._id, // Ensure this matches user.id usage in backend
-            email: user.email,
-            photoURL: user.photoURL
-        };
-        newSocket.emit('USER_CONNECTED', userPayload);
-      });
-
-      // Global Listeners
-      newSocket.on('NEW_NOTIFICATION', (data: any) => {
-         if (data.type === 'private_message') {
-             // Only toast if it's a private message notification
-             toast.info(data.content);
-         }
-         // Dispatch event for Header to update its list
-         window.dispatchEvent(new CustomEvent('sys_notification', { detail: data }));
-      });
-      
-      setSocket(newSocket);
-    } else if (!user && socket) {
-      socket.emit('LOGOUT');
-      socket.disconnect();
-      setSocket(null);
-    }
-  }, [user]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-     return () => {
-       if (socket) socket.disconnect();
-     }
-  }, [socket]);
-
-  // Fetch private blogs ONLY when user logs in AND is on Private Space
-  useEffect(() => {
-    if (user && currentPage === PageView.PRIVATE_SPACE) {
-      if (privateBlogs.length === 0) {
-        fetchPrivateBlogs(1);
-      } else {
-        // Refresh current page
-        fetchPrivateBlogs(privatePagination?.currentPage || 1);
-      }
-      
-      // Ensure user stays on private page only if valid perms
-      if (can(user, PERM_KEYS.PRIVATE_ACCESS)) {
-         // authorized
-      } else {
-         setCurrentPage(PageView.HOME);
-      }
-    } else if (!user && currentPage === PageView.PRIVATE_SPACE) {
-      // If logged out on private space, go home
-      setCurrentPage(PageView.HOME);
-    }
-  }, [user, currentPage]);
-
-  const fetchPublicBlogs = async (page: number, search = publicSearch, tag = publicTag) => {
-    if (publicBlogs.length === 0) {
-      setIsLoadingBlogs(true);
-    }
-    
-    try {
-      const { data, pagination: paginationMeta } = await apiService.getPosts(page, 10, search, tag || '');
-      setPublicBlogs(data);
-      setPagination(paginationMeta);
-      setPublicSearch(search);
-      setPublicTag(tag);
-    } catch (error) {
-      console.error("Failed to fetch public blogs", error);
-    } finally {
-      setIsLoadingBlogs(false);
-    }
-  };
-
-  const handlePublicFilterChange = (search: string, tag: string | null) => {
-    // Reset to page 1 when filter changes
-    fetchPublicBlogs(1, search, tag);
-  };
-
-  const fetchPrivateBlogs = async (page?: number, search?: string, tag?: string) => {
-    // Resolve parameters, defaulting to current state if not provided
-    const targetPage = page || privatePagination?.currentPage || 1;
-    const targetSearch = search !== undefined ? search : privateSearch;
-    const targetTag = tag !== undefined ? tag : privateTag;
-
-    try {
-      const { data, pagination: paginationMeta } = await apiService.getPrivatePosts(targetPage, 10, targetSearch, targetTag || '');
-      setPrivateBlogs(data);
-      setPrivatePagination(paginationMeta);
-      
-      // Update state
-      setPrivateSearch(targetSearch);
-      setPrivateTag(targetTag);
-    } catch (error) {
-      console.error("Failed to fetch private blogs (safely handled):", error);
-      setPrivateBlogs([]);
-    }
-  };
-
-  const handlePrivateFilterChange = (search: string, tag: string | null) => {
-    // Always reset to page 1 when filtering explicitly changes
-    fetchPrivateBlogs(1, search, tag || undefined);
-  };
-
+  // Theme Sync
   useEffect(() => {
     if (theme === Theme.DARK) {
       document.documentElement.classList.add('dark');
@@ -244,59 +182,52 @@ const App: React.FC = () => {
     localStorage.setItem('app_theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === Theme.LIGHT ? Theme.DARK : Theme.LIGHT);
-  };
+  // Socket Connection
+  useEffect(() => {
+    if (user && !socket) {
+      const newSocket = io(SOCKET_URL);
+      newSocket.on('connect', () => {
+        newSocket.emit('USER_CONNECTED', {
+            name: user.displayName,
+            id: user._id,
+            email: user.email,
+            photoURL: user.photoURL
+        });
+      });
+      newSocket.on('NEW_NOTIFICATION', (data: any) => {
+         if (data.type === 'private_message') {
+             toast.info(data.content);
+         }
+         window.dispatchEvent(new CustomEvent('sys_notification', { detail: data }));
+      });
+      setSocket(newSocket);
+    } else if (!user && socket) {
+      socket.emit('LOGOUT');
+      socket.disconnect();
+      setSocket(null);
+    }
+    return () => {
+       if (socket) socket.disconnect();
+    }
+  }, [user]);
 
-  const handleLoginSuccess = (user: User) => {
-    setUser(user);
-    // fetchPrivateBlogs is triggered by useEffect on user change IF on private space
-  };
-
-  const handleLogoutCleanup = () => {
-    setUser(null);
-    setPrivateBlogs([]); 
-    localStorage.removeItem('auth_token'); 
-    localStorage.removeItem('googleInfo');
-    setIsLoginModalOpen(true);
-    setCurrentPage(PageView.HOME);
+  // Handlers
+  const handleLoginSuccess = (loggedInUser: User) => {
+    setUser(loggedInUser);
   };
 
   const handleLogout = () => {
     apiService.logout();
-    handleLogoutCleanup();
-  };
-
-  const handleSelectBlog = (blog: BlogPost) => {
-    setSelectedBlog(blog);
-    setCurrentPage(PageView.ARTICLE);
-  };
-
-  const handleBackToBlog = () => {
-    // Return to the appropriate list view
-    if (selectedBlog?.isPrivate) {
-      setCurrentPage(PageView.PRIVATE_SPACE);
-    } else {
-      setCurrentPage(PageView.BLOG);
-    }
-    
-    // Give time for view transition then scroll
-    setTimeout(() => {
-      const scrollTarget = selectedBlog?.isPrivate 
-          ? document.querySelector('.private-feed-top') 
-          : document.getElementById('latest-posts');
-          
-      if (scrollTarget) {
-        scrollTarget.scrollIntoView({ behavior: 'smooth' });
-      } else {
-         window.scrollTo(0,0);
-      }
-    }, 100);
+    setUser(null);
+    localStorage.removeItem('auth_token'); 
+    localStorage.removeItem('googleInfo');
+    setIsLoginModalOpen(true);
+    navigate('/');
   };
 
   const handleNavigateToChat = (targetUser: ChatUser) => {
     setChatTarget(targetUser);
-    setCurrentPage(PageView.CHAT);
+    navigate('/chatroom');
   };
 
   const confirmPublicDelete = async () => {
@@ -304,233 +235,135 @@ const App: React.FC = () => {
     try {
       await apiService.deletePost(publicPostToDelete._id);
       setPublicPostToDelete(null);
-      fetchPublicBlogs(pagination?.currentPage || 1); 
+      window.dispatchEvent(new Event('blog:refresh'));
     } catch (error) {
       console.error("Failed to delete public post", error);
     }
   };
-  
-  const handlePublicLike = async (id: string) => {
-    const isLiked = likedPosts.has(id);
-    const newLikedPosts = new Set(likedPosts);
-    
-    try {
-       setPublicBlogs(prev => prev.map(p => {
-         if (p._id === id) {
-           return { ...p, likes: isLiked ? Math.max(0, (p.likes || 0) - 1) : (p.likes || 0) + 1 };
-         }
-         return p;
-       }));
 
-       if (isLiked) {
-         newLikedPosts.delete(id);
-         await apiService.unlikePost(id);
-       } else {
-         newLikedPosts.add(id);
-         await apiService.likePost(id);
-       }
-       
-       setLikedPosts(newLikedPosts);
-       localStorage.setItem('liked_posts', JSON.stringify(Array.from(newLikedPosts)));
-       
-    } catch (e) {
-      console.error("Like failed", e);
-    }
+  const toggleTheme = () => {
+    setTheme(prev => prev === Theme.LIGHT ? Theme.DARK : Theme.LIGHT);
   };
 
-  // Determine main background class based on theme
-  const mainBgClass = currentPage === PageView.PRIVATE_SPACE 
-    ? 'bg-gradient-to-br from-pink-200 via-rose-200 to-pink-200' 
-    : theme === Theme.DARK ? 'bg-slate-950' : 'bg-transparent';
+  if (isAuthChecking) {
+    return <PageLoader />;
+  }
 
   return (
-    <div className={`min-h-screen relative overflow-hidden transition-colors duration-500 selection:bg-primary-500/30 ${mainBgClass}`}>
-      
-      {/* Toast Container for Global Notifications */}
-      <ToastContainer />
+    <>
+      <Routes>
+        <Route element={<Layout 
+            user={user} 
+            socket={socket} 
+            theme={theme} 
+            toggleTheme={toggleTheme} 
+            onLogin={() => setIsLoginModalOpen(true)}
+            onLogout={handleLogout}
+            onNavigateToChat={handleNavigateToChat}
+        />}>
+          
+          {/* Public Routes */}
+          
+          {/* ROOT: Console / Home */}
+          <Route path="/" element={
+            <>
+              <Hero onCtaClick={() => navigate('/blogs')} />
+              <div id="console" className="pointer-events-auto">
+                 <ResumeView 
+                    onNavigate={(page) => {
+                        if (page === PageView.BLOG) navigate('/blogs');
+                        else if (page === PageView.RESUME) navigate('/profile');
+                        else if (page === PageView.CHAT) navigate('/chatroom');
+                        else if (page === PageView.PROFILE) navigate('/user-profile');
+                    }}
+                    currentUser={user}
+                    onLoginRequest={() => setIsLoginModalOpen(true)}
+                 />
+              </div>
+            </>
+          } />
+          
+          {/* BLOGS: Public Journal */}
+          <Route path="/blogs" element={
+             <BlogList 
+                onSelectBlog={(blog) => {
+                   // Generate Robust Slug: Title (cleaned) + ID
+                   // Use Unicode property escapes \p{L}\p{N} to match letters/numbers in any language (including Chinese)
+                   const cleanTitle = blog.name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'post';
+                   const slug = `${cleanTitle}-${blog._id}`;
+                   navigate(`/blogs/${slug}`);
+                }} 
+                isLoading={isLoadingBlogs}
+                currentUser={user}
+                onDeletePost={(blog) => setPublicPostToDelete(blog)}
+              />
+          } />
 
-      {/* Delete Modal for Public Blogs */}
+          {/* ARTICLE: SEO Friendly Route */}
+          <Route path="/blogs/:slug" element={
+             <ArticleView 
+                onBack={() => navigate('/blogs')}
+                onNavigateToBlog={(blog) => {
+                   const cleanTitle = blog.name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'post';
+                   const slug = `${cleanTitle}-${blog._id}`;
+                   navigate(`/blogs/${slug}`);
+                }}
+                currentUser={user}
+                onLoginRequest={() => setIsLoginModalOpen(true)}
+             />
+          } />
+
+          <Route path="/profile" element={<PortfolioPage currentUser={user} />} />
+
+          {/* Authenticated Routes */}
+          <Route path="/user-profile" element={<ProtectedRoute user={user} element={<UserProfile user={user!} onUpdateUser={setUser} />} />} />
+          
+          <Route path="/system-management" element={<ProtectedRoute user={user} element={<SystemManagement />} requiredPerm={PERM_KEYS.SYSTEM_LOGS} />} />
+          
+          <Route path="/system-settings" element={<SettingsPage theme={theme} toggleTheme={toggleTheme} language={language} toggleLanguage={toggleLanguage} />} />
+          
+          <Route path="/audit-log" element={<ProtectedRoute user={user} element={<AuditLogViewer />} requiredPerm={PERM_KEYS.SYSTEM_LOGS} />} />
+
+          <Route path="/footprints" element={<ProtectedRoute user={user} element={<Suspense fallback={<PageLoader />}><FootprintSpace theme={theme} /></Suspense>} />} />
+          
+          <Route path="/chatroom" element={<ProtectedRoute user={user} element={<ChatRoom currentUser={user!} socket={socket} targetUser={chatTarget} />} />} />
+
+          {/* Private Space (Captain Cabin) */}
+          <Route path="/captain-cabin" element={
+             <ProtectedRoute 
+                user={user}
+                requiredPerm={PERM_KEYS.PRIVATE_ACCESS}
+                element={
+                  <Suspense fallback={<PageLoader />}>
+                     <PrivateSpaceDashboard user={user} />
+                  </Suspense>
+                }
+             />
+          }>
+             <Route index element={<Navigate to="journal-space" replace />} />
+             <Route path="journal-space" element={<Suspense fallback={<PageLoader />}><JournalSpace /></Suspense>} />
+             <Route path="ai-space" element={<Suspense fallback={<PageLoader />}><SecondBrainSpace user={user}/></Suspense>} />
+             <Route path="leisure-space" element={<Suspense fallback={<PageLoader />}><LeisureSpace user={user}/></Suspense>} />
+             <Route path="capsule-gallery" element={<Suspense fallback={<PageLoader />}><PhotoGallery /></Suspense>} />
+             <Route path="fitness-space" element={<Suspense fallback={<PageLoader />}><FitnessSpace currentUser={user}/></Suspense>} />
+          </Route>
+
+        </Route>
+      </Routes>
+
       <DeleteModal 
          isOpen={!!publicPostToDelete}
          onClose={() => setPublicPostToDelete(null)}
          onConfirm={confirmPublicDelete}
          title={t.delete.confirmTitle}
       />
-      
-      {/* Background Layer Logic */}
-      {currentPage !== PageView.PRIVATE_SPACE && (
-        <>
-          {theme === Theme.DARK ? <CosmicBackground theme={theme} /> : <ScenicBackground />}
-        </>
-      )}
 
-      <Header 
-        theme={theme}
-        toggleTheme={toggleTheme}
-        setPage={(page) => {
-          // Extra security check on nav click using PERMISSIONS
-          if (page === PageView.PRIVATE_SPACE) {
-            if (!can(user, PERM_KEYS.PRIVATE_ACCESS)) {
-              toast.error("Access Denied: You do not have the required clearance level.");
-              return;
-            }
-          }
-          if (page === PageView.AUDIT_LOG && !can(user, PERM_KEYS.SYSTEM_LOGS)) {
-            toast.error("Access Denied: System Audit Clearance Required.");
-            return;
-          }
-          if (page === PageView.FOOTPRINT && !user) {
-             toast.error("Access Denied: Please Login.");
-             return;
-          }
-          if (page === PageView.SYSTEM && !can(user, PERM_KEYS.SYSTEM_LOGS)) {
-             toast.error("Access Denied: Admin Clearance Required.");
-             return;
-          }
-          setCurrentPage(page);
-          window.scrollTo(0, 0);
-        }}
-        currentPage={currentPage}
-        currentUser={user}
-        onLogin={() => setIsLoginModalOpen(true)}
-        onLogout={handleLogout}
-        socket={socket}
-        onNavigateToChat={handleNavigateToChat}
-      />
-      
-      <main className="relative z-10 pointer-events-none">
-        {currentPage === PageView.HOME && (
-          <>
-            <Hero onCtaClick={() => {
-              setCurrentPage(PageView.BLOG);
-              setTimeout(() => document.getElementById('latest-posts')?.scrollIntoView({ behavior: 'smooth' }), 100);
-            }} />
-            <div id="about" className="pointer-events-auto">
-              <ResumeView 
-                onNavigate={(page) => {
-                   setCurrentPage(page);
-                   window.scrollTo(0, 0);
-                }} 
-                currentUser={user} 
-                onLoginRequest={() => setIsLoginModalOpen(true)} 
-              />
-            </div>
-          </>
-        )}
-        
-        {currentPage === PageView.PRIVATE_SPACE && (
-          <div className="pointer-events-auto w-full">
-            <Suspense fallback={<PageLoader />}>
-              <PrivateSpaceDashboard 
-                user={user} 
-                blogs={privateBlogs} 
-                onSelectBlog={handleSelectBlog}
-                onRefresh={() => fetchPrivateBlogs(privatePagination?.currentPage || 1)}
-                pagination={privatePagination}
-                onPageChange={(p) => fetchPrivateBlogs(p)}
-                onFilterChange={handlePrivateFilterChange}
-                initialSearch={privateSearch}
-              />
-            </Suspense>
-          </div>
-        )}
-        
-        {currentPage === PageView.BLOG && (
-          <div className="pointer-events-auto w-full min-h-screen">
-            <BlogList 
-              blogs={publicBlogs} 
-              onSelectBlog={handleSelectBlog} 
-              isLoading={isLoadingBlogs}
-              currentUser={user}
-              onDeletePost={(blog) => setPublicPostToDelete(blog)}
-              pagination={pagination}
-              onPageChange={(page) => fetchPublicBlogs(page)}
-              onFilterChange={handlePublicFilterChange}
-              onLike={handlePublicLike}
-              likedPosts={likedPosts}
-            />
-          </div>
-        )}
-
-        {currentPage === PageView.ARTICLE && selectedBlog && (
-          <div className="pointer-events-auto w-full min-h-screen">
-            <ArticleView 
-              blog={selectedBlog}
-              // Pass the correct list depending on context
-              allBlogs={selectedBlog.isPrivate ? privateBlogs : publicBlogs} 
-              onBack={handleBackToBlog}
-              onNavigateToBlog={handleSelectBlog}
-              currentUser={user}
-              onLoginRequest={() => setIsLoginModalOpen(true)}
-            />
-          </div>
-        )}
-        
-        {currentPage === PageView.RESUME && (
-          <div className="pointer-events-auto w-full min-h-screen">
-            <PortfolioPage currentUser={user} />
-          </div>
-        )}
-
-        {currentPage === PageView.PROFILE && user && (
-          <div className="pointer-events-auto w-full min-h-screen">
-            <UserProfile user={user} onUpdateUser={setUser} />
-          </div>
-        )}
-
-        {currentPage === PageView.ARCHIVES && (
-           <div className="pointer-events-auto w-full min-h-screen">
-             <div className="p-20 text-center text-slate-500">Archives have been migrated to the new Profile page.</div>
-           </div>
-        )}
-        
-        {currentPage === PageView.CHAT && user && (
-          <div className="pointer-events-auto w-full min-h-screen">
-            <ChatRoom currentUser={user} socket={socket} targetUser={chatTarget} />
-          </div>
-        )}
-
-        {currentPage === PageView.AUDIT_LOG && can(user, PERM_KEYS.SYSTEM_LOGS) && (
-          <div className="pointer-events-auto w-full min-h-screen">
-            <AuditLogViewer />
-          </div>
-        )}
-
-        {currentPage === PageView.SETTINGS && (
-          <div className="pointer-events-auto w-full min-h-screen">
-            <SettingsPage 
-              theme={theme} 
-              toggleTheme={toggleTheme} 
-              language={language}
-              toggleLanguage={toggleLanguage}
-            />
-          </div>
-        )}
-
-        {currentPage === PageView.SYSTEM && can(user, PERM_KEYS.SYSTEM_LOGS) && (
-          <div className="pointer-events-auto w-full min-h-screen">
-            <SystemManagement />
-          </div>
-        )}
-
-        {currentPage === PageView.FOOTPRINT && user && (
-          <div className="pointer-events-auto w-full min-h-screen">
-             <Suspense fallback={<PageLoader />}>
-                <FootprintSpace theme={theme} />
-             </Suspense>
-          </div>
-        )}
-      </main>
-
-      <Footer currentPage={currentPage} currentUser={user} />
-
-      {/* Login Modal */}
       <LoginModal 
         isOpen={isLoginModalOpen} 
         onClose={() => setIsLoginModalOpen(false)} 
         onLoginSuccess={handleLoginSuccess}
       />
-    </div>
+    </>
   );
 };
 

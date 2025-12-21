@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { apiService } from '../../services/api';
-import { User, PaginationData, Role } from '../../types';
+import { User, PaginationData, Role, Permission } from '../../types';
 import { toast } from '../Toast';
 import { DeleteModal } from '../DeleteModal';
 
@@ -17,6 +17,11 @@ export const UserManagement: React.FC = () => {
   const [roleList, setRoleList] = useState<Role[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>('user');
   
+  // Permissions State
+  const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [isUpdatingPerms, setIsUpdatingPerms] = useState(false);
+  
   // Modals / Actions
   const [showVipModal, setShowVipModal] = useState(false);
   const [isProcessingVip, setIsProcessingVip] = useState(false);
@@ -24,7 +29,7 @@ export const UserManagement: React.FC = () => {
 
   useEffect(() => {
     fetchUsers(1);
-    fetchRoles();
+    fetchRolesAndPermissions();
   }, []);
 
   useEffect(() => {
@@ -37,6 +42,7 @@ export const UserManagement: React.FC = () => {
   useEffect(() => {
     if (targetUser) {
         setSelectedRole(targetUser.role || 'user');
+        setSelectedPermissions(targetUser.permissions || []);
     }
   }, [targetUser]);
 
@@ -55,10 +61,14 @@ export const UserManagement: React.FC = () => {
     }
   };
 
-  const fetchRoles = async () => {
+  const fetchRolesAndPermissions = async () => {
     try {
-        const data = await apiService.getAllRoles();
-        setRoleList(data);
+        const [roles, perms] = await Promise.all([
+            apiService.getAllRoles(),
+            apiService.getAllPermissions()
+        ]);
+        setRoleList(roles);
+        setAllPermissions(perms);
     } catch (e) { console.error(e); }
   };
 
@@ -78,6 +88,17 @@ export const UserManagement: React.FC = () => {
        return 0;
     });
   }, [userList]);
+
+  // Group permissions by category for UI
+  const groupedPermissions = useMemo(() => {
+    const groups: Record<string, Permission[]> = {};
+    allPermissions.forEach(p => {
+        const cat = p.category || 'General';
+        if (!groups[cat]) groups[cat] = [];
+        groups[cat].push(p);
+    });
+    return groups;
+  }, [allPermissions]);
 
   const handleVipActionClick = () => {
     if (!targetUser) return;
@@ -129,6 +150,34 @@ export const UserManagement: React.FC = () => {
     } finally {
         setIsUpdatingRole(false);
     }
+  };
+
+  const handleUpdatePermissions = async () => {
+    if (!targetUser) return;
+    if (targetUser.role === 'bot') {
+        toast.error("Operation Denied: Cannot modify Bot permissions.");
+        return;
+    }
+
+    setIsUpdatingPerms(true);
+    try {
+        await apiService.updateUserPermissions(targetUser._id, selectedPermissions);
+        toast.success(`Permissions updated for ${targetUser.displayName}`);
+        fetchUsers(page);
+        // Sync local targetUser with new permissions
+        setTargetUser(prev => prev ? ({ ...prev, permissions: selectedPermissions }) : null);
+    } catch (e) {
+        toast.error("Failed to update permissions");
+    } finally {
+        setIsUpdatingPerms(false);
+    }
+  };
+
+  const togglePermission = (key: string) => {
+      setSelectedPermissions(prev => {
+          if (prev.includes(key)) return prev.filter(k => k !== key);
+          return [...prev, key];
+      });
   };
 
   return (
@@ -204,15 +253,15 @@ export const UserManagement: React.FC = () => {
         </div>
 
         {/* Detail Column */}
-        <div className="w-full xl:w-1/4 bg-slate-50 dark:bg-slate-950/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-start relative">
+        <div className="w-full xl:w-1/4 bg-slate-50 dark:bg-slate-950/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-start relative overflow-hidden">
             {!targetUser ? (
                 <div className="text-slate-400 text-center mt-20">
                     <i className="fas fa-user-circle text-4xl mb-4 opacity-50"></i>
                     <p>Select a user to manage.</p>
                 </div>
             ) : (
-                <div className="w-full animate-fade-in">
-                    <div className="text-center mb-8">
+                <div className="w-full animate-fade-in flex flex-col h-full">
+                    <div className="text-center mb-6 shrink-0">
                     <div className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white dark:border-slate-800 shadow-xl overflow-hidden relative">
                         <img src={targetUser.photoURL || `https://ui-avatars.com/api/?name=${targetUser.displayName}`} className="w-full h-full object-cover"/>
                         {targetUser.role === 'bot' && <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-xs font-bold text-white uppercase tracking-wider backdrop-blur-sm">Bot</div>}
@@ -222,44 +271,86 @@ export const UserManagement: React.FC = () => {
                     <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest">{targetUser._id}</p>
                     </div>
 
-                    <div className="space-y-4">
-                    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                        <div>
-                            <div className="text-xs font-bold uppercase text-slate-400 mb-1">VIP Status</div>
-                            <div className={`text-sm font-bold ${targetUser.vip ? 'text-amber-500' : 'text-slate-500'}`}>{targetUser.vip ? 'Active' : 'Inactive'}</div>
-                        </div>
-                        <button 
-                            onClick={handleVipActionClick}
-                            disabled={isProcessingVip || targetUser.role === 'bot'}
-                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all ${targetUser.vip ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'bg-emerald-50 text-emerald-500 hover:bg-emerald-100'} disabled:opacity-50 disabled:cursor-not-allowed`}
-                        >
-                            {targetUser.vip ? 'Revoke' : 'Grant'}
-                        </button>
-                    </div>
-
-                    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-                        <div className="text-xs font-bold uppercase text-slate-400 mb-2">Role</div>
-                        <div className="flex gap-2">
-                            <select 
-                                value={selectedRole}
-                                onChange={(e) => setSelectedRole(e.target.value)}
-                                disabled={targetUser.role === 'bot'}
-                                className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm outline-none disabled:opacity-50"
-                            >
-                                {roleList.map(r => <option key={r.name} value={r.name}>{r.name}</option>)}
-                                {!roleList.find(r => r.name === 'user') && <option value="user">user</option>}
-                                {!roleList.find(r => r.name === 'admin') && <option value="admin">admin</option>}
-                                {!roleList.find(r => r.name === 'super_admin') && <option value="super_admin">super_admin</option>}
-                            </select>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1">
+                        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                            <div>
+                                <div className="text-xs font-bold uppercase text-slate-400 mb-1">VIP Status</div>
+                                <div className={`text-sm font-bold ${targetUser.vip ? 'text-amber-500' : 'text-slate-500'}`}>{targetUser.vip ? 'Active' : 'Inactive'}</div>
+                            </div>
                             <button 
-                                onClick={handleUpdateRole}
-                                disabled={isUpdatingRole || selectedRole === targetUser.role || targetUser.role === 'bot'}
-                                className="px-4 bg-blue-500 text-white rounded-lg font-bold text-xs uppercase hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={handleVipActionClick}
+                                disabled={isProcessingVip || targetUser.role === 'bot'}
+                                className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all ${targetUser.vip ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'bg-emerald-50 text-emerald-500 hover:bg-emerald-100'} disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
-                                Update
+                                {targetUser.vip ? 'Revoke' : 'Grant'}
                             </button>
                         </div>
-                    </div>
+
+                        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+                            <div className="text-xs font-bold uppercase text-slate-400 mb-2">Role</div>
+                            <div className="flex gap-2">
+                                <select 
+                                    value={selectedRole}
+                                    onChange={(e) => setSelectedRole(e.target.value)}
+                                    disabled={targetUser.role === 'bot'}
+                                    className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm outline-none disabled:opacity-50"
+                                >
+                                    {roleList.map(r => <option key={r.name} value={r.name}>{r.name}</option>)}
+                                    {!roleList.find(r => r.name === 'user') && <option value="user">user</option>}
+                                    {!roleList.find(r => r.name === 'admin') && <option value="admin">admin</option>}
+                                    {!roleList.find(r => r.name === 'super_admin') && <option value="super_admin">super_admin</option>}
+                                </select>
+                                <button 
+                                    onClick={handleUpdateRole}
+                                    disabled={isUpdatingRole || selectedRole === targetUser.role || targetUser.role === 'bot'}
+                                    className="px-4 bg-blue-500 text-white rounded-lg font-bold text-xs uppercase hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Update
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Direct Permissions Management */}
+                        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+                            <div className="flex justify-between items-center mb-3">
+                                <div className="text-xs font-bold uppercase text-slate-400">Direct Permissions</div>
+                                <button 
+                                    onClick={handleUpdatePermissions}
+                                    disabled={isUpdatingPerms || targetUser.role === 'bot'}
+                                    className="px-3 py-1 bg-indigo-500 text-white rounded-lg font-bold text-[10px] uppercase hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isUpdatingPerms ? 'Saving...' : 'Save'}
+                                </button>
+                            </div>
+                            
+                            <div className="max-h-60 overflow-y-auto custom-scrollbar space-y-4">
+                                {Object.entries(groupedPermissions).map(([category, perms]) => (
+                                    <div key={category}>
+                                        <h5 className="text-[10px] font-bold text-primary-500 uppercase mb-2 sticky top-0 bg-white dark:bg-slate-900 py-1">{category}</h5>
+                                        <div className="grid grid-cols-1 gap-1">
+                                            {(perms as Permission[]).map(p => {
+                                                const isChecked = selectedPermissions.includes(p.key);
+                                                return (
+                                                    <label key={p.key} className={`flex items-center gap-2 p-2 rounded-lg border transition-all cursor-pointer ${isChecked ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800' : 'bg-slate-50 dark:bg-slate-950 border-slate-100 dark:border-slate-800 hover:border-slate-300'}`}>
+                                                        <input 
+                                                            type="checkbox" 
+                                                            className="accent-indigo-500 w-4 h-4"
+                                                            checked={isChecked}
+                                                            onChange={() => togglePermission(p.key)}
+                                                            disabled={targetUser.role === 'bot'}
+                                                        />
+                                                        <div className="min-w-0">
+                                                            <div className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{p.name}</div>
+                                                            <div className="text-[9px] text-slate-400 font-mono truncate">{p.key}</div>
+                                                        </div>
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

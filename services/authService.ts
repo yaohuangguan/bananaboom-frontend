@@ -96,6 +96,13 @@ export const authService = {
     });
   },
 
+  updateUserPermissions: async (id: string, permissions: string[]): Promise<any> => {
+    return await fetchClient(`/users/${id}/permissions`, {
+      method: 'PUT',
+      body: JSON.stringify({ permissions })
+    });
+  },
+
   backupLogs: async (type?: string): Promise<void> => {
     const token = localStorage.getItem('auth_token');
     const urlEndpoint = type ? `${API_BASE_URL}/backup?type=${type}` : `${API_BASE_URL}/backup`;
