@@ -92,7 +92,7 @@ export const contentService = {
         currentPage: backendPagination.currentPage,
         totalPages: backendPagination.totalPages,
         totalItems: backendPagination.totalPosts || 0,
-        itemsPerPage: backendPagination.perPage || limit,
+        itemsPerPage: limit,
         hasNextPage: backendPagination.currentPage < backendPagination.totalPages,
         hasPrevPage: backendPagination.currentPage > 1
       };
@@ -297,7 +297,7 @@ export const contentService = {
 
   // --- Homepage & Projects ---
   getProjects: async (): Promise<Project[]> => {
-    return await fetchClient<Project[]>('/home/projects');
+    return await fetchClient<Project[]>('/homepage/projects');
   },
 
   getPortfolioProjects: async (): Promise<PortfolioProject[]> => {
@@ -330,11 +330,25 @@ export const contentService = {
   },
 
   getLogs: async (): Promise<Log[]> => {
-    return await fetchClient<Log[]>('/home/logs');
+    return await fetchClient<Log[]>('/homepage/logs');
   },
 
-  getHomeLikes: async (): Promise<any> => {
-    return await fetchClient('/home/likes');
+  getHomeLikes: async (): Promise<{_id: string, likes: number}[]> => {
+    try {
+      const data = await fetchClient<{_id: string, likes: number}[]>('/homepage/likes');
+      return Array.isArray(data) ? data : [data];
+    } catch (e) {
+      console.warn("Failed to fetch home stats", e);
+      return [];
+    }
+  },
+
+  addHomeLike: async (id: string): Promise<{likes: number}> => {
+    return await fetchClient<{likes: number}>(`/homepage/likes/${id}/add`, { method: 'POST' });
+  },
+
+  removeHomeLike: async (id: string): Promise<{likes: number}> => {
+    return await fetchClient<{likes: number}>(`/homepage/likes/${id}/remove`, { method: 'POST' });
   },
 
   // --- Resume ---
