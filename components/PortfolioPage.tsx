@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useState } from 'react';
 import { ProjectShowcase } from './profile/ProjectShowcase';
 import { ResumeDocument } from './profile/ResumeDocument';
@@ -14,11 +10,10 @@ interface PortfolioPageProps {
 
 export const PortfolioPage: React.FC<PortfolioPageProps> = ({ currentUser }) => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'PROJECTS' | 'RESUME'>('RESUME');
+  const [activeTab, setActiveTab] = useState<'PROJECTS' | 'RESUME'>('PROJECTS');
 
   return (
     <div className="container mx-auto px-6 py-24 pt-32 max-w-6xl animate-fade-in relative z-10 min-h-screen">
-      
       {/* Page Header */}
       <div className="text-center mb-16">
         <h1 className="text-5xl md:text-7xl font-display font-bold text-slate-900 dark:text-white mb-6 tracking-tight">
@@ -60,7 +55,6 @@ export const PortfolioPage: React.FC<PortfolioPageProps> = ({ currentUser }) => 
         {activeTab === 'RESUME' && <ResumeDocument currentUser={currentUser} />}
         {activeTab === 'PROJECTS' && <ProjectShowcase currentUser={currentUser} />}
       </div>
-
     </div>
   );
 };

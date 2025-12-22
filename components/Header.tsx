@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Theme, PageView, User, AuditLog, ChatUser, PERM_KEYS, can, Language } from '../types';
@@ -29,11 +28,11 @@ const LANGUAGES: { code: Language; label: string; flags: string[] }[] = [
   { code: 'ja', label: '日本語', flags: ['jp'] },
   { code: 'ru', label: 'Русский', flags: ['ru'] },
   { code: 'de', label: 'Deutsch', flags: ['de'] },
-  { code: 'es', label: 'Español', flags: ['es'] },
+  { code: 'es', label: 'Español', flags: ['es'] }
 ];
 
-export const Header: React.FC<HeaderProps> = ({ 
-  theme, 
+export const Header: React.FC<HeaderProps> = ({
+  theme,
   toggleTheme,
   currentPage,
   currentUser,
@@ -45,67 +44,74 @@ export const Header: React.FC<HeaderProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
-  
+
   // Notification States
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  
+
   // Language Menu State
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
-  
+
   const { t, language, setLanguage } = useTranslation();
 
   // Socket Listener for Notifications & Logs
   useEffect(() => {
     // Listen for VIP Operation Logs via Socket directly (Admin feature)
-    const handleLog = (data: { message: string, log: AuditLog }) => {
-       if (can(currentUser, PERM_KEYS.SYSTEM_LOGS)) {
-          setNotifications(prev => [{
-              type: 'audit',
-              message: data.message,
-              timestamp: new Date(),
-              payload: data
-          }, ...prev]);
-          setUnreadCount(prev => prev + 1);
-       }
+    const handleLog = (data: { message: string; log: AuditLog }) => {
+      if (can(currentUser, PERM_KEYS.SYSTEM_LOGS)) {
+        setNotifications((prev) => [
+          {
+            type: 'audit',
+            message: data.message,
+            timestamp: new Date(),
+            payload: data
+          },
+          ...prev
+        ]);
+        setUnreadCount((prev) => prev + 1);
+      }
     };
 
     // Listen for General Notifications (System events)
     const handleNotification = (data: any) => {
-        setNotifications(prev => {
-            const exists = prev.some(n => 
-                n.message === data.content && 
-                (new Date().getTime() - new Date(n.timestamp).getTime() < 2000)
-            );
-            if (exists) return prev;
+      setNotifications((prev) => {
+        const exists = prev.some(
+          (n) =>
+            n.message === data.content &&
+            new Date().getTime() - new Date(n.timestamp).getTime() < 2000
+        );
+        if (exists) return prev;
 
-            return [{
-                type: data.type || 'info',
-                message: data.content,
-                timestamp: new Date(),
-                payload: data
-            }, ...prev];
-        });
-        setUnreadCount(prev => prev + 1);
+        return [
+          {
+            type: data.type || 'info',
+            message: data.content,
+            timestamp: new Date(),
+            payload: data
+          },
+          ...prev
+        ];
+      });
+      setUnreadCount((prev) => prev + 1);
     };
 
     const handleSysNotification = (e: CustomEvent) => {
-       handleNotification(e.detail);
+      handleNotification(e.detail);
     };
 
     if (socket) {
-        socket.on('NEW_OPERATION_LOG', handleLog);
+      socket.on('NEW_OPERATION_LOG', handleLog);
     }
-    
+
     window.addEventListener('sys_notification' as any, handleSysNotification);
 
     return () => {
-       if (socket) {
-           socket.off('NEW_OPERATION_LOG', handleLog);
-       }
-       window.removeEventListener('sys_notification' as any, handleSysNotification);
+      if (socket) {
+        socket.off('NEW_OPERATION_LOG', handleLog);
+      }
+      window.removeEventListener('sys_notification' as any, handleSysNotification);
     };
   }, [socket, currentUser]);
 
@@ -152,21 +158,23 @@ export const Header: React.FC<HeaderProps> = ({
     if (n.type === 'private_message' && onNavigateToChat && n.payload) {
       const payload = n.payload;
       const fromUser = payload.fromUser || payload.user || {};
-      const targetId = fromUser.id || fromUser._id || payload.fromUserId || payload.userId || payload.senderId;
-      const targetName = fromUser.displayName || fromUser.name || payload.senderName || payload.author;
+      const targetId =
+        fromUser.id || fromUser._id || payload.fromUserId || payload.userId || payload.senderId;
+      const targetName =
+        fromUser.displayName || fromUser.name || payload.senderName || payload.author;
       const targetEmail = fromUser.email || payload.senderEmail || payload.email;
 
       if (targetId && targetName) {
-          onNavigateToChat({
-              id: targetId,
-              name: targetName,
-              email: targetEmail
-          });
-          setIsNotifOpen(false);
-          return;
+        onNavigateToChat({
+          id: targetId,
+          name: targetName,
+          email: targetEmail
+        });
+        setIsNotifOpen(false);
+        return;
       } else {
-        console.warn("Could not extract sender info from notification:", n);
-        toast.error("Unable to open chat: Missing sender information.");
+        console.warn('Could not extract sender info from notification:', n);
+        toast.error('Unable to open chat: Missing sender information.');
       }
     }
   };
@@ -176,77 +184,120 @@ export const Header: React.FC<HeaderProps> = ({
   const navLinks = [
     { label: t.header.home, value: PageView.HOME, path: '/', code: '01' },
     { label: t.header.blog, value: PageView.BLOG, path: '/blogs', code: '02' },
-    { label: t.header.about, value: PageView.RESUME, path: '/profile', code: '03' },
+    { label: t.header.about, value: PageView.RESUME, path: '/profile', code: '03' }
   ];
 
   if (currentUser) {
     if (can(currentUser, PERM_KEYS.FOOTPRINT_USE)) {
-        navLinks.push({ label: t.header.footprint, value: PageView.FOOTPRINT, path: '/footprints', code: '04' });
+      navLinks.push({
+        label: t.header.footprint,
+        value: PageView.FOOTPRINT,
+        path: '/footprints',
+        code: '04'
+      });
     }
     navLinks.push({ label: t.header.chat, value: PageView.CHAT, path: '/chatroom', code: '05' });
   }
 
   if (canAccessPrivateSpace) {
-    navLinks.push({ label: t.header.privateSpace, value: PageView.PRIVATE_SPACE, path: '/captain-cabin/journal-space', code: '00' });
+    navLinks.push({
+      label: t.header.privateSpace,
+      value: PageView.PRIVATE_SPACE,
+      path: '/captain-cabin/journal-space',
+      code: '00'
+    });
   }
 
   const isPrivate = location.pathname.startsWith('/captain-cabin');
 
   let headerClasses = `fixed w-full top-0 z-[2000] transition-all duration-500 `;
   if (isPrivate) {
-    headerClasses += 'bg-white/90 border-b border-rose-200 backdrop-blur-md py-3 shadow-sm shadow-rose-100/50';
+    headerClasses +=
+      'bg-white/90 border-b border-rose-200 backdrop-blur-md py-3 shadow-sm shadow-rose-100/50';
   } else {
     headerClasses += isScrolled
-      ? 'bg-[#fdfbf7]/80 dark:bg-[#02040a]/90 backdrop-blur-md border-b border-slate-200/50 dark:border-white/5 py-3 shadow-sm' 
+      ? 'bg-[#fdfbf7]/80 dark:bg-[#02040a]/90 backdrop-blur-md border-b border-slate-200/50 dark:border-white/5 py-3 shadow-sm'
       : 'bg-transparent py-6';
   }
 
-  const currentLangConfig = LANGUAGES.find(l => l.code === language);
+  const currentLangConfig = LANGUAGES.find((l) => l.code === language);
 
   return (
     <header className={headerClasses}>
       <div className="w-full px-6 md:px-12 max-w-[1600px] mx-auto flex justify-between items-center relative">
-        
-        {/* Logo */}
-        <Link 
-          to="/"
-          className="flex items-center gap-3 cursor-pointer group z-20 relative mr-auto"
-        >
+        {/* Logo - Redesigned to be native CSS composition */}
+        <Link to="/" className="flex items-center gap-3 cursor-pointer group z-20 relative mr-auto">
           <div className="relative w-10 h-10 flex items-center justify-center">
-            <div className={`absolute inset-0 rounded-full blur-md transition-all duration-500 ${isPrivate ? 'bg-rose-400/60 group-hover:bg-rose-500/80' : 'bg-primary-500/20 group-hover:bg-primary-500/40'}`}></div>
-            <div className={`relative w-full h-full rounded-full border flex items-center justify-center backdrop-blur-sm transition-colors ${isPrivate ? 'bg-rose-50 border-rose-200 group-hover:border-rose-300' : 'bg-white/50 dark:bg-black/50 border-slate-200 dark:border-white/20 group-hover:border-primary-500/50'}`}>
-               <i className={`fas ${isPrivate ? 'fa-heart' : 'fa-satellite-dish'} text-sm ${isPrivate ? 'text-rose-500' : 'text-primary-500 dark:text-primary-400'}`}></i>
+            {/* Glow Backing */}
+            <div
+              className={`absolute inset-0 rounded-xl blur-md transition-all duration-500 ${isPrivate ? 'bg-rose-400/60 group-hover:bg-rose-500/80' : 'bg-primary-500/20 group-hover:bg-primary-500/40'}`}
+            ></div>
+
+            {/* Main Icon Frame */}
+            <div
+              className={`relative w-full h-full rounded-xl border flex items-center justify-center backdrop-blur-md overflow-hidden transition-all duration-300 shadow-inner ${
+                isPrivate
+                  ? 'bg-rose-50 border-rose-200 group-hover:border-rose-300'
+                  : 'bg-white/80 dark:bg-slate-900/80 border-slate-200 dark:border-slate-700 group-hover:border-primary-500/50'
+              }`}
+            >
+              {isPrivate ? (
+                <i className="fas fa-heart text-sm text-rose-500 animate-pulse"></i>
+              ) : (
+                // Native CSS "Fusion" Icon
+                <div className="relative w-full h-full flex items-center justify-center">
+                  {/* Background Radial Tint */}
+                  <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary-500 to-transparent"></div>
+
+                  {/* Static Orbital Ring */}
+                  <div className="absolute inset-1.5 rounded-full border border-primary-500/30 dark:border-primary-400/30 group-hover:scale-110 transition-transform duration-500"></div>
+
+                  {/* Spinning Dashed Ring */}
+                  <div className="absolute inset-2 rounded-full border border-dashed border-primary-500/60 dark:border-primary-400/60 animate-[spin_10s_linear_infinite]"></div>
+
+                  {/* Center Diamond Core */}
+                  <div className="relative z-10 w-2.5 h-2.5 bg-gradient-to-br from-primary-500 to-primary-700 dark:from-primary-400 dark:to-primary-600 rounded-sm rotate-45 shadow-sm group-hover:rotate-[225deg] transition-transform duration-700"></div>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex flex-col">
-            <span className={`font-mono text-xl tracking-[0.2em] uppercase transition-colors duration-300 ${isPrivate ? 'text-rose-600 group-hover:text-rose-500 font-bold' : 'text-slate-800 dark:text-white group-hover:text-primary-500 dark:group-hover:text-primary-400'}`}>
+            <span
+              className={`font-display text-xl tracking-widest uppercase transition-colors duration-300 leading-none ${isPrivate ? 'text-rose-600 group-hover:text-rose-500 font-bold' : 'text-slate-800 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 font-bold'}`}
+            >
               Orion
             </span>
-            {!isPrivate && <span className="text-[8px] font-mono text-slate-500 dark:text-slate-600 uppercase tracking-widest hidden sm:block">Navigate your Value</span>}
+            {!isPrivate && (
+              <span className="text-[7px] font-mono text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em] hidden sm:block group-hover:text-primary-500/70 transition-colors mt-0.5">
+                Navigate Value
+              </span>
+            )}
           </div>
         </Link>
 
         {/* Desktop Nav - Hidden on Mobile */}
         <nav className="hidden xl:flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-           <div className={`flex items-center gap-1 px-2 py-1.5 rounded-full border backdrop-blur-md transition-colors duration-500 ${isPrivate ? 'bg-white/50 border-rose-200' : 'bg-white/70 dark:bg-white/5 border-slate-200 dark:border-white/10 shadow-lg shadow-black/5'}`}>
+          <div
+            className={`flex items-center gap-1 px-2 py-1.5 rounded-full border backdrop-blur-md transition-colors duration-500 ${isPrivate ? 'bg-white/50 border-rose-200' : 'bg-white/70 dark:bg-white/5 border-slate-200 dark:border-white/10 shadow-lg shadow-black/5'}`}
+          >
             {navLinks.map((link) => {
               const isActive = currentPage === link.value;
-              
+
               if (link.value === PageView.PRIVATE_SPACE) {
                 return (
-                   <Link
+                  <Link
                     key={link.value}
                     to={link.path}
                     className={`relative px-5 py-2 rounded-full transition-all duration-300 group ${
-                      isActive 
-                        ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white font-bold shadow-lg shadow-rose-400/30 transform scale-105' 
+                      isActive
+                        ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white font-bold shadow-lg shadow-rose-400/30 transform scale-105'
                         : 'text-rose-400 hover:text-rose-600 hover:bg-rose-50'
                     }`}
-                   >
-                     <span className="text-[10px] font-bold tracking-widest uppercase flex items-center gap-2">
-                       <i className="fas fa-heart text-[8px]"></i> {link.label}
-                     </span>
-                   </Link>
+                  >
+                    <span className="text-[10px] font-bold tracking-widest uppercase flex items-center gap-2">
+                      <i className="fas fa-heart text-[8px]"></i> {link.label}
+                    </span>
+                  </Link>
                 );
               }
 
@@ -255,8 +306,8 @@ export const Header: React.FC<HeaderProps> = ({
                   key={link.value}
                   to={link.path}
                   className={`relative px-4 py-2 group rounded-full transition-all duration-300 overflow-hidden flex flex-col items-center justify-center min-w-[100px] ${
-                    isActive 
-                      ? 'bg-primary-500/10 dark:bg-primary-900/20' 
+                    isActive
+                      ? 'bg-primary-500/10 dark:bg-primary-900/20'
                       : 'hover:bg-slate-100 dark:hover:bg-white/5'
                   }`}
                 >
@@ -268,17 +319,25 @@ export const Header: React.FC<HeaderProps> = ({
                   )}
 
                   <div className="flex items-baseline gap-2 relative z-10">
-                    <span className={`text-[9px] font-mono transition-colors ${isActive ? 'text-primary-600 dark:text-primary-400' : 'text-slate-500 dark:text-slate-500'}`}>{link.code}</span>
-                    <span className={`text-xs font-bold font-mono tracking-widest uppercase transition-colors ${
-                      isActive 
-                        ? 'text-slate-900 dark:text-primary-100' 
-                        : 'text-slate-700 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'
-                    }`}>
+                    <span
+                      className={`text-[9px] font-mono transition-colors ${isActive ? 'text-primary-600 dark:text-primary-400' : 'text-slate-500 dark:text-slate-500'}`}
+                    >
+                      {link.code}
+                    </span>
+                    <span
+                      className={`text-xs font-bold font-mono tracking-widest uppercase transition-colors ${
+                        isActive
+                          ? 'text-slate-900 dark:text-primary-100'
+                          : 'text-slate-700 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'
+                      }`}
+                    >
                       {link.label}
                     </span>
                   </div>
 
-                  <span className={`absolute bottom-0.5 w-1 h-1 rounded-full bg-primary-500 dark:bg-primary-400 transition-all duration-300 ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-0 group-hover:opacity-50 group-hover:scale-75'}`}></span>
+                  <span
+                    className={`absolute bottom-0.5 w-1 h-1 rounded-full bg-primary-500 dark:bg-primary-400 transition-all duration-300 ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-0 group-hover:opacity-50 group-hover:scale-75'}`}
+                  ></span>
                 </Link>
               );
             })}
@@ -287,8 +346,8 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Actions */}
         <div className="flex items-center gap-4 relative z-50">
-          <button 
-            onClick={toggleTheme} 
+          <button
+            onClick={toggleTheme}
             className={`w-8 h-8 flex items-center justify-center transition-colors ${isPrivate ? 'text-rose-700 hover:text-rose-900' : 'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400'}`}
             aria-label="Toggle Theme"
           >
@@ -301,35 +360,40 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
               className={`
                 flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border shadow-sm transition-all duration-300 group
-                ${isPrivate 
-                  ? 'bg-white/80 border-rose-200 hover:border-rose-300 text-rose-600' 
-                  : 'bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 hover:border-primary-500/50 dark:hover:border-primary-400/50 text-slate-600 dark:text-slate-300'
+                ${
+                  isPrivate
+                    ? 'bg-white/80 border-rose-200 hover:border-rose-300 text-rose-600'
+                    : 'bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 hover:border-primary-500/50 dark:hover:border-primary-400/50 text-slate-600 dark:text-slate-300'
                 }
                 ${isLangMenuOpen ? 'ring-2 ring-primary-500/20' : ''}
               `}
               title="Select Language"
             >
               <div className="w-5 h-5 rounded-full overflow-hidden relative shadow-sm border border-black/5 dark:border-white/10 shrink-0">
-                 {currentLangConfig?.flags[0] && (
-                    <img 
-                      src={getFlagUrl(currentLangConfig.flags[0])} 
-                      className="w-full h-full object-cover" 
-                      alt={currentLangConfig.code}
-                    />
-                 )}
+                {currentLangConfig?.flags[0] && (
+                  <img
+                    src={getFlagUrl(currentLangConfig.flags[0])}
+                    className="w-full h-full object-cover"
+                    alt={currentLangConfig.code}
+                  />
+                )}
               </div>
               <span className="text-xs font-bold uppercase tracking-wider hidden sm:block">
-                 {currentLangConfig?.code}
+                {currentLangConfig?.code}
               </span>
-              <i className={`fas fa-chevron-down text-[8px] opacity-60 transition-transform duration-300 ${isLangMenuOpen ? 'rotate-180' : ''}`}></i>
+              <i
+                className={`fas fa-chevron-down text-[8px] opacity-60 transition-transform duration-300 ${isLangMenuOpen ? 'rotate-180' : ''}`}
+              ></i>
             </button>
 
             {isLangMenuOpen && (
-              <div className={`absolute right-0 top-full mt-2 w-48 py-2 rounded-2xl shadow-xl border backdrop-blur-xl animate-fade-in z-50 overflow-hidden ${
-                isPrivate 
-                  ? 'bg-white/95 border-rose-200 shadow-rose-200/50' 
-                  : 'bg-white/95 dark:bg-[#0f172a]/95 border-slate-200 dark:border-slate-700/50'
-              }`}>
+              <div
+                className={`absolute right-0 top-full mt-2 w-48 py-2 rounded-2xl shadow-xl border backdrop-blur-xl animate-fade-in z-50 overflow-hidden ${
+                  isPrivate
+                    ? 'bg-white/95 border-rose-200 shadow-rose-200/50'
+                    : 'bg-white/95 dark:bg-[#0f172a]/95 border-slate-200 dark:border-slate-700/50'
+                }`}
+              >
                 {LANGUAGES.map((lang) => (
                   <button
                     key={lang.code}
@@ -338,23 +402,23 @@ export const Header: React.FC<HeaderProps> = ({
                       setIsLangMenuOpen(false);
                     }}
                     className={`w-full text-left px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-between group transition-colors ${
-                      isPrivate 
-                        ? 'hover:bg-rose-50 text-slate-600 hover:text-rose-600' 
+                      isPrivate
+                        ? 'hover:bg-rose-50 text-slate-600 hover:text-rose-600'
                         : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400'
                     } ${language === lang.code ? (isPrivate ? 'bg-rose-50/50 text-rose-600' : 'bg-slate-50 dark:bg-white/5 text-primary-600 dark:text-primary-400') : ''}`}
                   >
                     <div className="flex items-center gap-3">
-                        <div className="flex -space-x-1.5">
-                           {lang.flags.map(f => (
-                              <img 
-                                key={f} 
-                                src={getFlagUrl(f)} 
-                                className="w-5 h-5 rounded-full object-cover border border-white dark:border-slate-800 shadow-sm relative z-0 group-hover:z-10 transition-all" 
-                                alt={f} 
-                              />
-                           ))}
-                        </div>
-                        <span>{lang.label}</span>
+                      <div className="flex -space-x-1.5">
+                        {lang.flags.map((f) => (
+                          <img
+                            key={f}
+                            src={getFlagUrl(f)}
+                            className="w-5 h-5 rounded-full object-cover border border-white dark:border-slate-800 shadow-sm relative z-0 group-hover:z-10 transition-all"
+                            alt={f}
+                          />
+                        ))}
+                      </div>
+                      <span>{lang.label}</span>
                     </div>
                     {language === lang.code && <i className="fas fa-check text-[10px]"></i>}
                   </button>
@@ -362,134 +426,189 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             )}
           </div>
-          
+
           {/* Notification Bell */}
           {currentUser && (
-             <div className="relative">
-                <button 
-                  onClick={() => setIsNotifOpen(!isNotifOpen)}
-                  className={`w-8 h-8 flex items-center justify-center transition-colors relative ${isPrivate ? 'text-rose-700 hover:text-rose-900' : 'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400'}`}
-                >
-                   <i className="fas fa-bell"></i>
-                   {unreadCount > 0 && (
-                     <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-                   )}
-                </button>
-
-                {/* Dropdown */}
-                {isNotifOpen && (
-                  <div className="absolute right-0 top-full mt-4 w-72 animate-fade-in z-50">
-                     <div className={`backdrop-blur-xl border rounded-xl shadow-2xl overflow-hidden ${isPrivate ? 'bg-white/95 border-rose-200 shadow-rose-200/50' : 'bg-white/95 dark:bg-[#0f172a]/95 border-slate-200 dark:border-slate-700/50'}`}>
-                        <div className={`p-3 border-b flex justify-between items-center ${isPrivate ? 'border-rose-100' : 'border-slate-200 dark:border-slate-700/50'}`}>
-                           <span className={`text-xs font-bold uppercase tracking-wider ${isPrivate ? 'text-rose-600' : 'text-slate-600 dark:text-slate-400'}`}>{t.header.notifications}</span>
-                           {notifications.length > 0 && (
-                             <button onClick={handleClearNotifications} className="text-[10px] text-slate-500 hover:text-red-400">{t.header.clearAll}</button>
-                           )}
-                        </div>
-                        <div className="max-h-60 overflow-y-auto">
-                           {notifications.length === 0 ? (
-                              <div className="p-4 text-center text-slate-500 text-xs italic">{t.header.emptyNotifications}</div>
-                           ) : (
-                              notifications.map((n, idx) => (
-                                <div 
-                                  key={idx} 
-                                  onClick={() => handleNotificationClick(n)}
-                                  className={`p-3 border-b text-xs last:border-0 cursor-pointer transition-colors ${
-                                    isPrivate 
-                                      ? 'border-rose-50 hover:bg-rose-50' 
-                                      : 'border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-white/5'
-                                  }`}
-                                >
-                                   <div className={`font-bold mb-1 uppercase flex items-center justify-between ${isPrivate ? 'text-rose-700' : 'text-primary-600 dark:text-primary-400'}`}>
-                                      <span>{n.type === 'private_message' ? 'Private Message' : 'System Alert'}</span>
-                                      {n.type === 'private_message' && <i className="fas fa-chevron-right text-[8px] opacity-50"></i>}
-                                   </div>
-                                   <div className={isPrivate ? 'text-slate-600' : 'text-slate-700 dark:text-slate-300'}>{n.message}</div>
-                                   <div className="text-[10px] text-slate-500 mt-1">
-                                      {new Date(n.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                   </div>
-                                </div>
-                              ))
-                           )}
-                        </div>
-                     </div>
-                  </div>
+            <div className="relative">
+              <button
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                className={`w-8 h-8 flex items-center justify-center transition-colors relative ${isPrivate ? 'text-rose-700 hover:text-rose-900' : 'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400'}`}
+              >
+                <i className="fas fa-bell"></i>
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
                 )}
-             </div>
+              </button>
+
+              {/* Dropdown */}
+              {isNotifOpen && (
+                <div className="absolute right-0 top-full mt-4 w-72 animate-fade-in z-50">
+                  <div
+                    className={`backdrop-blur-xl border rounded-xl shadow-2xl overflow-hidden ${isPrivate ? 'bg-white/95 border-rose-200 shadow-rose-200/50' : 'bg-white/95 dark:bg-[#0f172a]/95 border-slate-200 dark:border-slate-700/50'}`}
+                  >
+                    <div
+                      className={`p-3 border-b flex justify-between items-center ${isPrivate ? 'border-rose-100' : 'border-slate-200 dark:border-slate-700/50'}`}
+                    >
+                      <span
+                        className={`text-xs font-bold uppercase tracking-wider ${isPrivate ? 'text-rose-600' : 'text-slate-600 dark:text-slate-400'}`}
+                      >
+                        {t.header.notifications}
+                      </span>
+                      {notifications.length > 0 && (
+                        <button
+                          onClick={handleClearNotifications}
+                          className="text-[10px] text-slate-500 hover:text-red-400"
+                        >
+                          {t.header.clearAll}
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="p-4 text-center text-slate-500 text-xs italic">
+                          {t.header.emptyNotifications}
+                        </div>
+                      ) : (
+                        notifications.map((n, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => handleNotificationClick(n)}
+                            className={`p-3 border-b text-xs last:border-0 cursor-pointer transition-colors ${
+                              isPrivate
+                                ? 'border-rose-50 hover:bg-rose-50'
+                                : 'border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-white/5'
+                            }`}
+                          >
+                            <div
+                              className={`font-bold mb-1 uppercase flex items-center justify-between ${isPrivate ? 'text-rose-700' : 'text-primary-600 dark:text-primary-400'}`}
+                            >
+                              <span>
+                                {n.type === 'private_message' ? 'Private Message' : 'System Alert'}
+                              </span>
+                              {n.type === 'private_message' && (
+                                <i className="fas fa-chevron-right text-[8px] opacity-50"></i>
+                              )}
+                            </div>
+                            <div
+                              className={
+                                isPrivate ? 'text-slate-600' : 'text-slate-700 dark:text-slate-300'
+                              }
+                            >
+                              {n.message}
+                            </div>
+                            <div className="text-[10px] text-slate-500 mt-1">
+                              {new Date(n.timestamp).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {currentUser ? (
             // Logged In Dropdown Menu (Desktop)
-            <div className={`hidden xl:block relative group border-l pl-4 ${isPrivate ? 'border-rose-200' : 'border-slate-200 dark:border-white/10'}`}>
+            <div
+              className={`hidden xl:block relative group border-l pl-4 ${isPrivate ? 'border-rose-200' : 'border-slate-200 dark:border-white/10'}`}
+            >
               <button className="flex items-center gap-3 py-1 outline-none min-w-[120px] justify-end">
-                 <div className={`w-8 h-8 rounded-full p-[1px] ${isPrivate ? 'bg-gradient-to-tr from-rose-300 to-pink-500' : 'bg-gradient-to-tr from-primary-400 to-primary-600'}`}>
-                   <img 
-                     src={currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName)}&background=random`} 
-                     alt="User" 
-                     className="w-full h-full rounded-full object-cover border-2 border-white dark:border-slate-900"
-                   />
-                 </div>
-                 <span className={`text-xs font-mono max-w-[100px] truncate ${isPrivate ? 'text-rose-800 font-bold' : 'text-slate-700 dark:text-primary-500/80 group-hover:text-primary-600 dark:group-hover:text-primary-400'}`}>
-                   {currentUser.displayName}
-                 </span>
-                 <i className={`fas fa-chevron-down text-[10px] transition-transform group-hover:rotate-180 ${isPrivate ? 'text-rose-600' : 'text-slate-400 dark:text-slate-300'}`}></i>
+                <div
+                  className={`w-8 h-8 rounded-full p-[1px] ${isPrivate ? 'bg-gradient-to-tr from-rose-300 to-pink-500' : 'bg-gradient-to-tr from-primary-400 to-primary-600'}`}
+                >
+                  <img
+                    src={
+                      currentUser.photoURL ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName)}&background=random`
+                    }
+                    alt="User"
+                    className="w-full h-full rounded-full object-cover border-2 border-white dark:border-slate-900"
+                  />
+                </div>
+                <span
+                  className={`text-xs font-mono max-w-[100px] truncate ${isPrivate ? 'text-rose-800 font-bold' : 'text-slate-700 dark:text-primary-500/80 group-hover:text-primary-600 dark:group-hover:text-primary-400'}`}
+                >
+                  {currentUser.displayName}
+                </span>
+                <i
+                  className={`fas fa-chevron-down text-[10px] transition-transform group-hover:rotate-180 ${isPrivate ? 'text-rose-600' : 'text-slate-400 dark:text-slate-300'}`}
+                ></i>
               </button>
 
               {/* Hover Dropdown */}
               <div className="absolute right-0 top-full pt-4 hidden group-hover:block w-56 animate-fade-in z-50">
-                 <div className={`backdrop-blur-xl border rounded-xl shadow-2xl overflow-hidden ${isPrivate ? 'bg-white/95 border-rose-200 shadow-rose-200/50' : 'bg-white/95 dark:bg-[#0f172a]/95 border-slate-200 dark:border-slate-700/50'}`}>
-                    <div className={`p-3 border-b ${isPrivate ? 'border-rose-100' : 'border-slate-200 dark:border-slate-700/50'}`}>
-                      <p className={`text-xs font-mono uppercase tracking-wider mb-1 ${isPrivate ? 'text-rose-400' : 'text-slate-500 dark:text-slate-400'}`}>Signed in as</p>
-                      <p className={`text-sm font-bold truncate ${isPrivate ? 'text-rose-900' : 'text-slate-900 dark:text-white'}`}>{currentUser.email}</p>
-                    </div>
-                    
-                    <div className="p-1">
-                      <Link 
-                        to="/user-profile"
-                        className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${isPrivate ? 'text-rose-700 hover:bg-rose-50 font-medium' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary-600 dark:hover:text-primary-400'}`}
-                      >
-                         <i className="fas fa-id-card w-4 text-center"></i> {t.header.profile}
-                      </Link>
-                      
-                      {can(currentUser, PERM_KEYS.SYSTEM_ACCESS) && (
-                        <Link 
-                          to="/system-management"
-                          className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${isPrivate ? 'text-rose-700 hover:bg-rose-50 font-medium' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary-600 dark:hover:text-primary-400'}`}
-                        >
-                           <i className="fas fa-server w-4 text-center"></i> {t.header.system}
-                        </Link>
-                      )}
-                      
-                      <Link 
-                        to="/system-settings"
-                        className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${isPrivate ? 'text-rose-700 hover:bg-rose-50 font-medium' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary-600 dark:hover:text-primary-400'}`}
-                      >
-                         <i className="fas fa-cog w-4 text-center"></i> {t.header.settings}
-                      </Link>
-                      
-                      {can(currentUser, PERM_KEYS.SYSTEM_LOGS) && (
-                         <Link 
-                            to="/audit-log"
-                            className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${isPrivate ? 'text-rose-700 hover:bg-rose-50 font-medium' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary-600 dark:hover:text-primary-400'}`}
-                         >
-                            <i className="fas fa-shield-alt w-4 text-center"></i> {t.header.audit}
-                         </Link>
-                      )}
-                    </div>
+                <div
+                  className={`backdrop-blur-xl border rounded-xl shadow-2xl overflow-hidden ${isPrivate ? 'bg-white/95 border-rose-200 shadow-rose-200/50' : 'bg-white/95 dark:bg-[#0f172a]/95 border-slate-200 dark:border-slate-700/50'}`}
+                >
+                  <div
+                    className={`p-3 border-b ${isPrivate ? 'border-rose-100' : 'border-slate-200 dark:border-slate-700/50'}`}
+                  >
+                    <p
+                      className={`text-xs font-mono uppercase tracking-wider mb-1 ${isPrivate ? 'text-rose-400' : 'text-slate-500 dark:text-slate-400'}`}
+                    >
+                      Signed in as
+                    </p>
+                    <p
+                      className={`text-sm font-bold truncate ${isPrivate ? 'text-rose-900' : 'text-slate-900 dark:text-white'}`}
+                    >
+                      {currentUser.email}
+                    </p>
+                  </div>
 
-                    <div className={`p-1 border-t ${isPrivate ? 'border-rose-100 bg-rose-50/50' : 'border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-red-500/5'}`}>
-                      <button 
-                        onClick={onLogout}
-                        className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 font-medium ${isPrivate ? 'text-rose-600 hover:bg-rose-100 hover:text-rose-800' : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-700 dark:hover:text-red-300'}`}
+                  <div className="p-1">
+                    <Link
+                      to="/user-profile"
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${isPrivate ? 'text-rose-700 hover:bg-rose-50 font-medium' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary-600 dark:hover:text-primary-400'}`}
+                    >
+                      <i className="fas fa-id-card w-4 text-center"></i> {t.header.profile}
+                    </Link>
+
+                    {can(currentUser, PERM_KEYS.SYSTEM_ACCESS) && (
+                      <Link
+                        to="/system-management"
+                        className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${isPrivate ? 'text-rose-700 hover:bg-rose-50 font-medium' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary-600 dark:hover:text-primary-400'}`}
                       >
-                         <i className="fas fa-sign-out-alt w-4 text-center"></i> {t.header.signOut}
-                      </button>
-                    </div>
-                 </div>
+                        <i className="fas fa-server w-4 text-center"></i> {t.header.system}
+                      </Link>
+                    )}
+
+                    <Link
+                      to="/system-settings"
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${isPrivate ? 'text-rose-700 hover:bg-rose-50 font-medium' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary-600 dark:hover:text-primary-400'}`}
+                    >
+                      <i className="fas fa-cog w-4 text-center"></i> {t.header.settings}
+                    </Link>
+
+                    {can(currentUser, PERM_KEYS.SYSTEM_LOGS) && (
+                      <Link
+                        to="/audit-log"
+                        className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${isPrivate ? 'text-rose-700 hover:bg-rose-50 font-medium' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary-600 dark:hover:text-primary-400'}`}
+                      >
+                        <i className="fas fa-shield-alt w-4 text-center"></i> {t.header.audit}
+                      </Link>
+                    )}
+                  </div>
+
+                  <div
+                    className={`p-1 border-t ${isPrivate ? 'border-rose-100 bg-rose-50/50' : 'border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-red-500/5'}`}
+                  >
+                    <button
+                      onClick={onLogout}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 font-medium ${isPrivate ? 'text-rose-600 hover:bg-rose-100 hover:text-rose-800' : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-700 dark:hover:text-red-300'}`}
+                    >
+                      <i className="fas fa-sign-out-alt w-4 text-center"></i> {t.header.signOut}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
-            <button 
+            <button
               onClick={onLogin}
               className="hidden xl:flex items-center justify-center gap-2 px-6 py-2 rounded-full border border-primary-500/30 bg-primary-500/10 text-primary-600 dark:text-primary-400 text-xs font-bold uppercase tracking-widest hover:bg-primary-500 hover:text-white transition-all duration-300 hover:shadow-[0_0_20px_rgba(14,165,233,0.4)] min-w-[110px]"
             >
