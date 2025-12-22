@@ -38,44 +38,36 @@ export const Hero: React.FC<HeroProps> = ({ onCtaClick, onSecondaryCtaClick }) =
   const handleLike = async () => {
     if (!homeId) return;
     
-    // Toggle Logic
-    const newLikedState = !hasLiked;
-    setHasLiked(newLikedState);
+    // Determine action based on current state (Toggle)
+    const isCurrentlyLiked = hasLiked;
 
-    if (newLikedState) {
-        // --- ACTION: LIKE ---
-        // Optimistic Update
-        setLikes(prev => prev + 1);
-        setShowThanks(true);
-        localStorage.setItem('home_liked', 'true');
-
-        try {
-          await apiService.addHomeLike(homeId);
-        } catch (e) {
-          // Revert if failed
-          setLikes(prev => prev - 1);
-          setHasLiked(false);
-          localStorage.removeItem('home_liked');
+    try {
+        if (isCurrentlyLiked) {
+            // Action: UNLIKE
+            await apiService.removeHomeLike(homeId);
+            
+            // Success -> Update State
+            setLikes(prev => Math.max(0, prev - 1));
+            setHasLiked(false);
+            localStorage.removeItem('home_liked');
+            setShowThanks(false);
+        } else {
+            // Action: LIKE
+            await apiService.addHomeLike(homeId);
+            
+            // Success -> Update State
+            setLikes(prev => prev + 1);
+            setHasLiked(true);
+            localStorage.setItem('home_liked', 'true');
+            
+            setShowThanks(true);
+            setTimeout(() => {
+              setShowThanks(false);
+            }, 2000);
         }
-
-        setTimeout(() => {
-          setShowThanks(false);
-        }, 2000);
-    } else {
-        // --- ACTION: UNLIKE ---
-        // Optimistic Update
-        setLikes(prev => Math.max(0, prev - 1));
-        setShowThanks(false); 
-        localStorage.removeItem('home_liked');
-
-        try {
-          await apiService.removeHomeLike(homeId);
-        } catch (e) {
-          // Revert if failed
-          setLikes(prev => prev + 1);
-          setHasLiked(true);
-          localStorage.setItem('home_liked', 'true');
-        }
+    } catch (e) {
+        console.error("Like/Unlike failed", e);
+        // Do not update UI on failure
     }
   };
 

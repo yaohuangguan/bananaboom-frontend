@@ -111,32 +111,49 @@ export const BlogList: React.FC<BlogListProps> = ({
       });
   };
 
-  // Internal Like Handler
+  // Internal Like Handler (Updated: Success -> Update UI)
   const handleLikeInternal = async (id: string) => {
       const isLiked = likedPosts.has(id);
-      const newLikedPosts = new Set(likedPosts);
       
       try {
-         setBlogs(prev => prev.map(p => {
-           if (p._id === id) {
-             return { ...p, likes: isLiked ? Math.max(0, (p.likes || 0) - 1) : (p.likes || 0) + 1 };
-           }
-           return p;
-         }));
-  
          if (isLiked) {
-           newLikedPosts.delete(id);
+           // Currently liked, so UNLIKE
            await apiService.unlikePost(id);
+           
+           // Update State AFTER success
+           setBlogs(prev => prev.map(p => {
+             if (p._id === id) {
+               return { ...p, likes: Math.max(0, (p.likes || 0) - 1) };
+             }
+             return p;
+           }));
+
+           const newLikedPosts = new Set(likedPosts);
+           newLikedPosts.delete(id);
+           setLikedPosts(newLikedPosts);
+           localStorage.setItem('liked_posts', JSON.stringify(Array.from(newLikedPosts)));
+
          } else {
-           newLikedPosts.add(id);
+           // Currently NOT liked, so LIKE
            await apiService.likePost(id);
+           
+           // Update State AFTER success
+           setBlogs(prev => prev.map(p => {
+             if (p._id === id) {
+               return { ...p, likes: (p.likes || 0) + 1 };
+             }
+             return p;
+           }));
+
+           const newLikedPosts = new Set(likedPosts);
+           newLikedPosts.add(id);
+           setLikedPosts(newLikedPosts);
+           localStorage.setItem('liked_posts', JSON.stringify(Array.from(newLikedPosts)));
          }
          
-         setLikedPosts(newLikedPosts);
-         localStorage.setItem('liked_posts', JSON.stringify(Array.from(newLikedPosts)));
          if (onLike) onLike(id);
       } catch (e) {
-        console.error("Like failed", e);
+        console.error("Like action failed", e);
       }
   };
 

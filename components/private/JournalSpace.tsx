@@ -31,6 +31,9 @@ export const JournalSpace: React.FC = () => {
   const [publicPagination, setPublicPagination] = useState<PaginationData | null>(null);
   const [isPublicLoading, setIsPublicLoading] = useState(false);
 
+  // Like Tracking State
+  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+
   // UI State
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [postToDelete, setPostToDelete] = useState<BlogPost | null>(null);
@@ -38,6 +41,14 @@ export const JournalSpace: React.FC = () => {
   const [previewData, setPreviewData] = useState<{ title: string, content: string, tags: string[], date: string } | null>(null);
   const [isPreviewHidden, setIsPreviewHidden] = useState(false);
   const [searchQuery, setSearchQuery] = useState(search);
+
+  // Load likes from local storage on mount
+  useEffect(() => {
+    const savedLikes = localStorage.getItem('liked_posts');
+    if (savedLikes) {
+        try { setLikedPosts(new Set(JSON.parse(savedLikes))); } catch (e) {}
+    }
+  }, []);
 
   // Sync internal search with URL
   useEffect(() => {
@@ -93,13 +104,50 @@ export const JournalSpace: React.FC = () => {
       });
   };
 
+  // Handle Like Toggle Logic (Success First)
   const handleLike = async (id: string) => {
+    const isLiked = likedPosts.has(id);
+    
     try {
-      await apiService.likePost(id);
-      if (logSource === 'public') {
-         setPublicBlogs(prev => prev.map(p => p._id === id ? { ...p, likes: (p.likes || 0) + 1 } : p));
+      if (isLiked) {
+         // Currently Liked -> Unlike
+         await apiService.unlikePost(id);
+         
+         // Update UI
+         if (logSource === 'public') {
+            setPublicBlogs(prev => prev.map(p => p._id === id ? { ...p, likes: Math.max(0, (p.likes || 0) - 1) } : p));
+         } else {
+            setPrivateBlogs(prev => prev.map(p => p._id === id ? { ...p, likes: Math.max(0, (p.likes || 0) - 1) } : p));
+         }
+         if (selectedEntry && selectedEntry._id === id) {
+            setSelectedEntry(prev => prev ? ({ ...prev, likes: Math.max(0, (prev.likes || 0) - 1) }) : null);
+         }
+
+         // Update Local State
+         const newLikedPosts = new Set(likedPosts);
+         newLikedPosts.delete(id);
+         setLikedPosts(newLikedPosts);
+         localStorage.setItem('liked_posts', JSON.stringify(Array.from(newLikedPosts)));
+
       } else {
-         fetchPrivateBlogs();
+         // Not Liked -> Like
+         await apiService.likePost(id);
+         
+         // Update UI
+         if (logSource === 'public') {
+            setPublicBlogs(prev => prev.map(p => p._id === id ? { ...p, likes: (p.likes || 0) + 1 } : p));
+         } else {
+            setPrivateBlogs(prev => prev.map(p => p._id === id ? { ...p, likes: (p.likes || 0) + 1 } : p));
+         }
+         if (selectedEntry && selectedEntry._id === id) {
+            setSelectedEntry(prev => prev ? ({ ...prev, likes: (prev.likes || 0) + 1 }) : null);
+         }
+
+         // Update Local State
+         const newLikedPosts = new Set(likedPosts);
+         newLikedPosts.add(id);
+         setLikedPosts(newLikedPosts);
+         localStorage.setItem('liked_posts', JSON.stringify(Array.from(newLikedPosts)));
       }
     } catch (error) { console.error(error); }
   };
