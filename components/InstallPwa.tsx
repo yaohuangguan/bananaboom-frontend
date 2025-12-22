@@ -11,6 +11,9 @@ export const InstallPwa: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    // Check if previously dismissed
+    if (localStorage.getItem('pwa_dismissed')) return;
+
     // Logic: Only check if NOT already installed
     // 1. Check if already in standalone mode
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
@@ -60,6 +63,11 @@ export const InstallPwa: React.FC = () => {
     setIsVisible(false);
   };
 
+  const handleClose = () => {
+    setIsVisible(false);
+    localStorage.setItem('pwa_dismissed', 'true');
+  };
+
   return (
     <div className="fixed bottom-24 left-4 right-4 z-[100] md:bottom-6 md:left-auto md:right-6 md:w-96 animate-slide-up">
       <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4 transition-colors duration-300">
@@ -93,7 +101,7 @@ export const InstallPwa: React.FC = () => {
         
         {/* Close Button */}
         <button 
-          onClick={() => setIsVisible(false)}
+          onClick={handleClose}
           className="absolute -top-2 -left-2 bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-300 rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-500 hover:text-white transition-colors shadow-sm"
         >
           <i className="fas fa-times"></i>

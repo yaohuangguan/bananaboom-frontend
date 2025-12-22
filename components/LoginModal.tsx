@@ -299,6 +299,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
                   onChange={phone => setPhone(phone)}
                   enableSearch={true}
                   disableSearchIcon={true}
+                  autoFormat={false} // Disable auto format to prevent hyphens like 13-13
+                  countryCodeEditable={false} // Prevent users from deleting the country code
+                  preferredCountries={['cn', 'hk', 'us']} // Prioritize China, HK, US
                   inputClass="!w-full !h-[50px] !text-sm !font-mono !bg-slate-50 dark:!bg-[#0a0f1e] !border-slate-200 dark:!border-slate-800 focus:!border-primary-500 !text-slate-900 dark:!text-white !rounded-xl placeholder:!text-slate-400 dark:placeholder:!text-slate-600 transition-all !pl-[48px]"
                   buttonClass="!bg-transparent !border-0 !border-r !border-slate-200 dark:!border-slate-800 !rounded-l-xl"
                   dropdownClass="!bg-white dark:!bg-slate-900 !text-slate-800 dark:!text-slate-200 !border-slate-200 dark:!border-slate-700 !shadow-xl !rounded-lg !mt-1"

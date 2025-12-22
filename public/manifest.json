@@ -1,6 +1,6 @@
 {
     "name": "PS5 Space | Engineering & Design | Sam Yao",
-    "short_name": "Sam Yao Space",
+    "short_name": "SAM的博客圣所",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#fdfbf7",
@@ -8,13 +8,13 @@
     "orientation": "portrait-primary",
     "icons": [
       {
-        "src": "/icon.png",
+        "src": "/ios-share-icon-192.png",
         "sizes": "192x192",
         "type": "image/png",
         "purpose": "any"
       },
       {
-        "src": "/icon.png",
+        "src": "/ios-share-icon-512.png",
         "sizes": "512x512",
         "type": "image/png",
         "purpose": "any"
