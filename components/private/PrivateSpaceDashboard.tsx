@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { CountDateWidget, TabType } from './CountDateWidget';
 import { NewsWidget } from './HotSearchWidget';
 import { AccessRestricted } from '../AccessRestricted';
@@ -23,6 +24,24 @@ export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   
+  // Tab -> Permission Mapping
+  const TAB_PERMISSIONS: Record<TabType, string> = {
+      'JOURNAL': PERM_KEYS.JOURNAL_USE,
+      'SECOND_BRAIN': PERM_KEYS.BRAIN_USE,
+      'LEISURE': PERM_KEYS.LEISURE_USE,
+      'GALLERY': PERM_KEYS.CAPSULE_USE,
+      'FITNESS': PERM_KEYS.FITNESS_USE
+  };
+
+  // Tab -> Route Mapping
+  const TAB_ROUTES: Record<TabType, string> = {
+      'JOURNAL': 'journal-space',
+      'SECOND_BRAIN': 'ai-space',
+      'LEISURE': 'leisure-space',
+      'GALLERY': 'capsule-gallery',
+      'FITNESS': 'fitness-space'
+  };
+
   // Determine active tab based on URL path
   const currentPath = location.pathname.split('/').pop();
   const activeTab: TabType = useMemo(() => {
@@ -36,16 +55,26 @@ export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({
       }
   }, [currentPath]);
 
-  const handleTabChange = (tab: TabType) => {
-      let path = 'journal-space';
-      switch(tab) {
-          case 'SECOND_BRAIN': path = 'ai-space'; break;
-          case 'JOURNAL': path = 'journal-space'; break;
-          case 'LEISURE': path = 'leisure-space'; break;
-          case 'GALLERY': path = 'capsule-gallery'; break;
-          case 'FITNESS': path = 'fitness-space'; break;
+  // Calculate Visible Tabs based on User Permissions
+  const visibleTabs = useMemo(() => {
+      const allTabs: TabType[] = ['SECOND_BRAIN', 'JOURNAL', 'GALLERY', 'LEISURE', 'FITNESS'];
+      return allTabs.filter(tab => can(user, TAB_PERMISSIONS[tab]));
+  }, [user]);
+
+  // Redirect if current tab is not accessible
+  useEffect(() => {
+      // If visibleTabs is calculated (and not empty) and activeTab is NOT in it
+      if (visibleTabs.length > 0 && !visibleTabs.includes(activeTab)) {
+          // Redirect to the first available tab
+          const firstAllowed = visibleTabs[0];
+          const route = TAB_ROUTES[firstAllowed];
+          navigate(`/captain-cabin/${route}`, { replace: true });
       }
-      navigate(`/captain-cabin/${path}`);
+  }, [activeTab, visibleTabs, navigate]);
+
+  const handleTabChange = (tab: TabType) => {
+      const path = TAB_ROUTES[tab];
+      if (path) navigate(`/captain-cabin/${path}`);
   };
   
   // --- Auto Holiday Logic ---
@@ -104,6 +133,9 @@ export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({
   // Only VIP users or Super Admins can see the special timer. Everyone else sees System Time.
   const canViewTogetherTime = !!(user?.vip || user?.role === 'super_admin');
 
+  // Strict Permission Check for current tab content rendering (Double check)
+  const hasTabAccess = can(user, TAB_PERMISSIONS[activeTab]);
+
   return (
     <div className={`
       min-h-screen pt-24 pb-6 px-4 md:px-6 relative flex flex-col gap-6 transition-colors duration-1000
@@ -153,31 +185,27 @@ export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({
           onToggleEffects={handleToggleEffects}
           // Display "Together Time" only for VIP or Super Admin
           hasAccess={canViewTogetherTime}
+          // Dynamic Tab Visibility
+          visibleTabs={visibleTabs}
         />
       </div>
 
       {/* Main Content Area - Render Outlet for Child Routes */}
       <div className={`container mx-auto flex-1 max-w-[1600px] relative z-10 ${isFixedLayout ? 'lg:min-h-0 pb-10 lg:pb-0' : 'pb-20'}`}>
-         {/* Check specific permissions for specific routes before rendering outlet content */}
-         {activeTab === 'SECOND_BRAIN' && !can(user, PERM_KEYS.BRAIN_USE) && (
-             <AccessRestricted permission={PERM_KEYS.BRAIN_USE} className="bg-white/80 backdrop-blur shadow-xl border-white/50" onSuccess={() => window.location.reload()} />
-         )}
-         {activeTab === 'LEISURE' && !can(user, PERM_KEYS.LEISURE_READ) && (
-             <AccessRestricted permission={PERM_KEYS.LEISURE_READ} className="bg-white/80 backdrop-blur shadow-xl border-white/50" onSuccess={() => window.location.reload()} />
-         )}
-         {activeTab === 'GALLERY' && !can(user, PERM_KEYS.CAPSULE_USE) && (
-             <AccessRestricted permission={PERM_KEYS.CAPSULE_USE} className="bg-white/80 backdrop-blur shadow-xl border-white/50" onSuccess={() => window.location.reload()} />
-         )}
-         {activeTab === 'FITNESS' && !(can(user, PERM_KEYS.FITNESS_USE) || can(user, PERM_KEYS.FITNESS_READ_ALL)) && (
-             <AccessRestricted permission={PERM_KEYS.FITNESS_READ_ALL} className="bg-white/80 backdrop-blur shadow-xl border-white/50" onSuccess={() => window.location.reload()} />
-         )}
-
-         {/* Render actual content if permissions pass (or if route is public within private space like journal list) */}
-         {/* Note: The JournalSpace itself does checking on actions but viewing list is generally allowed if you have Private Space Access */}
          
-         <div className="h-full animate-fade-in lg:overflow-hidden w-full">
-            <Outlet context={{ user }} />
-         </div>
+         {/* STRICT PERMISSION CHECK INTERCEPTION */}
+         {!hasTabAccess ? (
+             <AccessRestricted 
+                permission={TAB_PERMISSIONS[activeTab]} 
+                className="bg-white/80 backdrop-blur shadow-xl border-white/50 h-full" 
+                onSuccess={() => window.location.reload()} 
+             />
+         ) : (
+             // Render actual content if permissions pass
+             <div className="h-full animate-fade-in lg:overflow-hidden w-full">
+                <Outlet context={{ user }} />
+             </div>
+         )}
       </div>
       
       <style>{`
@@ -198,3 +226,5 @@ export const PrivateSpaceDashboard: React.FC<PrivateSpaceDashboardProps> = ({
     </div>
   );
 };
+
+export default PrivateSpaceDashboard;

@@ -474,3 +474,5 @@ export const FitnessSpace: React.FC<FitnessSpaceProps> = ({ currentUser }) => {
     </div>
   );
 };
+
+export default FitnessSpace;

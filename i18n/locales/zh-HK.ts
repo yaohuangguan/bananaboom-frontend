@@ -1,4 +1,5 @@
 
+
 export const zhHK = {
   header: {
     home: '主控台',
@@ -16,6 +17,12 @@ export const zhHK = {
     emptyNotifications: '無新警報',
     footprint: '星圖',
     system: '系統管理'
+  },
+  bottomNav: {
+    home: '主頁',
+    archives: '檔案',
+    cabin: '艦長室',
+    me: '我的'
   },
   hero: {
     status: '系統在線',

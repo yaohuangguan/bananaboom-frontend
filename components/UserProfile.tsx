@@ -1,7 +1,8 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { User, PaginationData, PERM_KEYS, Permission, Role } from '../types';
+import { Link, useNavigate } from 'react-router-dom';
+import { User, PaginationData, PERM_KEYS, Permission, Role, can } from '../types';
 import { useTranslation } from '../i18n/LanguageContext';
 import { apiService } from '../services/api';
 import { toast } from './Toast';
@@ -28,6 +29,7 @@ const TIMEZONES = [
 
 export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [displayName, setDisplayName] = useState(user.displayName);
   const [height, setHeight] = useState<string>(user.height ? user.height.toString() : '');
   const [fitnessGoal, setFitnessGoal] = useState<'cut' | 'bulk' | 'maintain'>(user.fitnessGoal || 'maintain');
@@ -264,6 +266,13 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
     setIsPermModalOpen(true);
   };
 
+  const handleLogout = () => {
+    apiService.logout();
+    localStorage.removeItem('auth_token'); 
+    localStorage.removeItem('googleInfo');
+    window.location.href = '/';
+  };
+
   const getRoleColorClass = (role?: string) => {
       switch (role) {
           case 'super_admin': return 'bg-purple-500 text-white border-purple-400';
@@ -279,26 +288,41 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
       return t.profile.roles[role] || role;
   };
 
+  // Render a list item link
+  const ListItemLink = ({ to, icon, label, color = 'text-slate-600 dark:text-slate-300' }: { to: string, icon: string, label: string, color?: string }) => (
+    <Link to={to} className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+      <div className={`flex items-center gap-3 ${color}`}>
+        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+           <i className={`fas ${icon}`}></i>
+        </div>
+        <span className="text-sm font-bold text-slate-700 dark:text-white">{label}</span>
+      </div>
+      <i className="fas fa-chevron-right text-slate-300 text-xs"></i>
+    </Link>
+  );
+
   return (
     <div className="container mx-auto px-6 py-24 pt-32 max-w-4xl animate-fade-in relative z-10">
       
-      <div className="mb-12 border-b border-slate-200 dark:border-slate-800 pb-8">
-        <h1 className="text-4xl font-display font-bold text-slate-900 dark:text-white mb-2">
-          {t.profile.title}
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400">
-          {t.profile.subtitle}
-        </p>
+      <div className="mb-8 border-b border-slate-200 dark:border-slate-800 pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div>
+            <h1 className="text-4xl font-display font-bold text-slate-900 dark:text-white mb-2">
+            {t.profile.title}
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400">
+            {t.profile.subtitle}
+            </p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        {/* Left Column: Avatar & Status */}
-        <div className="col-span-1">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col items-center text-center">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Avatar & Menu Links (Mobile Hub) */}
+        <div className="col-span-1 space-y-6">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col items-center text-center relative overflow-hidden">
             
             {/* Clickable Avatar Area */}
             <div 
-              className="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-amber-400 to-rose-500 mb-6 relative group cursor-pointer"
+              className="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-amber-400 to-rose-500 mb-4 relative group cursor-pointer"
               onClick={handleAvatarClick}
             >
               <img 
@@ -307,17 +331,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
                 className={`w-full h-full rounded-full object-cover border-4 border-white dark:border-slate-900 transition-opacity ${isUploadingAvatar ? 'opacity-50' : ''}`}
               />
               
-              {/* Loading Indicator */}
               {isUploadingAvatar && (
                  <div className="absolute inset-0 flex items-center justify-center z-20">
-                    <i className="fas fa-circle-notch fa-spin text-white text-3xl"></i>
+                    <i className="fas fa-circle-notch fa-spin text-white text-2xl"></i>
                  </div>
               )}
 
-              {/* Overlay for Edit Indication (Only show when not uploading) */}
               {!isUploadingAvatar && (
                 <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <i className="fas fa-camera text-white text-2xl"></i>
+                  <i className="fas fa-camera text-white text-xl"></i>
                 </div>
               )}
 
@@ -330,37 +352,51 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
               />
             </div>
 
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">{user.displayName}</h2>
-            <p className="text-sm font-mono text-slate-500 mb-4">{user.email}</p>
-            {user.phone && <p className="text-xs font-mono text-slate-400 mb-4">{user.phone}</p>}
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-1">{user.displayName}</h2>
+            <p className="text-xs font-mono text-slate-500 mb-3">{user.email}</p>
             
-            <div className="flex gap-2 justify-center flex-wrap">
-                <div className="inline-flex items-center px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full text-xs font-bold uppercase tracking-widest border border-emerald-500/20">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
-                {t.profile.active}
-                </div>
-                
-                {/* Role Badge */}
+            <div className="flex gap-2 justify-center flex-wrap mb-2">
                 {user.role && user.role !== 'user' && (
-                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border ${getRoleColorClass(user.role)} bg-opacity-10 border-opacity-20`}>
+                    <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${getRoleColorClass(user.role)} bg-opacity-10 border-opacity-20`}>
                         {getRoleLabel(user.role)}
                     </div>
                 )}
+                {user.vip && (
+                    <div className="inline-flex items-center px-2 py-0.5 bg-amber-500/10 text-amber-500 rounded-full text-[10px] font-bold uppercase tracking-widest border border-amber-500/20">
+                        <i className="fas fa-crown mr-1"></i> {t.profile.vipBadge}
+                    </div>
+                )}
             </div>
-
-            {user.vip && (
-              <div className="mt-2 inline-flex items-center px-3 py-1 bg-amber-500/10 text-amber-500 rounded-full text-xs font-bold uppercase tracking-widest border border-amber-500/20">
-                 <i className="fas fa-crown mr-2"></i> {t.profile.vipBadge}
-              </div>
-            )}
           </div>
+
+          {/* Navigation Links Group */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 shadow-sm">
+             <ListItemLink to="/system-settings" icon="fa-cog" label={t.header.settings} />
+             
+             {can(user, PERM_KEYS.SYSTEM_ACCESS) && (
+                <ListItemLink to="/system-management" icon="fa-server" label={t.header.system} color="text-blue-500" />
+             )}
+             
+             {can(user, PERM_KEYS.SYSTEM_LOGS) && (
+                <ListItemLink to="/audit-log" icon="fa-shield-alt" label={t.header.audit} color="text-emerald-500" />
+             )}
+          </div>
+
+          {/* Logout Button */}
+          <button 
+            onClick={handleLogout}
+            className="w-full bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 text-red-500 font-bold text-sm uppercase tracking-wider hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors shadow-sm"
+          >
+             {t.header.signOut}
+          </button>
         </div>
 
-        {/* Right Column: Edit Forms */}
+        {/* Right Column: Edit Forms (Desktop Primarily, stacks on mobile below nav) */}
         <div className="col-span-1 lg:col-span-2 space-y-8">
           
           {/* Identity Card */}
           <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-3xl p-8 border border-slate-200 dark:border-slate-800">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-6">Edit Profile</h3>
             <form onSubmit={handleSave} className="space-y-6">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{t.profile.displayName}</label>
@@ -422,40 +458,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
                 </select>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{t.profile.email}</label>
-                  <input 
-                    type="text" 
-                    value={user.email}
-                    disabled
-                    className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-500 cursor-not-allowed font-mono text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{t.profile.phone}</label>
-                  <input 
-                    type="text" 
-                    value={user.phone || ''}
-                    disabled
-                    placeholder="Not linked"
-                    className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-500 cursor-not-allowed font-mono text-sm"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{t.profile.uid}</label>
-                <div className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-500 font-mono text-xs break-all">
-                  {user._id}
-                </div>
-              </div>
-
               <div className="pt-4">
                 <button 
                   type="submit" 
                   disabled={isLoading}
-                  className="px-8 py-3 bg-amber-500 text-black rounded-xl font-bold uppercase tracking-widest hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-500/20 transition-all disabled:opacity-50"
+                  className="w-full md:w-auto px-8 py-3 bg-amber-500 text-black rounded-xl font-bold uppercase tracking-widest hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-500/20 transition-all disabled:opacity-50"
                 >
                   {isLoading ? <i className="fas fa-circle-notch fa-spin"></i> : t.profile.save}
                 </button>
@@ -527,7 +534,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
                  <button 
                    type="submit" 
                    disabled={isChangingPassword || !oldPassword || !newPassword}
-                   className="px-6 py-3 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold uppercase tracking-widest hover:bg-amber-500 hover:text-black transition-all disabled:opacity-50"
+                   className="w-full md:w-auto px-6 py-3 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold uppercase tracking-widest hover:bg-amber-500 hover:text-black transition-all disabled:opacity-50"
                  >
                    {isChangingPassword ? <i className="fas fa-circle-notch fa-spin"></i> : t.profile.changePassword}
                  </button>

@@ -12,6 +12,7 @@ interface CountDateWidgetProps {
   effectsEnabled: boolean;
   onToggleEffects: () => void;
   hasAccess?: boolean; // New Prop for Permission
+  visibleTabs?: TabType[]; // Tabs the user is allowed to see
 }
 
 export const CountDateWidget: React.FC<CountDateWidgetProps> = ({ 
@@ -21,7 +22,8 @@ export const CountDateWidget: React.FC<CountDateWidgetProps> = ({
   holidayType,
   effectsEnabled,
   onToggleEffects,
-  hasAccess = false
+  hasAccess = false,
+  visibleTabs = ['SECOND_BRAIN', 'JOURNAL', 'GALLERY', 'LEISURE', 'FITNESS']
 }) => {
   const [timeLeft, setTimeLeft] = useState({
     years: 0,
@@ -172,14 +174,14 @@ export const CountDateWidget: React.FC<CountDateWidgetProps> = ({
         {/* Center/Right: Navigation Tabs (Integrated) */}
         <div className="flex items-center gap-3">
             <div className="flex items-center bg-black/10 backdrop-blur-sm rounded-full p-1 overflow-x-auto max-w-full custom-scrollbar">
-            {(['SECOND_BRAIN', 'JOURNAL', 'GALLERY', 'LEISURE', 'FITNESS'] as TabType[]).map((tab) => {
+            {visibleTabs.map((tab: TabType) => {
                 const isActive = activeTab === tab;
                 return (
                 <button
                     key={tab}
                     onClick={() => onTabChange(tab)}
                     className={`relative px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-2 whitespace-nowrap ${
-                    isActive 
+                    isActive
                         ? tabActiveClass
                         : 'text-white/80 hover:bg-white/10 hover:text-white'
                     }`}

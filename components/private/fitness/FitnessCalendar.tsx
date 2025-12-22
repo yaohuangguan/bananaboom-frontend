@@ -88,7 +88,9 @@ export const FitnessCalendar: React.FC<FitnessCalendarProps> = ({
     const cells = [];
     
     for (let i = 0; i < firstDay; i++) {
-      cells.push(<div key={`pad-${i}`} className="h-48 md:h-56 bg-white/20 rounded-xl border border-white/10"></div>);
+      cells.push(<div key={`pad-${i}`} className="h-24 md:h-56 bg-white/20 rounded-xl border border-white/10 hidden md:block"></div>);
+      // Empty placeholder for mobile grid to keep alignment
+      cells.push(<div key={`pad-m-${i}`} className="aspect-square bg-transparent md:hidden"></div>);
     }
     
     for (let d = 1; d <= daysInMonth; d++) {
@@ -107,19 +109,24 @@ export const FitnessCalendar: React.FC<FitnessCalendarProps> = ({
         <button
           key={d}
           onClick={() => onDateClick(d)}
-          className={`h-48 md:h-56 rounded-2xl flex flex-col p-3 relative transition-all duration-200 border text-left group overflow-hidden ${
+          className={`
+            relative flex flex-col transition-all duration-200 border text-left group overflow-hidden
+            md:h-56 md:rounded-2xl md:p-3
+            aspect-square md:aspect-auto rounded-xl p-1.5 
+            ${
             isSelected 
-              ? 'bg-rose-500 text-white border-rose-500 shadow-xl scale-[1.02] z-20 ring-4 ring-rose-200' 
+              ? 'bg-rose-500 text-white border-rose-500 shadow-xl scale-[1.02] z-20 ring-2 md:ring-4 ring-rose-200' 
               : isToday
-                ? 'bg-white border-rose-300 text-rose-600 shadow-md ring-2 ring-rose-100'
+                ? 'bg-white border-rose-300 text-rose-600 shadow-md ring-1 md:ring-2 ring-rose-100'
                 : 'bg-white/80 hover:bg-white border-white text-slate-600 shadow-sm hover:shadow-md'
           }`}
         >
-          <div className="flex justify-between items-start w-full mb-3 pb-2 border-b border-black/5 relative">
-             <div className="flex flex-col">
-                <span className={`text-lg md:text-xl font-bold font-display ${isSelected ? 'text-white' : 'text-slate-800'}`}>{d}</span>
+          {/* Header Row */}
+          <div className="flex justify-between items-start w-full md:mb-3 md:pb-2 md:border-b md:border-black/5 relative h-full md:h-auto">
+             <div className="flex flex-col items-center md:items-start w-full md:w-auto">
+                <span className={`text-sm md:text-xl font-bold font-display ${isSelected ? 'text-white' : 'text-slate-800'}`}>{d}</span>
                 {holiday && (
-                  <span className={`text-[10px] whitespace-nowrap font-bold px-1.5 py-0.5 rounded-full mt-1 ${
+                  <span className={`text-[8px] md:text-[10px] whitespace-nowrap font-bold px-1 py-0.5 md:px-1.5 md:py-0.5 rounded-full mt-0.5 md:mt-1 truncate max-w-full text-center ${
                     holiday === '春节' || holiday === 'Spring Festival' || holiday === 'CNY'
                         ? 'bg-red-600 text-white shadow-sm'
                         : isSelected ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-600'
@@ -127,9 +134,16 @@ export const FitnessCalendar: React.FC<FitnessCalendarProps> = ({
                     {holiday}
                   </span>
                 )}
+                
+                {/* Mobile Indicators */}
+                <div className="flex md:hidden gap-1 flex-wrap justify-center mt-auto w-full pb-1">
+                   {hasData && <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-rose-400'}`}></div>}
+                   {hasPhotos && <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-yellow-300' : 'bg-amber-400'}`}></div>}
+                </div>
              </div>
 
-             <div className="flex gap-2 items-start">
+             {/* Desktop Indicators */}
+             <div className="hidden md:flex gap-2 items-start">
                {hasData && (
                   <div
                      onClick={(e) => { e.stopPropagation(); onShowSummary(cellDate); }}
@@ -151,7 +165,8 @@ export const FitnessCalendar: React.FC<FitnessCalendarProps> = ({
              </div>
           </div>
 
-          <div className="flex flex-col gap-2 w-full flex-1 overflow-y-auto custom-scrollbar pr-1">
+          {/* Desktop Content List */}
+          <div className="hidden md:flex flex-col gap-2 w-full flex-1 overflow-y-auto custom-scrollbar pr-1">
              {dayRecords.length > 0 ? (
                 dayRecords.map((r, idx) => {
                    const u = r.user as User;
@@ -193,23 +208,23 @@ export const FitnessCalendar: React.FC<FitnessCalendarProps> = ({
   }, [viewDate, currentDate, monthRecords, t, language]);
 
   return (
-    <div className="bg-white/80 backdrop-blur-md rounded-[2rem] p-6 shadow-xl border border-white/50">
+    <div className="bg-white/80 backdrop-blur-md rounded-[2rem] p-4 md:p-6 shadow-xl border border-white/50">
        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-display font-bold text-slate-800 flex items-center gap-3">
-             <div className="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 shadow-inner">
-                <i className="fas fa-calendar-alt text-xl"></i>
+          <h2 className="text-xl md:text-2xl font-display font-bold text-slate-800 flex items-center gap-3">
+             <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 shadow-inner">
+                <i className="fas fa-calendar-alt text-lg md:text-xl"></i>
              </div>
              {viewDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long' })}
           </h2>
           <div className="flex gap-2">
-             <button onClick={onPrevMonth} className="w-10 h-10 rounded-full bg-white hover:bg-rose-100 hover:text-rose-500 transition-colors flex items-center justify-center text-slate-500 border border-slate-200 shadow-sm"><i className="fas fa-chevron-left"></i></button>
-             <button onClick={onNextMonth} className="w-10 h-10 rounded-full bg-white hover:bg-rose-100 hover:text-rose-500 transition-colors flex items-center justify-center text-slate-500 border border-slate-200 shadow-sm"><i className="fas fa-chevron-right"></i></button>
+             <button onClick={onPrevMonth} className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white hover:bg-rose-100 hover:text-rose-500 transition-colors flex items-center justify-center text-slate-500 border border-slate-200 shadow-sm"><i className="fas fa-chevron-left"></i></button>
+             <button onClick={onNextMonth} className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white hover:bg-rose-100 hover:text-rose-500 transition-colors flex items-center justify-center text-slate-500 border border-slate-200 shadow-sm"><i className="fas fa-chevron-right"></i></button>
           </div>
        </div>
        
-       <div className="grid grid-cols-7 gap-3 md:gap-4">
+       <div className="grid grid-cols-7 gap-2 md:gap-4">
           {(t.privateSpace.fitness.calendar.weekdays as string[]).map((d,i) => (
-             <div key={i} className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{d}</div>
+             <div key={i} className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 md:mb-2">{d}</div>
           ))}
           {calendarCells}
        </div>

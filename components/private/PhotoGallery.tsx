@@ -610,3 +610,5 @@ export const PhotoGallery: React.FC = () => {
     </div>
   );
 };
+
+export default PhotoGallery;

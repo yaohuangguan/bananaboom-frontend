@@ -6,12 +6,48 @@ import { UserManagement } from './system/UserManagement';
 import { RoleManagement } from './system/RoleManagement';
 import { PermissionManagement } from './system/PermissionManagement';
 import { RequestManagement } from './system/RequestManagement';
+import { PERM_KEYS, can } from '../types';
+import { AccessRestricted } from './AccessRestricted';
+import { apiService } from '../services/api';
 
 type SystemTab = 'RESOURCES' | 'USERS' | 'ROLES' | 'PERMISSIONS' | 'REQUESTS';
 
 export const SystemManagement: React.FC = () => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<SystemTab>('RESOURCES');
+  
+  // We need to fetch current user permissions again or assume they are passed/contextual.
+  // For simplicity here, we assume a mechanism like `apiService.getCurrentUser` cached or passed down.
+  // In a real app, use the `useOutletContext` or global state.
+  // For this component, we'll re-fetch briefly or rely on the `ProtectedRoute` wrapper having done the high-level check.
+  // But granular tab checks need user info.
+  // Let's use a local user state fetched on mount to be safe for granular checks.
+  const [user, setUser] = useState<any>(null);
+
+  React.useEffect(() => {
+      apiService.getCurrentUser().then(setUser).catch(() => {});
+  }, []);
+
+  const renderTabContent = () => {
+      if (!user) return null;
+
+      switch (activeTab) {
+          case 'RESOURCES':
+              return <SystemResources />;
+          case 'USERS':
+              return can(user, PERM_KEYS.USER_MANAGE) ? <UserManagement /> : <AccessRestricted permission={PERM_KEYS.USER_MANAGE} />;
+          case 'ROLES':
+              return can(user, PERM_KEYS.ROLE_MANAGE) ? <RoleManagement /> : <AccessRestricted permission={PERM_KEYS.ROLE_MANAGE} />;
+          case 'PERMISSIONS':
+              return can(user, PERM_KEYS.PERM_MANAGE) ? <PermissionManagement /> : <AccessRestricted permission={PERM_KEYS.PERM_MANAGE} />;
+          case 'REQUESTS':
+              // Usually handled by role management or user management permissions, or a specific one.
+              // Let's use USER_MANAGE as a proxy or if strict, add REQUEST_MANAGE.
+              return can(user, PERM_KEYS.USER_MANAGE) ? <RequestManagement /> : <AccessRestricted permission={PERM_KEYS.USER_MANAGE} />;
+          default:
+              return null;
+      }
+  };
 
   return (
     <div className="container mx-auto px-6 py-24 pt-32 max-w-7xl animate-fade-in relative z-10 min-h-screen">
@@ -40,11 +76,7 @@ export const SystemManagement: React.FC = () => {
         </div>
       </div>
 
-      {activeTab === 'RESOURCES' && <SystemResources />}
-      {activeTab === 'USERS' && <UserManagement />}
-      {activeTab === 'ROLES' && <RoleManagement />}
-      {activeTab === 'PERMISSIONS' && <PermissionManagement />}
-      {activeTab === 'REQUESTS' && <RequestManagement />}
+      {renderTabContent()}
     </div>
   );
 };

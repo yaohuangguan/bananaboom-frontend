@@ -23,12 +23,11 @@ export const AccessRestricted: React.FC<AccessRestrictedProps> = ({ permission, 
 
     setIsSubmitting(true);
     try {
-      // Force request for 'admin' role when access is restricted, as per requirements
-      // We append the missing permission to the reason for context for the admin reviewing it
-      const detailedReason = `[Missing Permission: ${permission}] ${reason}`;
-      await apiService.submitRoleRequest('admin', detailedReason);
+      // Direct request for specific permission
+      await apiService.submitPermissionRequest(permission, reason);
       
       setIsModalOpen(false);
+      toast.success(t.access.pending);
       if (onSuccess) onSuccess();
     } catch (e) {
       console.error(e);
@@ -47,14 +46,17 @@ export const AccessRestricted: React.FC<AccessRestrictedProps> = ({ permission, 
         <h3 className="text-2xl font-display font-bold text-slate-700 dark:text-slate-300 mb-2">
            {t.access.restricted}
         </h3>
-        <p className="text-slate-500 dark:text-slate-400 max-w-md mb-8">
+        <p className="text-slate-500 dark:text-slate-400 max-w-md mb-2">
            {t.access.message}
+        </p>
+        <p className="text-xs font-mono text-red-400 mb-8 uppercase tracking-widest bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded">
+           Missing: {permission}
         </p>
         <button 
           onClick={() => setIsModalOpen(true)}
           className="px-8 py-3 bg-slate-800 dark:bg-slate-700 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-slate-900 dark:hover:bg-slate-600 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
         >
-           Request Admin Access
+           {t.access.request}
         </button>
       </div>
 
@@ -70,20 +72,13 @@ export const AccessRestricted: React.FC<AccessRestrictedProps> = ({ permission, 
 
               <div className="text-center mb-6">
                  <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto mb-4">
-                    <i className="fas fa-user-shield text-xl"></i>
+                    <i className="fas fa-key text-xl"></i>
                  </div>
-                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">Request Admin Role</h3>
-                 <p className="text-sm text-slate-500 mt-2">Access to this area requires elevated privileges.</p>
+                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t.access.requestTitle}</h3>
+                 <p className="text-sm text-slate-500 mt-2">Requesting permission: <span className="font-mono text-amber-500">{permission}</span></p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                 <div>
-                    <label className="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-2">Requesting Access For</label>
-                    <div className="px-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-mono text-slate-600 dark:text-slate-300 break-all border border-slate-200 dark:border-slate-700">
-                       Admin Role (via {permission})
-                    </div>
-                 </div>
-
                  <div>
                     <label className="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-2">{t.system.requests.reason}</label>
                     <textarea 

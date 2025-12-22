@@ -3,6 +3,7 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Routes, Route, Navigate, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { Header } from './components/Header';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { Hero } from './components/Hero';
 import { BlogList } from './components/BlogList';
 import { CosmicBackground } from './components/CosmicBackground';
@@ -28,15 +29,15 @@ import { SystemManagement } from './components/SystemManagement';
 import { AccessRestricted } from './components/AccessRestricted';
 
 // Lazy Load Heavy Components
-const PrivateSpaceDashboard = lazy(() => import('./components/private/PrivateSpaceDashboard').then(module => ({ default: module.PrivateSpaceDashboard })));
-const FootprintSpace = lazy(() => import('./components/FootprintSpace').then(module => ({ default: module.FootprintSpace })));
+const PrivateSpaceDashboard = lazy(() => import('./components/private/PrivateSpaceDashboard'));
+const FootprintSpace = lazy(() => import('./components/FootprintSpace'));
 
 // Lazy Load Private Sub-Spaces for explicit routing
-const JournalSpace = lazy(() => import('./components/private/JournalSpace').then(m => ({ default: m.JournalSpace })));
-const SecondBrainSpace = lazy(() => import('./components/private/SecondBrainSpace').then(m => ({ default: m.SecondBrainSpace })));
-const LeisureSpace = lazy(() => import('./components/private/LeisureSpace').then(m => ({ default: m.LeisureSpace })));
-const PhotoGallery = lazy(() => import('./components/private/PhotoGallery').then(m => ({ default: m.PhotoGallery })));
-const FitnessSpace = lazy(() => import('./components/private/FitnessSpace').then(m => ({ default: m.FitnessSpace })));
+const JournalSpace = lazy(() => import('./components/private/JournalSpace'));
+const SecondBrainSpace = lazy(() => import('./components/private/SecondBrainSpace'));
+const LeisureSpace = lazy(() => import('./components/private/LeisureSpace'));
+const PhotoGallery = lazy(() => import('./components/private/PhotoGallery'));
+const FitnessSpace = lazy(() => import('./components/private/FitnessSpace'));
 
 const SOCKET_URL = 'https://bananaboom-api-242273127238.asia-east1.run.app';
 
@@ -98,13 +99,18 @@ const Layout: React.FC<{
         onNavigateToChat={onNavigateToChat}
       />
 
-      <main className="relative z-10 pointer-events-none w-full">
+      <main className="relative z-10 pointer-events-none w-full pb-24 md:pb-0">
         <div className="pointer-events-auto w-full min-h-screen">
            <Outlet />
         </div>
       </main>
 
       <Footer currentPage={getCurrentPageView(location.pathname)} currentUser={user} />
+      
+      {/* Mobile Bottom Navigation */}
+      <div className="block xl:hidden">
+        <MobileBottomNav currentUser={user} onLoginRequest={onLogin} />
+      </div>
     </div>
   );
 };
@@ -267,7 +273,10 @@ const App: React.FC = () => {
           {/* ROOT: Console / Home */}
           <Route path="/" element={
             <>
-              <Hero onCtaClick={() => navigate('/blogs')} />
+              <Hero 
+                onCtaClick={() => navigate('/blogs')} 
+                onSecondaryCtaClick={() => navigate('/profile')}
+              />
               <div id="console" className="pointer-events-auto">
                  <ResumeView 
                     onNavigate={(page) => {
@@ -287,8 +296,6 @@ const App: React.FC = () => {
           <Route path="/blogs" element={
              <BlogList 
                 onSelectBlog={(blog) => {
-                   // Generate Robust Slug: Title (cleaned) + ID
-                   // Use Unicode property escapes \p{L}\p{N} to match letters/numbers in any language (including Chinese)
                    const cleanTitle = blog.name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'post';
                    const slug = `${cleanTitle}-${blog._id}`;
                    navigate(`/blogs/${slug}`);
@@ -318,13 +325,13 @@ const App: React.FC = () => {
           {/* Authenticated Routes */}
           <Route path="/user-profile" element={<ProtectedRoute user={user} element={<UserProfile user={user!} onUpdateUser={setUser} />} />} />
           
-          <Route path="/system-management" element={<ProtectedRoute user={user} element={<SystemManagement />} requiredPerm={PERM_KEYS.SYSTEM_LOGS} />} />
+          <Route path="/system-management" element={<ProtectedRoute user={user} element={<SystemManagement />} requiredPerm={PERM_KEYS.SYSTEM_ACCESS} />} />
           
           <Route path="/system-settings" element={<SettingsPage theme={theme} toggleTheme={toggleTheme} language={language} toggleLanguage={toggleLanguage} />} />
           
           <Route path="/audit-log" element={<ProtectedRoute user={user} element={<AuditLogViewer />} requiredPerm={PERM_KEYS.SYSTEM_LOGS} />} />
 
-          <Route path="/footprints" element={<ProtectedRoute user={user} element={<Suspense fallback={<PageLoader />}><FootprintSpace theme={theme} /></Suspense>} />} />
+          <Route path="/footprints" element={<ProtectedRoute user={user} element={<Suspense fallback={<PageLoader />}><FootprintSpace theme={theme} /></Suspense>} requiredPerm={PERM_KEYS.FOOTPRINT_USE} />} />
           
           <Route path="/chatroom" element={<ProtectedRoute user={user} element={<ChatRoom currentUser={user!} socket={socket} targetUser={chatTarget} />} />} />
 

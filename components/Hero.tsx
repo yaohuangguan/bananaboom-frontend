@@ -5,9 +5,10 @@ import { apiService } from '../services/api';
 
 interface HeroProps {
   onCtaClick: () => void;
+  onSecondaryCtaClick?: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ onCtaClick }) => {
+export const Hero: React.FC<HeroProps> = ({ onCtaClick, onSecondaryCtaClick }) => {
   const { t } = useTranslation();
   const [likes, setLikes] = useState<number>(0);
   const [homeId, setHomeId] = useState<string | null>(null);
@@ -150,7 +151,7 @@ export const Hero: React.FC<HeroProps> = ({ onCtaClick }) => {
           </button>
           
           <button 
-            onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
+            onClick={onSecondaryCtaClick || (() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }))}
             className="w-full sm:w-auto px-10 py-5 border border-slate-300 dark:border-white/10 text-slate-600 dark:text-slate-300 font-bold text-sm uppercase tracking-[0.15em] hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white hover:border-primary-500/30 transition-all backdrop-blur-sm"
           >
             {t.hero.ctaSecondary}

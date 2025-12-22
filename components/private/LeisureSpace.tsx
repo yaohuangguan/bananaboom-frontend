@@ -124,3 +124,5 @@ export const LeisureSpace: React.FC<LeisureSpaceProps> = ({ user }) => {
     </div>
   );
 };
+
+export default LeisureSpace;

@@ -347,7 +347,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
   };
 
   return (
-    <div className="flex h-full relative max-w-7xl mx-auto w-full bg-[#171717] rounded-[2rem] border border-[#333] shadow-2xl overflow-hidden">
+    <div className="flex h-[calc(100vh-140px)] md:h-full relative max-w-7xl mx-auto w-full bg-[#171717] rounded-[2rem] border border-[#333] shadow-2xl overflow-hidden">
       
       <DeleteModal 
          isOpen={!!sessionToDelete}
@@ -420,7 +420,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
       <div className="flex-1 flex flex-col min-w-0 bg-[#212121] relative">
         
         {/* Mobile Header Toggle */}
-        <div className="md:hidden p-4 border-b border-[#333] flex items-center gap-3 text-gray-200">
+        <div className="md:hidden p-4 border-b border-[#333] flex items-center gap-3 text-gray-200 bg-[#212121] z-10">
            <button onClick={() => setIsSidebarOpen(true)}>
               <i className="fas fa-bars"></i>
            </button>
@@ -438,7 +438,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
               <div className="flex flex-col items-center justify-center h-full text-gray-600 gap-4 p-8 text-center">
                  <div className="w-16 h-16 bg-[#333] rounded-full flex items-center justify-center text-3xl">🧠</div>
                  <h3 className="text-xl font-bold text-gray-300">Second Brain</h3>
-                 <p className="text-sm max-w-md">I can remember your journals, check your fitness stats, and analyze your projects. How can I help today?</p>
+                 <p className="text-sm max-w-md">I can remember your journals, check your fitness logs, and analyze your projects. How can I help today?</p>
               </div>
            ) : (
              <div className="flex flex-col pb-4">
@@ -447,9 +447,9 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
                   return (
                     <div 
                       key={msg.id} 
-                      className={`w-full py-8 px-4 md:px-12 border-b border-black/5 ${isUser ? 'bg-[#212121]' : 'bg-[#212121]'}`}
+                      className={`w-full py-6 md:py-8 px-4 md:px-12 border-b border-black/5 ${isUser ? 'bg-[#212121]' : 'bg-[#212121]'}`}
                     >
-                       <div className="max-w-3xl mx-auto flex gap-6">
+                       <div className="max-w-3xl mx-auto flex gap-4 md:gap-6">
                           
                           {/* Avatar */}
                           <div className={`shrink-0 flex flex-col items-center ${isUser ? 'order-2' : 'order-1'}`}>
@@ -478,18 +478,18 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
                              )}
 
                              {isUser ? (
-                                <div className="inline-block bg-[#2f2f2f] text-gray-100 px-5 py-3 rounded-2xl rounded-tr-sm text-sm leading-relaxed whitespace-pre-wrap text-left shadow-sm">
+                                <div className="inline-block bg-[#2f2f2f] text-gray-100 px-4 py-2 md:px-5 md:py-3 rounded-2xl rounded-tr-sm text-sm leading-relaxed whitespace-pre-wrap text-left shadow-sm">
                                    {msg.content}
                                 </div>
                              ) : (
-                                <div className="chat-content text-gray-300 text-[15px] leading-7 relative">
+                                <div className="chat-content text-gray-300 text-sm md:text-[15px] leading-relaxed relative">
                                    {msg.content ? (
                                       <div dangerouslySetInnerHTML={renderMarkdown(msg.content)} />
                                    ) : (
                                       <div className="flex items-center gap-1 h-6">
-                                         <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
-                                         <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span>
-                                         <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></span>
+                                         <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-gray-500 rounded-full animate-bounce"></span>
+                                         <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span>
+                                         <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></span>
                                       </div>
                                    )}
                                    {msg.isStreaming && (
@@ -513,7 +513,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 md:p-6 bg-[#212121] border-t border-white/5 shrink-0">
+        <div className="p-3 md:p-6 bg-[#212121] border-t border-white/5 shrink-0">
            <div className="max-w-3xl mx-auto relative">
               {isDragging && (
                  <div className="absolute inset-0 -top-12 -left-4 -right-4 -bottom-4 z-50 bg-[#212121]/90 backdrop-blur-sm border-2 border-dashed border-gray-500 rounded-xl flex items-center justify-center pointer-events-none">
@@ -543,12 +543,12 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
                    onKeyDown={handleKeyDown}
                    onPaste={handlePaste}
                    placeholder={t.privateSpace.secondBrain.placeholder}
-                   className="w-full bg-transparent border-none outline-none py-3 pl-12 pr-12 text-gray-200 placeholder:text-gray-500 resize-none max-h-48 min-h-[52px] text-sm leading-relaxed custom-scrollbar"
+                   className="w-full bg-transparent border-none outline-none py-3 pl-10 md:pl-12 pr-12 text-gray-200 placeholder:text-gray-500 resize-none max-h-32 md:max-h-48 min-h-[52px] text-sm leading-relaxed custom-scrollbar"
                    rows={1}
                    disabled={isProcessing}
                  />
                  
-                 <div className="absolute left-3 bottom-2.5">
+                 <div className="absolute left-2 md:left-3 bottom-2.5">
                     <button onClick={() => fileInputRef.current?.click()} disabled={isProcessing} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
                        <i className="fas fa-paperclip text-sm"></i>
                     </button>
@@ -563,7 +563,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
                     {isProcessing ? <i className="fas fa-stop text-xs"></i> : <i className="fas fa-arrow-up text-xs"></i>}
                  </button>
               </div>
-              <p className="text-[10px] text-gray-500 text-center mt-2">AI can make mistakes. Consider checking important information.</p>
+              <p className="text-[10px] text-gray-500 text-center mt-2 hidden md:block">AI can make mistakes. Consider checking important information.</p>
            </div>
         </div>
 
@@ -586,3 +586,5 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
     </div>
   );
 };
+
+export default SecondBrainSpace;

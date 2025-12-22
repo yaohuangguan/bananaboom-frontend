@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { TodoWidget } from './TodoWidget';
@@ -281,3 +282,5 @@ export const JournalSpace: React.FC = () => {
     </>
   );
 };
+
+export default JournalSpace;

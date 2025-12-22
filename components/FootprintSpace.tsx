@@ -712,3 +712,5 @@ export const FootprintSpace: React.FC<FootprintSpaceProps> = ({ theme }) => {
     </div>
   );
 };
+
+export default FootprintSpace;

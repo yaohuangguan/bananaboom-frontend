@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Theme, PageView, User, AuditLog, ChatUser, PERM_KEYS, can, Language } from '../types';
@@ -44,7 +45,6 @@ export const Header: React.FC<HeaderProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Notification States
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -180,7 +180,9 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   if (currentUser) {
-    navLinks.push({ label: t.header.footprint, value: PageView.FOOTPRINT, path: '/footprints', code: '04' });
+    if (can(currentUser, PERM_KEYS.FOOTPRINT_USE)) {
+        navLinks.push({ label: t.header.footprint, value: PageView.FOOTPRINT, path: '/footprints', code: '04' });
+    }
     navLinks.push({ label: t.header.chat, value: PageView.CHAT, path: '/chatroom', code: '05' });
   }
 
@@ -205,14 +207,6 @@ export const Header: React.FC<HeaderProps> = ({
     <header className={headerClasses}>
       <div className="w-full px-6 md:px-12 max-w-[1600px] mx-auto flex justify-between items-center relative">
         
-        {/* Mobile Toggle */}
-        <button 
-          className={`xl:hidden mr-4 ${isPrivate ? 'text-rose-600' : 'text-slate-800 dark:text-white'}`}
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          <i className="fas fa-bars text-xl"></i>
-        </button>
-
         {/* Logo */}
         <Link 
           to="/"
@@ -232,7 +226,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </Link>
 
-        {/* Desktop Nav */}
+        {/* Desktop Nav - Hidden on Mobile */}
         <nav className="hidden xl:flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
            <div className={`flex items-center gap-1 px-2 py-1.5 rounded-full border backdrop-blur-md transition-colors duration-500 ${isPrivate ? 'bg-white/50 border-rose-200' : 'bg-white/70 dark:bg-white/5 border-slate-200 dark:border-white/10 shadow-lg shadow-black/5'}`}>
             {navLinks.map((link) => {
@@ -425,7 +419,7 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           {currentUser ? (
-            // Logged In Dropdown Menu
+            // Logged In Dropdown Menu (Desktop)
             <div className={`hidden xl:block relative group border-l pl-4 ${isPrivate ? 'border-rose-200' : 'border-slate-200 dark:border-white/10'}`}>
               <button className="flex items-center gap-3 py-1 outline-none min-w-[120px] justify-end">
                  <div className={`w-8 h-8 rounded-full p-[1px] ${isPrivate ? 'bg-gradient-to-tr from-rose-300 to-pink-500' : 'bg-gradient-to-tr from-primary-400 to-primary-600'}`}>
@@ -457,7 +451,7 @@ export const Header: React.FC<HeaderProps> = ({
                          <i className="fas fa-id-card w-4 text-center"></i> {t.header.profile}
                       </Link>
                       
-                      {can(currentUser, PERM_KEYS.SYSTEM_LOGS) && (
+                      {can(currentUser, PERM_KEYS.SYSTEM_ACCESS) && (
                         <Link 
                           to="/system-management"
                           className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${isPrivate ? 'text-rose-700 hover:bg-rose-50 font-medium' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary-600 dark:hover:text-primary-400'}`}
@@ -497,7 +491,7 @@ export const Header: React.FC<HeaderProps> = ({
           ) : (
             <button 
               onClick={onLogin}
-              className="hidden xl:flex items-center justify-center gap-2 px-6 py-2 rounded-full border border-primary-500/30 bg-primary-500/10 text-primary-600 dark:text-primary-400 text-xs font-bold uppercase tracking-widest hover:bg-primary-500 hover:text-white transition-all duration-300 hover:shadow-[0_0_20px_rgba(14,165,233,0.4)] min-w-[110px]"
+              className="flex items-center justify-center gap-2 px-6 py-2 rounded-full border border-primary-500/30 bg-primary-500/10 text-primary-600 dark:text-primary-400 text-xs font-bold uppercase tracking-widest hover:bg-primary-500 hover:text-white transition-all duration-300 hover:shadow-[0_0_20px_rgba(14,165,233,0.4)] min-w-[110px]"
             >
               <i className="fas fa-terminal text-[10px]"></i>
               {t.header.signIn}
@@ -505,88 +499,6 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
       </div>
-
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className={`xl:hidden absolute top-full left-0 w-full p-6 shadow-2xl animate-fade-in backdrop-blur-xl h-screen overflow-y-auto pb-32 ${isPrivate ? 'bg-white/95 border-b border-rose-200' : 'bg-[#fdfbf7] dark:bg-[#050914] border-b border-slate-200 dark:border-white/10'}`}>
-          <div className="flex flex-col space-y-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.value}
-                to={link.path}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`text-left text-lg font-mono uppercase tracking-widest ${
-                  currentPage === link.value
-                    ? (isPrivate ? 'text-rose-500 font-bold' : 'text-primary-600 dark:text-primary-400')
-                    : (isPrivate ? 'text-slate-600' : 'text-slate-500 dark:text-slate-400')
-                }`}
-              >
-                <span className="opacity-50 mr-2">{link.code}</span> {link.label}
-              </Link>
-            ))}
-            
-            {/* Mobile User Options */}
-            {currentUser && (
-               <>
-                 <div className={`border-t my-4 ${isPrivate ? 'border-rose-100' : 'border-slate-200 dark:border-white/10'}`}></div>
-                 <Link
-                    to="/user-profile"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`text-left text-lg font-mono uppercase tracking-widest flex items-center gap-2 ${isPrivate ? 'text-slate-600' : 'text-slate-500 dark:text-slate-400'}`}
-                  >
-                    <i className="fas fa-id-card text-xs"></i> {t.header.profile}
-                  </Link>
-                  
-                  {can(currentUser, PERM_KEYS.SYSTEM_LOGS) && (
-                    <Link
-                      to="/system-management"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`text-left text-lg font-mono uppercase tracking-widest flex items-center gap-2 ${isPrivate ? 'text-slate-600' : 'text-slate-500 dark:text-slate-400'}`}
-                    >
-                      <i className="fas fa-server text-xs"></i> {t.header.system}
-                    </Link>
-                  )}
-                  
-                  <Link
-                    to="/system-settings"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`text-left text-lg font-mono uppercase tracking-widest flex items-center gap-2 ${isPrivate ? 'text-slate-600' : 'text-slate-500 dark:text-slate-400'}`}
-                  >
-                    <i className="fas fa-cog text-xs"></i> {t.header.settings}
-                  </Link>
-                  
-                  {can(currentUser, PERM_KEYS.SYSTEM_LOGS) && (
-                    <Link
-                      to="/audit-log"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`text-left text-lg font-mono uppercase tracking-widest flex items-center gap-2 ${isPrivate ? 'text-slate-600' : 'text-primary-600 dark:text-primary-400'}`}
-                    >
-                      <i className="fas fa-shield-alt text-xs"></i> {t.header.audit}
-                    </Link>
-                  )}
-               </>
-            )}
-
-            <div className={`pt-6 border-t mt-2 ${isPrivate ? 'border-rose-100' : 'border-slate-200 dark:border-white/10'}`}>
-              {currentUser ? (
-                <button 
-                  onClick={onLogout}
-                  className={`w-full py-3 text-center font-mono text-sm uppercase rounded ${isPrivate ? 'text-rose-500 border border-rose-200 bg-rose-50' : 'text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/30 bg-red-50 dark:bg-red-900/10'}`}
-                >
-                  {t.header.signOut}
-                </button>
-              ) : (
-                <button 
-                  onClick={onLogin}
-                  className="w-full py-3 bg-primary-600 text-white font-bold uppercase tracking-widest text-sm"
-                >
-                  {t.header.signIn}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 };
