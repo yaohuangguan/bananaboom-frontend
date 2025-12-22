@@ -1,106 +1,153 @@
-# Orion System (猎户座系统)
+# Orion System | 工程与设计
 
 ![Orion Banner](public/logo.svg)
 
-> **指引价值航向 (Navigate your Value)**
+![React](https://img.shields.io/badge/React-v19-blue?logo=react)
+![Vite](https://img.shields.io/badge/Vite-v6-purple?logo=vite)
+![pnpm](https://img.shields.io/badge/Manager-pnpm-orange?logo=pnpm)
+![PWA](https://img.shields.io/badge/PWA-Offline_Ready-success?logo=pwa)
 
-Orion 是一个现代化、高性能的**个人知识管理 (PKM)** 与**数字花园**系统。它结合了面向公众的作品集博客与一个精密的、加密的私人仪表盘（“舰长室”），用于全方位管理个人数据、健康与 AI 协作。
+> **Navigate your Value. (探索你的价值坐标)**
 
-本项目基于 **React 19**, **Vite**, **Tailwind CSS** 构建，并由 **Google Gemini** 模型驱动核心智能。
+Orion 是一个现代化、高性能的 **个人知识管理 (PKM)** 与 **数字花园** 系统。它融合了面向公众的作品集与博客（“舰桥”），以及一个精密加密的私人仪表盘（“舰长室”），用于深度管理个人数据、健康指标及 AI 交互。
 
-## 🌟 核心功能
+项目遵循 **原子化设计 (Atomic Design)** 原则，基于 **React 19** 构建，并采用 **pnpm** 进行现代化的依赖管理。
 
-### 1. 公共扇区 (舰桥)
-- **沉浸式首页:** 动态 3D 风格 CSS 动画与状态指示器。
-- **传输日志 (Blog):** 支持 Markdown 的日志系统，包含标签、搜索、分页及嵌套评论功能。
-- **档案室 (Portfolio):** 双模式展示（简历文档 / 项目卡片），支持中英双语切换。
-- **AI 代理:**
-  - **思考者 (Thinking Agent):** 利用 Gemini 3.0 Pro 进行深度推理任务。
-  - **实时链路 (Live Agent):** 基于 WebRTC 与 GenAI 的实时语音/视频交互接口。
+## 🌟 核心功能 (Key Features)
 
-### 2. 舰长室 (私人空间)
-受 JWT 认证与 RBAC（基于角色的访问控制）保护的加密区域。
+### 1. 公共扇区 (The Bridge / 舰桥)
+
+- **交互式主视觉:** 动态 3D 风格 CSS 动画与系统状态指示器。
+- **传输日志 (博客):** 支持 Markdown 的日志系统，包含标签、搜索及嵌套评论功能。支持嵌入 iFrame 与富媒体。
+- **作品集与简历:** 双模展示（文档简历 / 项目卡片），支持中英双语切换。
+- **AI 智能体:**
+  - **思考者 (Thinking Agent):** 基于 Gemini 3.0 Pro 处理复杂逻辑推理任务。
+  - **实时通讯 (Live Agent):** 支持多模态（音频/视频）的实时交互界面。
+
+### 2. 舰长室 (Captain's Cabin / 私有空间)
+
+受 JWT 鉴权与 RBAC（基于角色的访问控制）保护的加密区域。
 
 #### 🧠 第二大脑 (AI Core)
-- **上下文感知:** AI 可读取您的日志、运动记录与项目数据进行回答。
-- **多模态输入:** 支持拖拽上传图片进行分析与对话。
-- **会话管理:** 持久化聊天记录与侧边栏导航。
 
-#### 🏃 运动空间 (Fitness)
-- **全维度追踪:** 体重、BMI、睡眠、心情与饮水记录。
-- **活动日志:** 记录多种运动类型（跑步、举铁、HIIT 等）及市场与笔记。
-- **光影墙:** 基于月历视图的进度照片画廊。
+- **上下文感知对话:** RAG 风格交互，AI 可读取你的日志、健身记录及项目数据。
+- **多模态输入:** 支持拖拽图片分析与文本处理。
+- **会话管理:** 持久化的聊天记录与侧边栏导航。
+
+#### 🏃 体能舱 (Fitness Space)
+
+- **全方位追踪:** 记录体重、BMI、睡眠、情绪及饮水量。
+- **训练日志:** 追踪运动类型（跑步、力量、HIIT 等）、持续时间及训练笔记。
+- **照片墙:** 基于月历的体态进度照片库。
 - **数据分析:** 使用 Recharts 可视化体重趋势与活动统计。
 
-#### 🧘 休闲与工具 (Leisure)
-- **AI 智能厨房:** 
-  - **幸运大转盘:** 随机决定餐食，支持“健康”与“多样化”过滤器。
-  - **智能方案:** 基于健身目标（减脂/增肌）自动生成膳食建议。
-  - **食谱搜索:** 集成外部 API 的食谱查询。
-- **月相周期:** 生理期记录与预测系统。
-- **雀魂专区:** 嵌入式 Mahjong Soul 游戏窗口。
-- **四皇海战:** 原创逻辑解谜游戏 (Pirate Lords)。
+#### 🧘 休闲与实用工具
 
-#### 🗺️ 星图 (Footprint)
-- **双视图模式:** 
-  - **中国扇区:** 基于 ECharts 的省份点亮地图。
-  - **全球坐标:** 基于 Leaflet 的世界地图，支持图钉与回忆记录。
-- **旅行日志:** 记录抵达日期、心情与照片。
+- **AI 智慧厨房:**
+  - **主厨转盘:** 随机餐点决策器（支持健康/多样化滤镜）。
+  - **智能计划:** 基于健身目标（减脂/增肌）AI 生成备餐计划。
+- **月相周期:** 生理周期追踪与预测。
+- **海盗领主:** 自研逻辑解谜游戏（滑动/网格策略）。
 
-#### 📸 胶囊相册 (Gallery)
-- **软木板 UI:** 可拖拽、旋转的照片卡片，模拟真实的照片墙体验。
-- **云端集成:** 高效的 Cloudinary 图片管理。
+#### 🗺️ 足迹与画廊
 
-### 3. 系统管理 (Admin)
-- **权限控制:** 用户、角色与权限的颗粒度管理。
-- **审计日志:** 追踪系统内所有操作（登录、删除、编辑）。
-- **资源监控:** 实时监控 Cloudinary 资源使用情况（存储、带宽）。
-- **审批流:** 处理用户的权限提升申请。
+- **星图:** 双视图旅行记录（ECharts 中国地图 / Leaflet 全球地图）。
+- **胶囊画廊:** 软木板 UI 风格，支持照片卡片的自由拖拽与旋转。
 
-## 🛠 技术栈
+## 🛠 技术栈与工程化
 
-- **前端框架:** React 19, TypeScript, Vite
-- **样式方案:** Tailwind CSS, FontAwesome
-- **路由:** React Router DOM v6
-- **AI & ML:** @google/genai SDK (Gemini 3 Pro, Flash 2.5)
-- **数据可视化:** Recharts, ECharts, Leaflet
-- **富文本与内容:** Quill, Highlight.js, Marked
-- **实时通讯:** Socket.io-client
-- **PWA:** 支持离线访问的渐进式 Web 应用
+### 核心架构
 
-## 🚀 快速开始
+- **框架:** React 19
+- **构建工具:** Vite
+- **语言:** TypeScript
+- **包管理器:** **pnpm** (Strict mode)
+
+### 基础设施与质量保证
+
+- **Linting:** ESLint v9 (Flat Config)
+- **Formatting:** Prettier
+- **Git Hooks:** Husky + Lint-staged (自动化提交前检查)
+- **CI/CD:** 自动化的 Service Worker 版本控制
+
+### 关键库
+
+- **样式:** Tailwind CSS, FontAwesome
+- **AI:** @google/genai SDK (Gemini 3 Pro, Flash 2.5)
+- **可视化:** Recharts, ECharts, Leaflet
+- **实时通信:** Socket.io-client
+
+## 🚀 快速开始 (Getting Started)
 
 ### 环境要求
-- Node.js 18+
-- Google Gemini API Key
-- Cloudinary 账号 (用于媒体存储)
+
+- **Node.js**: v22.0.0 或更高
+- **pnpm**: v9+ (推荐使用 Corepack 启用)
 
 ### 安装步骤
 
-1. **克隆仓库**
+1. **克隆与设置**
+
    ```bash
-   git clone https://github.com/yourusername/orion.git
+   git clone [https://github.com/yourusername/orion.git](https://github.com/yourusername/orion.git)
    cd orion
+
+   # 通过 Node Corepack 启用 pnpm
+   corepack enable
+   corepack prepare pnpm@latest --activate
    ```
+
+````
 
 2. **安装依赖**
-   ```bash
-   npm install
-   ```
+```bash
+pnpm install
 
-3. **配置环境变量**
-   在根目录创建 `.env` 文件，并配置必要的 API 密钥（如 `API_KEY` 用于 GenAI）。
+````
+
+3. **环境配置**
+   在根目录创建 `.env` 文件：
+
+```properties
+VITE_API_URL=http://localhost:5000/api
+VITE_GEMINI_API_KEY=your_key_here
+VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
+
+```
 
 4. **启动开发服务器**
-   ```bash
-   npm run dev
-   ```
+
+```bash
+pnpm dev
+
+```
+
+## 🤖 自动化与 PWA
+
+本项目使用 **Husky** 强制执行代码质量检查，并实现了 PWA 版本的自动化管理。
+
+### Service Worker 策略
+
+- **入口 (HTML):** 网络优先 (Network First) —— 防止版本死锁，确保用户总是访问最新页面。
+- **资源 (JS/CSS):** 缓存优先 (Cache First) —— 利用哈希文件名特性，极大提升加载速度。
+- **API:** 仅网络 (Network Only)。
+
+### 自动版本递增 (Auto-Bumping)
+
+每次执行 `git commit` 时，`pre-commit` 钩子会自动触发：
+
+1. 运行 `scripts/bump-sw.js`，将当前时间戳注入 `sw.js` 的缓存版本号。
+2. 运行 `ESLint` 和 `Prettier` 修复代码风格。
+3. 将更新后的 Service Worker 自动添加回本次提交。
 
 ## 🎨 主题系统
-系统内置动态的 **星际/自然 (Cosmic/Scenic)** 主题引擎：
-- **日间模式:** "Milky" 暖色调，搭配纸张纹理与自然风景。
-- **夜间模式:** 深空 "Cosmic" 主题，包含动态星场与星云动画。
-- **节日模式:** 圣诞节（飘雪）与农历新年（灯笼与烟花）的专属特效覆盖。
 
-## 📄 许可证
-[MIT](LICENSE)
+系统内置动态 **Cosmic/Scenic** 主题引擎：
+
+- **Light Mode:** "Milky" —— 暖色调、纸质纹理与风景。
+- **Dark Mode:** "Cosmic" —— 深空主题，带有动态星空背景。
+- **节日模式:** 特定日期自动触发（如圣诞节雪花、春节灯笼）。
+
+## 📄 License
+
+[MIT](https://www.google.com/search?q=LICENSE)
