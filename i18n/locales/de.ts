@@ -1,4 +1,5 @@
 
+
 export const de = {
   header: {
     home: 'Startseite',
@@ -18,7 +19,7 @@ export const de = {
     system: 'Systemverwaltung'
   },
   pwa: {
-    title: "PS5 Space",
+    title: "Orion",
     desc: "Für ein besseres Erlebnis auf dem Startbildschirm installieren",
     install: "Installieren",
     ios: "Tippen Sie auf das Teilen-Symbol <i class='fas fa-share-square'></i> und wählen Sie <b>'Zum Home-Bildschirm'</b>"
@@ -43,7 +44,15 @@ export const de = {
     title: 'Portfolio',
     subtitle: 'Eine Sammlung von Ingenieurprojekten und beruflicher Geschichte.',
     resume: 'Lebenslauf',
-    projects: 'Projekte'
+    projects: 'Projekte',
+    liveDemo: 'Live-Demo',
+    sourceCode: 'Quellcode',
+    demoOptions: {
+      title: "Auswahl des Ansichtsmodus",
+      local: "Hier Vorschau",
+      newTab: "Neuer Tab",
+      iframeTitle: "Live-Vorschau"
+    }
   },
   blogList: {
     title: 'Übertragungsprotokoll',
@@ -272,6 +281,12 @@ export const de = {
       chatDesc: 'Echtzeit-Quantenlink. Login erforderlich. Verbinden Sie sich und chatten Sie mit anderen Reisenden im System.',
       privateTitle: 'Kapitänsquartier',
       privateDesc: 'Verschlüsselter Tresor für meine Liebesgeschichte und persönlichen Erinnerungen. Streng nur für die Augen des Kapitäns (haha).'
+    },
+    orion: {
+      etymology1: '(Französisch: Gold)',
+      etymology2: '(Der Jäger)',
+      description: 'Das hellste Sternbild am Nachthimmel. Ein Navigationsstern, der Sie durch den digitalen Kosmos führt, um Ihren Wert zu entdecken.',
+      slogan: 'Navigieren Sie Ihren Wert'
     },
     education: 'Datenbank: Bildung',
     educationSchool: 'Miami University',

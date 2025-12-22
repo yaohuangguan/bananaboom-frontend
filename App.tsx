@@ -107,7 +107,11 @@ const Layout: React.FC<{
         </div>
       </main>
 
-      <Footer currentPage={getCurrentPageView(location.pathname)} currentUser={user} />
+      <Footer 
+        currentPage={getCurrentPageView(location.pathname)} 
+        currentUser={user} 
+        onLogin={onLogin}
+      />
       
       {/* Mobile Bottom Navigation */}
       <div className="block xl:hidden">

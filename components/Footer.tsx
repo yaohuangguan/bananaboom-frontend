@@ -1,11 +1,13 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from '../i18n/LanguageContext';
 import { PageView, User, PERM_KEYS, can } from '../types';
 
 interface FooterProps {
   currentPage: PageView;
   currentUser?: User | null;
+  onLogin?: () => void;
 }
 
 // --- Heart Firework Effect Helper ---
@@ -48,7 +50,7 @@ const triggerHeartExplosion = (e: React.MouseEvent) => {
   }
 };
 
-export const Footer: React.FC<FooterProps> = ({ currentPage, currentUser }) => {
+export const Footer: React.FC<FooterProps> = ({ currentPage, currentUser, onLogin }) => {
   const { t, language } = useTranslation();
 
   const hasAccess = can(currentUser, PERM_KEYS.PRIVATE_ACCESS);
@@ -57,30 +59,23 @@ export const Footer: React.FC<FooterProps> = ({ currentPage, currentUser }) => {
     <footer className={`relative overflow-hidden mt-20 transition-colors z-10 pointer-events-auto ${
       currentPage === PageView.PRIVATE_SPACE 
         ? 'bg-rose-900/5 text-rose-900/50 border-t border-rose-900/5 py-16' 
-        : 'bg-slate-900 text-slate-300 border-t border-slate-800 py-24'
+        : 'bg-[#0b0f17] text-slate-400 border-t border-slate-800/50 pt-20 pb-12'
     }`}>
       
       {/* Public Footer Star Chart Background */}
       {currentPage !== PageView.PRIVATE_SPACE && (
-        <div className="absolute inset-0 pointer-events-none opacity-20">
-           <svg viewBox="0 0 1000 300" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-              <circle cx="500" cy="-500" r="600" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="4 4" />
-              <circle cx="500" cy="-500" r="700" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.5" />
-              <line x1="0" y1="300" x2="1000" y2="300" stroke="currentColor" strokeWidth="1" />
-              <path d="M200,200 L300,100 L400,150" fill="none" stroke="currentColor" strokeWidth="0.5" />
-              <circle cx="200" cy="200" r="2" fill="currentColor" />
-              <circle cx="300" cy="100" r="2" fill="currentColor" />
-              <circle cx="400" cy="150" r="2" fill="currentColor" />
-              <circle cx="800" cy="80" r="3" fill="currentColor" opacity="0.5" />
-              <circle cx="750" cy="150" r="1" fill="currentColor" />
-              <path d="M750,150 L800,80" fill="none" stroke="currentColor" strokeWidth="0.3" opacity="0.5" />
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03]">
+           <svg viewBox="0 0 1000 1000" className="w-full h-full text-slate-500" preserveAspectRatio="none">
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="0.5"/>
+              </pattern>
+              <rect width="100%" height="100%" fill="url(#grid)" />
            </svg>
         </div>
       )}
 
-      <div className="container mx-auto px-6 text-center relative z-10">
-        <div className="mb-8">
-          {currentPage === PageView.PRIVATE_SPACE ? (
+      {currentPage === PageView.PRIVATE_SPACE ? (
+        <div className="container mx-auto px-6 text-center relative z-10">
             <div className="flex flex-col items-center justify-center gap-3 font-display font-bold text-2xl text-rose-400">
               {hasAccess ? (
                 <div className="flex items-center gap-3">
@@ -101,35 +96,105 @@ export const Footer: React.FC<FooterProps> = ({ currentPage, currentUser }) => {
                 </div>
               )}
             </div>
-          ) : (
-             <>
-               <div className="mb-6">
-                  <h2 className="font-display font-bold text-2xl tracking-widest uppercase mb-2">Sam Yao</h2>
-                  <p className="text-xs font-mono text-amber-500 uppercase tracking-[0.3em]">{t.footer.builtBy}</p>
-               </div>
-               
-               <div className="flex justify-center items-center gap-4 my-8 opacity-50">
-                  <div className="h-px w-12 bg-slate-500"></div>
-                  <div className="w-2 h-2 rounded-full border border-slate-500"></div>
-                  <div className="h-px w-12 bg-slate-500"></div>
-               </div>
+            <p className="mt-4 text-xs font-mono opacity-50 uppercase tracking-widest">{t.footer.rights}</p>
+        </div>
+      ) : (
+        <div className="container mx-auto px-6 relative z-10">
+           <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 mb-16">
+              
+              {/* Column 1: Brand */}
+              <div className="lg:col-span-1">
+                 <div className="mb-6">
+                    <h2 className="font-display font-bold text-2xl tracking-widest uppercase text-slate-100">Orion</h2>
+                    <div className="h-1 w-8 bg-amber-500 mt-2 rounded-full"></div>
+                 </div>
+                 <p className="text-sm leading-relaxed text-slate-500 mb-6 max-w-sm">
+                    {t.footer.tagline}
+                 </p>
+                 <div className="flex gap-4">
+                    <a href="https://github.com/yaohuangguan" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all">
+                       <i className="fab fa-github"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/in/sam-y-54828a140/" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-blue-600 transition-all">
+                       <i className="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="mailto:719919153@qq.com" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-rose-600 transition-all">
+                       <i className="fas fa-envelope"></i>
+                    </a>
+                 </div>
+              </div>
 
-               <p className="text-lg font-serif italic text-slate-400 mb-8">
-                  "{t.footer.strengthHonor}"
-               </p>
-             </>
-          )}
+              {/* Column 2: Navigation */}
+              <div className="lg:col-span-1 lg:pl-10">
+                 <h3 className="font-bold text-slate-200 uppercase tracking-wider text-xs mb-6">Explore</h3>
+                 <ul className="space-y-3 text-sm">
+                    <li><Link to="/" className="text-slate-500 hover:text-amber-500 transition-colors flex items-center gap-2"><i className="fas fa-chevron-right text-[8px] opacity-30"></i> {t.header.home}</Link></li>
+                    <li><Link to="/blogs" className="text-slate-500 hover:text-amber-500 transition-colors flex items-center gap-2"><i className="fas fa-chevron-right text-[8px] opacity-30"></i> {t.header.blog}</Link></li>
+                    <li><Link to="/profile" className="text-slate-500 hover:text-amber-500 transition-colors flex items-center gap-2"><i className="fas fa-chevron-right text-[8px] opacity-30"></i> {t.portfolio.title}</Link></li>
+                    <li><Link to="/footprints" className="text-slate-500 hover:text-amber-500 transition-colors flex items-center gap-2"><i className="fas fa-chevron-right text-[8px] opacity-30"></i> {t.header.footprint}</Link></li>
+                 </ul>
+              </div>
+
+              {/* Column 3: Resources */}
+              <div className="lg:col-span-1">
+                 <h3 className="font-bold text-slate-200 uppercase tracking-wider text-xs mb-6">Resources</h3>
+                 <ul className="space-y-3 text-sm">
+                    <li><Link to="/profile" className="text-slate-500 hover:text-amber-500 transition-colors flex items-center gap-2"><i className="fas fa-file-alt text-[10px] opacity-50 w-4"></i> {t.portfolio.resume}</Link></li>
+                    <li><Link to="/profile" className="text-slate-500 hover:text-amber-500 transition-colors flex items-center gap-2"><i className="fas fa-laptop-code text-[10px] opacity-50 w-4"></i> {t.portfolio.projects}</Link></li>
+                    <li><Link to="/blogs" className="text-slate-500 hover:text-amber-500 transition-colors flex items-center gap-2"><i className="fas fa-rss text-[10px] opacity-50 w-4"></i> RSS Feed</Link></li>
+                 </ul>
+              </div>
+
+              {/* Column 4: System */}
+              <div className="lg:col-span-1">
+                 <h3 className="font-bold text-slate-200 uppercase tracking-wider text-xs mb-6">System</h3>
+                 <ul className="space-y-3 text-sm">
+                    {currentUser ? (
+                       <>
+                         <li>
+                            <Link to="/user-profile" className="text-slate-500 hover:text-amber-500 transition-colors flex items-center gap-2">
+                               <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> {t.header.profile}
+                            </Link>
+                         </li>
+                         <li>
+                            <Link to="/system-settings" className="text-slate-500 hover:text-amber-500 transition-colors flex items-center gap-2">
+                               <i className="fas fa-cog text-[10px] opacity-50 w-4"></i> {t.header.settings}
+                            </Link>
+                         </li>
+                       </>
+                    ) : (
+                       <li>
+                          <button onClick={onLogin} className="text-slate-500 hover:text-amber-500 transition-colors flex items-center gap-2">
+                             <span className="w-1.5 h-1.5 bg-slate-600 rounded-full"></span> {t.header.signIn}
+                          </button>
+                       </li>
+                    )}
+                    <li>
+                       <div className="flex items-center gap-2 text-slate-600 cursor-default">
+                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                          <span>System Optimal</span>
+                       </div>
+                    </li>
+                 </ul>
+              </div>
+           </div>
+
+           {/* Footer Bottom */}
+           <div className="border-t border-slate-800/50 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left">
+                  <p className="text-xs text-slate-600 font-mono">{t.footer.rights}</p>
+                  <span className="hidden md:inline-block text-slate-800">|</span>
+                  <p className="text-xs text-slate-500 font-bold font-display uppercase tracking-[0.2em]">{t.footer.strengthHonor}</p>
+              </div>
+              
+              <div className="flex items-center gap-1.5 text-xs text-slate-600 font-mono">
+                 <span>Built with Strength, Pride</span>
+                 <i className="fas fa-heart text-rose-800 animate-pulse"></i>
+                 <span>& Honor by Sam Yao</span>
+              </div>
+           </div>
         </div>
-        <p className="mb-8 max-w-sm mx-auto opacity-80">
-          {t.footer.tagline}
-        </p>
-        <div className="flex justify-center gap-8 mb-8">
-          <a href="https://github.com/yaohuangguan" target="_blank" rel="noreferrer" className="hover:text-primary-600 transition-colors"><i className="fab fa-github text-xl"></i></a>
-          <a href="https://www.linkedin.com/in/sam-y-54828a140/" target="_blank" rel="noreferrer" className="hover:text-primary-600 transition-colors"><i className="fab fa-linkedin text-xl"></i></a>
-          <a href="mailto:719919153@qq.com" className="hover:text-primary-600 transition-colors"><i className="fas fa-envelope text-xl"></i></a>
-        </div>
-        <p className="text-sm opacity-60">{t.footer.rights}</p>
-      </div>
+      )}
     </footer>
   );
 };

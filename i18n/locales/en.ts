@@ -1,4 +1,3 @@
-
 export const en = {
   header: {
     home: 'Home',
@@ -18,7 +17,7 @@ export const en = {
     system: 'System Management'
   },
   pwa: {
-    title: "PS5 Space",
+    title: "Orion",
     desc: "Install to home screen for a better experience",
     install: "Install",
     ios: "Tap share icon <i class='fas fa-share-square'></i> then select <b>'Add to Home Screen'</b>"
@@ -43,7 +42,15 @@ export const en = {
     title: 'Portfolio',
     subtitle: 'A collection of engineering projects and professional history.',
     resume: 'Resume',
-    projects: 'Projects'
+    projects: 'Projects',
+    liveDemo: 'Live Demo',
+    sourceCode: 'Source Code',
+    demoOptions: {
+      title: "Select Viewing Mode",
+      local: "Preview Here",
+      newTab: "New Tab",
+      iframeTitle: "Live Preview"
+    }
   },
   blogList: {
     title: 'Transmission Log',
@@ -273,9 +280,65 @@ export const en = {
       privateTitle: "Captain's Cabin",
       privateDesc: 'Encrypted vault for my personal love story and memories. Strictly for the Captain\'s eyes (haha).'
     },
+    websiteIntro: {
+      title: 'About This System',
+      description: "Orion is a modern Personal Knowledge Management (PKM) and Digital Garden system. It acts as a bridge between public expression and private introspection, powered by React 19 and Gemini AI.",
+      viewSpecs: "View Full Architecture",
+      modalTitle: "Orion System Architecture",
+      sections: {
+        public: {
+          title: "Public Sector (The Bridge)",
+          desc: "The outward-facing interface accessible to all voyagers.",
+          features: [
+            "Interactive 3D-style Hero with dynamic status indicators.",
+            "Transmission Log (Blog) with Markdown, tagging, and search.",
+            "Dual-mode Portfolio (Resume Document / Project Cards).",
+            "AI Agents: Thinking Agent (Gemini 3.0 Pro) & Live Agent (Multimodal)."
+          ]
+        },
+        private: {
+          title: "Captain's Cabin (Private Space)",
+          desc: "A restricted area protected by JWT authentication and RBAC.",
+          features: [
+            "Second Brain: RAG-style context-aware AI chat with memory.",
+            "Fitness Space: Holistic tracking (Weight, BMI, Sleep, Workout Log).",
+            "Leisure: AI Smart Kitchen (Chef's Wheel), Moon Cycle Tracker, Pirate Lords Game.",
+            "Star Map: ECharts & Leaflet based travel footprint tracking.",
+            "Capsule Gallery: Draggable corkboard UI for memories."
+          ]
+        },
+        admin: {
+          title: "System Management",
+          desc: "Administrative controls and monitoring.",
+          features: [
+            "RBAC: Granular control over Users, Roles, and Permissions.",
+            "Audit Log: Comprehensive tracking of all system actions.",
+            "Resource Monitor: Real-time Cloudinary usage stats."
+          ]
+        },
+        stack: {
+          title: "Tech Stack",
+          list: [
+            "React 19 & Vite",
+            "TypeScript",
+            "Tailwind CSS",
+            "Google GenAI SDK",
+            "Recharts & ECharts",
+            "Socket.io",
+            "PWA"
+          ]
+        }
+      }
+    },
+    orion: {
+      etymology1: '(French: Gold)',
+      etymology2: '(The Hunter)',
+      description: 'The brightest constellation in the night sky. A navigational star guiding you through the digital cosmos to discover your value.',
+      slogan: 'Navigate your Value'
+    },
     education: 'Database: Education',
     educationSchool: 'Miami University',
-    educationDegree: 'BA, Interactive Media Studies',
+    educationDegree: 'BA, Interactive Media Studies (STEM)',
     skills: 'Tech Stack',
     experience: 'Mission History',
     basedIn: 'Orbiting Earth',

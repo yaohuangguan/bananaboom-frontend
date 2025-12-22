@@ -1,4 +1,5 @@
 
+
 export const ja = {
   header: {
     home: 'ホーム',
@@ -18,7 +19,7 @@ export const ja = {
     system: 'システム管理'
   },
   pwa: {
-    title: "PS5 Space",
+    title: "Orion",
     desc: "ホーム画面に追加して、より良い体験を",
     install: "インストール",
     ios: "共有アイコン <i class='fas fa-share-square'></i> をタップし、<b>「ホーム画面に追加」</b>を選択"
@@ -43,7 +44,15 @@ export const ja = {
     title: 'ポートフォリオ',
     subtitle: 'エンジニアリングプロジェクトとプロフェッショナルな経歴のコレクション。',
     resume: '履歴書',
-    projects: 'プロジェクト'
+    projects: 'プロジェクト',
+    liveDemo: 'ライブデモ',
+    sourceCode: 'ソースコード',
+    demoOptions: {
+      title: "選択瀏覽模式",
+      local: "当前页面预览",
+      newTab: "新标签页打开",
+      iframeTitle: "实时预览"
+    }
   },
   blogList: {
     title: '送信ログ',
@@ -272,6 +281,12 @@ export const ja = {
       chatDesc: 'リアルタイムの量子リンク。ログインが必要です。接続して、システム内の他のボイジャーとチャットしましょう。',
       privateTitle: 'キャプテンの部屋',
       privateDesc: '私の個人的な愛の物語と思い出のための暗号化された保管庫。キャプテンの目専用（笑）。'
+    },
+    orion: {
+      etymology1: '(フランス語: 金)',
+      etymology2: '(狩人)',
+      description: '夜空で最も明るい星座。デジタル宇宙を航海し、あなたの価値を発見へと導くナビゲーションスター。',
+      slogan: 'あなたの価値をナビゲート'
     },
     education: 'データベース: 教育',
     educationSchool: 'マイアミ大学 (Miami University)',

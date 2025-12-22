@@ -220,9 +220,9 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div className="flex flex-col">
             <span className={`font-mono text-xl tracking-[0.2em] uppercase transition-colors duration-300 ${isPrivate ? 'text-rose-600 group-hover:text-rose-500 font-bold' : 'text-slate-800 dark:text-white group-hover:text-primary-500 dark:group-hover:text-primary-400'}`}>
-              ps5<span className={`${isPrivate ? 'text-rose-400' : 'text-slate-400 dark:text-white/40'}`}>.space</span>
+              Orion
             </span>
-            {!isPrivate && <span className="text-[8px] font-mono text-slate-500 dark:text-slate-600 uppercase tracking-widest hidden sm:block">Deep Space Network</span>}
+            {!isPrivate && <span className="text-[8px] font-mono text-slate-500 dark:text-slate-600 uppercase tracking-widest hidden sm:block">Navigate your Value</span>}
           </div>
         </Link>
 

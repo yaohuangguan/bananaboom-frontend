@@ -1,4 +1,5 @@
 
+
 export const zhHK = {
   header: {
     home: '主控台',
@@ -18,7 +19,7 @@ export const zhHK = {
     system: '系統管理'
   },
   pwa: {
-    title: "PS5 Space",
+    title: "Orion",
     desc: "安裝到桌面，體驗更絲滑",
     install: "安裝",
     ios: "點擊底部分享按鈕 <i class='fas fa-share-square'></i> 選擇 <b>「加入主畫面」</b>"
@@ -43,7 +44,15 @@ export const zhHK = {
     title: '作品集',
     subtitle: '工程項目與職業生涯的合集。',
     resume: '簡歷',
-    projects: '項目'
+    projects: '項目',
+    liveDemo: '在線演示',
+    sourceCode: '查看源碼',
+    demoOptions: {
+      title: "選擇瀏覽模式",
+      local: "當前頁面預覽",
+      newTab: "新標籤頁打開",
+      iframeTitle: "實時預覽"
+    }
   },
   blogList: {
     title: '傳輸日誌',
@@ -272,6 +281,12 @@ export const zhHK = {
       chatDesc: '登陸後即可接入聊天室，與其他探索者實時暢聊。',
       privateTitle: '艦長室',
       privateDesc: '加密的愛情檔案庫，用來保存屬於我的珍貴回憶，僅供艦長本人查閱（哈哈）。'
+    },
+    orion: {
+      etymology1: '(法語: 金)',
+      etymology2: '(獵戶座/獵人)',
+      description: '夜空中最明亮的星座。一顆指引你穿越數位宇宙、發現自我價值的導航之星。',
+      slogan: '指引價值航向'
     },
     education: '數據庫：教育',
     educationSchool: '邁阿密大學 (Miami University)',

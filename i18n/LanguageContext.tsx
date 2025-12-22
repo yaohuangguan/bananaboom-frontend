@@ -1,5 +1,6 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { Language } from '../types';
 import { resources } from './resources';
 
@@ -9,6 +10,32 @@ interface LanguageContextType {
   toggleLanguage: () => void;
   t: typeof resources['en'];
 }
+
+// Helper for deep merging two objects
+const deepMerge = (target: any, source: any): any => {
+  if (typeof target !== 'object' || target === null) {
+    return source;
+  }
+  if (typeof source !== 'object' || source === null) {
+    return target;
+  }
+  
+  const output = { ...target };
+  
+  Object.keys(source).forEach(key => {
+    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      if (!(key in target)) {
+        Object.assign(output, { [key]: source[key] });
+      } else {
+        output[key] = deepMerge(target[key], source[key]);
+      }
+    } else {
+      Object.assign(output, { [key]: source[key] });
+    }
+  });
+  
+  return output;
+};
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
@@ -42,11 +69,21 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     localStorage.setItem('app_language', lang);
   };
 
+  // Implement automatic fallback to English using deep merge
+  const t = useMemo(() => {
+    if (language === 'en') {
+      return resources.en;
+    }
+    // Deep merge English keys with current language keys
+    // English is the base (target), current language overrides it (source)
+    return deepMerge(resources.en, resources[language]);
+  }, [language]);
+
   const value = {
     language,
     setLanguage: setLanguageHandler,
     toggleLanguage,
-    t: resources[language]
+    t
   };
 
   return (

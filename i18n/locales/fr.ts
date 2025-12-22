@@ -1,4 +1,5 @@
 
+
 export const fr = {
   header: {
     home: 'Accueil',
@@ -18,7 +19,7 @@ export const fr = {
     system: 'Gestion Système'
   },
   pwa: {
-    title: "PS5 Space",
+    title: "Orion",
     desc: "Installer sur l'écran d'accueil pour une meilleure expérience",
     install: "Installer",
     ios: "Appuyez sur partager <i class='fas fa-share-square'></i> puis sélectionnez <b>'Sur l'écran d'accueil'</b>"
@@ -43,7 +44,15 @@ export const fr = {
     title: 'Portfolio',
     subtitle: 'Une collection de projets d\'ingénierie et d\'histoire professionnelle.',
     resume: 'CV',
-    projects: 'Projets'
+    projects: 'Projets',
+    liveDemo: 'Démo Live',
+    sourceCode: 'Code Source',
+    demoOptions: {
+      title: "Sélectionner le mode d'affichage",
+      local: "Aperçu ici",
+      newTab: "Nouvel onglet",
+      iframeTitle: "Aperçu en direct"
+    }
   },
   blogList: {
     title: 'Journal de Transmission',
@@ -272,6 +281,12 @@ export const fr = {
       chatDesc: 'Lien quantique en temps réel. Connexion requise. Connectez-vous et discutez avec d\'autres voyageurs du système.',
       privateTitle: 'Cabine du Capitaine',
       privateDesc: 'Coffre chiffré pour mon histoire d\'amour et mes souvenirs personnels. Strictement réservé aux yeux du Capitaine (haha).'
+    },
+    orion: {
+      etymology1: '(Français : Or)',
+      etymology2: '(Le Chasseur)',
+      description: 'La constellation la plus brillante du ciel nocturne. Une étoile de navigation vous guidant à travers le cosmos numérique pour découvrir votre valeur.',
+      slogan: 'Naviguez vers votre Valeur'
     },
     education: 'Base de données : Éducation',
     educationSchool: 'Université Miami',

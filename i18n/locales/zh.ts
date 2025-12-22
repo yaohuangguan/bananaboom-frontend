@@ -1,4 +1,3 @@
-
 export const zh = {
   header: {
     home: '主控台',
@@ -18,7 +17,7 @@ export const zh = {
     system: '系统管理'
   },
   pwa: {
-    title: "PS5 Space",
+    title: "Orion",
     desc: "安装到桌面，体验更丝滑",
     install: "安装",
     ios: "点击底部分享按钮 <i class='fas fa-share-square'></i> 选择 <b>“添加到主屏幕”</b>"
@@ -43,7 +42,15 @@ export const zh = {
     title: '作品集',
     subtitle: '工程项目与职业生涯的合集。',
     resume: '简历',
-    projects: '项目'
+    projects: '项目',
+    liveDemo: '在线演示',
+    sourceCode: '查看源码',
+    demoOptions: {
+      title: "选择浏览模式",
+      local: "当前页面预览",
+      newTab: "新标签页打开",
+      iframeTitle: "实时预览"
+    }
   },
   blogList: {
     title: '传输日志',
@@ -271,7 +278,63 @@ export const zh = {
       chatTitle: '星际通讯',
       chatDesc: '登陆后即可接入聊天室，与其他探索者实时畅聊。',
       privateTitle: '舰长室',
-      privateDesc: '加密的爱情档案库，用来保存属于我的珍贵回忆，仅供舰长本人查阅（哈哈）。'
+      privateDesc: '加密的爱情檔案庫，用来保存属于我的珍贵回忆，仅供舰长本人查阅（哈哈）。'
+    },
+    websiteIntro: {
+      title: '关于本站',
+      description: "Orion 是一个现代化的个人知识管理 (PKM) 与数字花园系统。它完美融合了面向公众的作品集博客与加密的私人仪表盘——「舰长室」，用于全方位管理个人数据、健康指标与 AI 深度协作。本项目基于 React 19 构建并由 Google Gemini 驱动，旨在连接公开表达与私人内省的数字桥梁。",
+      viewSpecs: "查看完整架构",
+      modalTitle: "Orion 系统架构",
+      sections: {
+        public: {
+          title: "公共扇区 (舰桥)",
+          desc: "面向所有访客开放的展示接口。",
+          features: [
+            "沉浸式首页：动态 3D 风格 CSS 动画与状态指示器。",
+            "传输日志 (Blog)：支持 Markdown，包含标签、搜索及嵌套评论。",
+            "双模式档案室：简历文档模式 / 项目卡片模式，中英双语切换。",
+            "AI 代理：思考者 (Gemini 3.0 Pro 推理) & 实时链路 (多模态交互)。"
+          ]
+        },
+        private: {
+          title: "舰长室 (私人空间)",
+          desc: "受 JWT 认证与 RBAC 保护的加密区域。",
+          features: [
+            "第二大脑：基于 RAG 的上下文感知 AI 对话。",
+            "运动空间：全维度追踪（体重、BMI、睡眠、活动日志）。",
+            "休闲空间：AI 智能厨房（大转盘/食谱）、月相周期、海战游戏。",
+            "星图：ECharts 与 Leaflet 驱动的足迹追踪。",
+            "胶囊相册：可拖拽的照片墙 UI。"
+          ]
+        },
+        admin: {
+          title: "系统管理",
+          desc: "行政控制与监控。",
+          features: [
+            "RBAC：用户、角色与权限的颗粒度管理。",
+            "审计日志：追踪系统内所有操作。",
+            "资源监控：实时 Cloudinary 资源使用情况。"
+          ]
+        },
+        stack: {
+          title: "技术栈",
+          list: [
+            "React 19 & Vite",
+            "TypeScript",
+            "Tailwind CSS",
+            "Google GenAI SDK",
+            "Recharts & ECharts",
+            "Socket.io",
+            "PWA"
+          ]
+        }
+      }
+    },
+    orion: {
+      etymology1: '(法语: 金)',
+      etymology2: '(猎户座/猎人)',
+      description: '夜空中最明亮的星座。一颗指引你穿越数字宇宙、发现自我价值的导航之星。',
+      slogan: '指引价值航向'
     },
     education: '数据库：教育',
     educationSchool: '迈阿密大学 (Miami University)',
@@ -361,7 +424,7 @@ export const zh = {
     secondBrain: {
       title: "数字孪生",
       subtitle: "全知 AI 核心",
-      welcome: "你好。我是你的第二大脑。我已经接入了你的日志、运动数据和项目记录。请问有什么可以帮你？",
+      welcome: "你好。我是你的第二大脑。我已经接入了你的日志、运动记录与项目数据。请问有什么可以帮你？",
       placeholder: "问我关于你数据的任何事..."
     },
     hotSearch: {

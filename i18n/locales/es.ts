@@ -43,7 +43,15 @@ export const es = {
     title: 'Portafolio',
     subtitle: 'Una colección de proyectos de ingeniería e historia profesional.',
     resume: 'Currículum',
-    projects: 'Proyectos'
+    projects: 'Proyectos',
+    liveDemo: 'Demo en Vivo',
+    sourceCode: 'Código Fuente',
+    demoOptions: {
+      title: "Seleccionar modo de visualización",
+      local: "Vista previa aquí",
+      newTab: "Nueva pestaña",
+      iframeTitle: "Vista previa en vivo"
+    }
   },
   blogList: {
     title: 'Registro de Transmisión',
@@ -272,6 +280,12 @@ export const es = {
       chatDesc: 'Enlace cuántico en tiempo real. Se requiere inicio de sesión. Conéctese y chatee con otros viajeros en el sistema.',
       privateTitle: 'Camarote del Capitán',
       privateDesc: 'Bóveda cifrada para mi historia de amor y recuerdos personales. Estrictamente para los ojos del Capitán (jaja).'
+    },
+    orion: {
+      etymology1: '(Francés: Oro)',
+      etymology2: '(El Cazador)',
+      description: 'La constelación más brillante del cielo nocturno. Una estrella de navegación que te guía a través del cosmos digital para descubrir tu valor.',
+      slogan: 'Navega tu Valor'
     },
     education: 'Base de Datos: Educación',
     educationSchool: 'Universidad de Miami',

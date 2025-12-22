@@ -1,10 +1,10 @@
-const CACHE_NAME = 'ps5-space-v2'; // 🔥 升级一下版本号，强迫浏览器更新缓存
+const CACHE_NAME = 'orion-v2'; // 🔥 升级一下版本号，强迫浏览器更新缓存
 const URLS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
   '/logo.svg',
-  '/logo.png', // ✅ 关键：缓存主屏幕图标
+  '/ios-share-icon-192.png', // ✅ 关键：缓存主屏幕图标
 ];
 
 // 1. 安装阶段：预缓存关键静态资源

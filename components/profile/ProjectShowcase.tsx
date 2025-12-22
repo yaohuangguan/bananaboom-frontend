@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { apiService } from '../../services/api';
@@ -12,7 +13,7 @@ interface ProjectShowcaseProps {
 }
 
 export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser }) => {
-  const { language } = useTranslation();
+  const { language, t } = useTranslation();
   const [projects, setProjects] = useState<PortfolioProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -24,6 +25,11 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
   // Upload State
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Demo Modal State
+  const [demoProject, setDemoProject] = useState<PortfolioProject | null>(null);
+  const [viewMode, setViewMode] = useState<'CHOICE' | 'IFRAME' | null>(null);
+  const [iframeLoading, setIframeLoading] = useState(true);
   
   const isVip = currentUser?.vip && currentUser?.private_token === 'ilovechenfangting';
 
@@ -115,6 +121,30 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
     }
   };
 
+  // Demo Logic
+  const handleLiveDemoClick = (project: PortfolioProject) => {
+    setDemoProject(project);
+    setViewMode('CHOICE');
+  };
+
+  const handleOpenLocal = () => {
+    setViewMode('IFRAME');
+    setIframeLoading(true);
+  };
+
+  const handleOpenNewTab = () => {
+    if (demoProject?.demoUrl) {
+      window.open(demoProject.demoUrl, '_blank');
+    }
+    closeDemoModal();
+  };
+
+  const closeDemoModal = () => {
+    setDemoProject(null);
+    setViewMode(null);
+    setIframeLoading(true);
+  };
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-pulse">
@@ -150,7 +180,7 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
         </div>
       )}
 
-      {/* Edit Modal - Portal to Body for Centering */}
+      {/* Edit Modal */}
       {isEditing && createPortal(
         <div className={modalBaseClass}>
           <div className={editorClass}>
@@ -301,6 +331,100 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
         document.body
       )}
 
+      {/* Demo View Modals */}
+      {viewMode === 'CHOICE' && demoProject && createPortal(
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+           <div className="bg-white dark:bg-[#0f172a] rounded-2xl shadow-2xl p-8 max-w-sm w-full border border-slate-200 dark:border-slate-700 relative overflow-hidden">
+              <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none"></div>
+              
+              <button 
+                onClick={closeDemoModal}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              >
+                 <i className="fas fa-times"></i>
+              </button>
+
+              <div className="text-center mb-8 relative z-10">
+                 <div className="w-16 h-16 rounded-full bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mx-auto mb-4 text-primary-500 dark:text-primary-400">
+                    <i className="fas fa-desktop text-2xl"></i>
+                 </div>
+                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t.portfolio.demoOptions.title}</h3>
+                 <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1">{getLocalized(demoProject, 'title')}</p>
+              </div>
+
+              <div className="flex flex-col gap-3 relative z-10">
+                 <button 
+                   onClick={handleOpenLocal}
+                   className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                 >
+                    <i className="fas fa-window-maximize"></i> {t.portfolio.demoOptions.local}
+                 </button>
+                 <button 
+                   onClick={handleOpenNewTab}
+                   className="w-full py-3.5 bg-primary-600 text-white rounded-xl font-bold text-sm hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all flex items-center justify-center gap-2"
+                 >
+                    <i className="fas fa-external-link-alt"></i> {t.portfolio.demoOptions.newTab}
+                 </button>
+              </div>
+           </div>
+        </div>,
+        document.body
+      )}
+
+      {viewMode === 'IFRAME' && demoProject && createPortal(
+        <div className="fixed inset-0 z-[10000] flex flex-col bg-slate-900 animate-fade-in">
+           {/* Header */}
+           <div className="h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 md:px-6 shadow-lg relative z-20">
+              <div className="flex items-center gap-4">
+                 <button 
+                   onClick={closeDemoModal}
+                   className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 flex items-center justify-center transition-colors"
+                 >
+                    <i className="fas fa-arrow-left"></i>
+                 </button>
+                 <h3 className="text-white font-bold text-sm md:text-base hidden sm:block truncate max-w-xs md:max-w-md">
+                    {t.portfolio.demoOptions.iframeTitle}: {getLocalized(demoProject, 'title')}
+                 </h3>
+              </div>
+              <div className="flex items-center gap-3">
+                 <a 
+                   href={demoProject.demoUrl}
+                   target="_blank"
+                   rel="noreferrer"
+                   className="text-slate-400 hover:text-primary-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors"
+                 >
+                    <span className="hidden sm:inline">{t.portfolio.demoOptions.newTab}</span>
+                    <i className="fas fa-external-link-alt"></i>
+                 </a>
+                 <button 
+                   onClick={closeDemoModal}
+                   className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-red-400 hover:bg-slate-700 flex items-center justify-center transition-colors"
+                 >
+                    <i className="fas fa-times"></i>
+                 </button>
+              </div>
+           </div>
+
+           {/* Iframe Content */}
+           <div className="flex-1 relative bg-black w-full">
+              {iframeLoading && (
+                 <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 z-0">
+                    <i className="fas fa-circle-notch fa-spin text-3xl mb-4 text-primary-500"></i>
+                    <p className="text-xs uppercase tracking-widest font-mono">Loading Application...</p>
+                 </div>
+              )}
+              <iframe 
+                src={demoProject.demoUrl}
+                className="w-full h-full border-0 relative z-10"
+                onLoad={() => setIframeLoading(false)}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+           </div>
+        </div>,
+        document.body
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {projects.map((project) => (
           <div 
@@ -363,23 +487,21 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
 
               <div className="flex gap-4 border-t border-slate-100 dark:border-slate-800 pt-6">
                 {project.demoUrl && (
-                  <a 
-                    href={project.demoUrl} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-700 dark:text-slate-200 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
+                  <button
+                    onClick={() => handleLiveDemoClick(project)}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold uppercase tracking-wider hover:from-amber-600 hover:to-orange-600 shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
                   >
-                    <i className="fas fa-external-link-alt"></i> Live Demo
-                  </a>
+                    <i className="fas fa-play-circle text-sm"></i> {t.portfolio.liveDemo}
+                  </button>
                 )}
                 {project.repoUrl && (
                   <a 
                     href={project.repoUrl} 
                     target="_blank" 
                     rel="noreferrer"
-                    className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-700 dark:text-slate-200 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
-                    <i className="fab fa-github"></i> Source Code
+                    <i className="fab fa-github text-lg"></i> {t.portfolio.sourceCode}
                   </a>
                 )}
               </div>

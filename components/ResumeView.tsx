@@ -1,7 +1,7 @@
-
 import React, { useRef, useState } from 'react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { PageView, User } from '../types';
+import { createPortal } from 'react-dom';
 
 // --- Star Compass Component ---
 const StarCompass = () => {
@@ -67,6 +67,7 @@ interface ResumeViewProps {
 
 export const ResumeView: React.FC<ResumeViewProps> = ({ onNavigate, currentUser, onLoginRequest }) => {
   const { t } = useTranslation();
+  const [showSpecs, setShowSpecs] = useState(false);
 
   const handleChatClick = () => {
     if (currentUser) {
@@ -75,6 +76,8 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ onNavigate, currentUser,
       onLoginRequest();
     }
   };
+
+  const sections = t.resume.websiteIntro.sections as any;
 
   return (
     <div className="container mx-auto px-6 py-24 pt-32 max-w-5xl animate-fade-in relative z-10">
@@ -188,6 +191,29 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ onNavigate, currentUser,
       <div className="grid md:grid-cols-2 gap-12 border-t border-slate-200 dark:border-slate-800 pt-20">
         <div className="flex flex-col items-center justify-center order-2 md:order-1">
           <StarCompass />
+          
+          {/* Orion Explanation */}
+          <div className="mt-12 text-center max-w-md mx-auto bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-3xl p-8 border border-amber-500/10 shadow-xl">
+            <div className="mb-4">
+              <h3 className="text-3xl font-display font-bold text-slate-900 dark:text-white uppercase tracking-widest inline-block border-b-2 border-amber-500 pb-1">Orion</h3>
+              <p className="text-xs font-mono text-slate-400 mt-2">/əˈraɪən/</p>
+            </div>
+            
+            <div className="space-y-4 text-sm text-slate-600 dark:text-slate-300 font-light leading-relaxed">
+              <p>
+                <strong className="text-amber-600 dark:text-amber-500">Or</strong> {t.resume.orion.etymology1} + <strong className="text-amber-600 dark:text-amber-500">Orion</strong> {t.resume.orion.etymology2}
+              </p>
+              <p className="opacity-90">
+                {t.resume.orion.description}
+              </p>
+            </div>
+
+            <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
+              <p className="text-xs font-bold uppercase tracking-[0.3em] text-slate-900 dark:text-white">
+                {t.resume.orion.slogan}
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-12 order-1 md:order-2 flex flex-col justify-center">
@@ -214,8 +240,135 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ onNavigate, currentUser,
                 </a>
              </div>
           </section>
+
+          {/* New Website Introduction Section */}
+          <section>
+             <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-6">{t.resume.websiteIntro.title}</h2>
+             <div className="bg-slate-50 dark:bg-slate-900/50 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed font-light mb-6">
+                   {t.resume.websiteIntro.description}
+                </p>
+                <button 
+                  onClick={() => setShowSpecs(true)}
+                  className="px-6 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 hover:border-amber-500 dark:hover:border-amber-500 transition-all flex items-center gap-2 group"
+                >
+                   <i className="fas fa-sitemap group-hover:animate-pulse"></i>
+                   {t.resume.websiteIntro.viewSpecs}
+                </button>
+             </div>
+          </section>
         </div>
       </div>
+
+      {/* System Specs Modal */}
+      {showSpecs && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
+           <div className="bg-white dark:bg-[#0f172a] w-full max-w-5xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden relative border border-slate-200 dark:border-slate-800">
+              
+              <button 
+                onClick={() => setShowSpecs(false)}
+                className="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-red-500 flex items-center justify-center transition-colors z-20"
+              >
+                 <i className="fas fa-times text-lg"></i>
+              </button>
+
+              <div className="p-8 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
+                 <h2 className="text-3xl font-display font-bold text-slate-900 dark:text-white">{t.resume.websiteIntro.modalTitle}</h2>
+                 <p className="text-sm text-slate-500 font-mono mt-2 uppercase tracking-wider">Architecture & Capabilities</p>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-white dark:bg-[#0f172a]">
+                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    
+                    {/* Public Sector */}
+                    <div>
+                       <div className="flex items-center gap-3 mb-6">
+                          <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center text-xl shadow-sm">
+                             <i className="fas fa-globe"></i>
+                          </div>
+                          <div>
+                             <h3 className="text-xl font-bold text-slate-800 dark:text-white">{sections.public.title}</h3>
+                             <p className="text-xs text-slate-500 dark:text-slate-400">{sections.public.desc}</p>
+                          </div>
+                       </div>
+                       <ul className="space-y-3">
+                          {sections.public.features.map((feat: string, i: number) => (
+                             <li key={i} className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300">
+                                <i className="fas fa-check text-blue-500 mt-1"></i>
+                                <span dangerouslySetInnerHTML={{ __html: feat }} />
+                             </li>
+                          ))}
+                       </ul>
+                    </div>
+
+                    {/* Private Space */}
+                    <div>
+                       <div className="flex items-center gap-3 mb-6">
+                          <div className="w-12 h-12 rounded-xl bg-rose-100 dark:bg-rose-900/30 text-rose-600 flex items-center justify-center text-xl shadow-sm">
+                             <i className="fas fa-user-secret"></i>
+                          </div>
+                          <div>
+                             <h3 className="text-xl font-bold text-slate-800 dark:text-white">{sections.private.title}</h3>
+                             <p className="text-xs text-slate-500 dark:text-slate-400">{sections.private.desc}</p>
+                          </div>
+                       </div>
+                       <ul className="space-y-3">
+                          {sections.private.features.map((feat: string, i: number) => (
+                             <li key={i} className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300">
+                                <i className="fas fa-lock text-rose-500 mt-1"></i>
+                                <span dangerouslySetInnerHTML={{ __html: feat }} />
+                             </li>
+                          ))}
+                       </ul>
+                    </div>
+
+                    {/* Admin */}
+                    <div>
+                       <div className="flex items-center gap-3 mb-6">
+                          <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xl shadow-sm">
+                             <i className="fas fa-cogs"></i>
+                          </div>
+                          <div>
+                             <h3 className="text-xl font-bold text-slate-800 dark:text-white">{sections.admin.title}</h3>
+                             <p className="text-xs text-slate-500 dark:text-slate-400">{sections.admin.desc}</p>
+                          </div>
+                       </div>
+                       <ul className="space-y-3">
+                          {sections.admin.features.map((feat: string, i: number) => (
+                             <li key={i} className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300">
+                                <i className="fas fa-shield-alt text-slate-500 mt-1"></i>
+                                <span dangerouslySetInnerHTML={{ __html: feat }} />
+                             </li>
+                          ))}
+                       </ul>
+                    </div>
+
+                    {/* Tech Stack */}
+                    <div>
+                       <div className="flex items-center gap-3 mb-6">
+                          <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center text-xl shadow-sm">
+                             <i className="fas fa-layer-group"></i>
+                          </div>
+                          <div>
+                             <h3 className="text-xl font-bold text-slate-800 dark:text-white">{sections.stack.title}</h3>
+                             <p className="text-xs text-slate-500 dark:text-slate-400">Core Technologies</p>
+                          </div>
+                       </div>
+                       <div className="flex flex-wrap gap-2">
+                          {sections.stack.list.map((tech: string, i: number) => (
+                             <span key={i} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-700">
+                                {tech}
+                             </span>
+                          ))}
+                       </div>
+                    </div>
+
+                 </div>
+              </div>
+           </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
