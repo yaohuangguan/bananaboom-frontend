@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
   <head>
@@ -6,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#fdfbf7" />
     
-    <!-- PWA Manifest & Icons -->
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <link rel="apple-touch-icon" href="/logo.svg?v=4" />
@@ -16,23 +14,25 @@
     <meta name="apple-mobile-web-app-title" content="Orion" />
 
     <title>Orion | Engineering & Design</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sen:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet" />
-    <!-- Leaflet CSS -->
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     
-    <!-- Highlight.js for Syntax Highlighting -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     
-    <!-- React Phone Input 2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/react-phone-input-2@2.15.1/lib/style.css" rel="stylesheet" />
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <script>
       tailwind.config = {
         darkMode: 'class',
@@ -49,7 +49,7 @@
                 950: '#020617',
               },
               milky: {
-                50: '#fdfbf7', // The main warm background
+                50: '#fdfbf7', 
                 100: '#f7f4ed',
                 200: '#e8e2d2',
                 900: '#1c1917',
@@ -70,16 +70,6 @@
             animation: {
               'fade-in': 'fadeIn 0.6s ease-out forwards',
               'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              'pulse-slow': 'pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'rise': 'rise 60s linear infinite',
-              'rise-loop': 'riseLoop 120s linear infinite', /* Slower, smoother loop */
-              'rise-loop-slow': 'riseLoop 180s linear infinite',
-              'rise-loop-slower': 'riseLoop 240s linear infinite',
-              'nebula-drift': 'nebulaDrift 40s ease-in-out infinite alternate',
-              'twinkle': 'twinkle 4s ease-in-out infinite',
-              'shooting': 'shooting 8s ease-out infinite',
-              'bounce-slight': 'bounceSlight 2s infinite',
-              'spin-slow': 'spin 12s linear infinite',
             },
             keyframes: {
               fadeIn: {
@@ -90,30 +80,6 @@
                 '0%': { transform: 'translateY(20px)', opacity: '0' },
                 '100%': { transform: 'translateY(0)', opacity: '1' },
               },
-              rise: {
-                '0%': { transform: 'translateY(100vh)' },
-                '100%': { transform: 'translateY(-100vh)' },
-              },
-              riseLoop: {
-                '0%': { transform: 'translateY(0)' },
-                '100%': { transform: 'translateY(-100%)' },
-              },
-              nebulaDrift: {
-                '0%': { transform: 'translate(0, 0) scale(1)' },
-                '100%': { transform: 'translate(-20px, -10px) scale(1.1)' },
-              },
-              twinkle: {
-                '0%, 100%': { opacity: '0.3', transform: 'scale(0.8)' },
-                '50%': { opacity: '1', transform: 'scale(1.2)' },
-              },
-              shooting: {
-                '0%': { transform: 'translateX(0) translateY(0) rotate(-45deg)', opacity: '1' },
-                '100%': { transform: 'translateX(500px) translateY(500px) rotate(-45deg)', opacity: '0' },
-              },
-              bounceSlight: {
-                '0%, 100%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-5px)' },
-              }
             },
           },
         },
@@ -121,159 +87,89 @@
     </script>
     <style>
       :root {
-        /* Light Mode: Vintage Brown / Sepia Ink */
         --color-primary-50: 253 248 246;
         --color-primary-100: 249 241 236;
-        --color-primary-200: 236 218 206;
-        --color-primary-300: 216 186 168;
-        --color-primary-400: 184 145 120;
-        --color-primary-500: 153 102 70;  /* Main Sepia/Bronze */
+        --color-primary-500: 153 102 70;
         --color-primary-600: 125 78 50;
         --color-primary-700: 97 58 35;
-        --color-primary-800: 74 45 28;
-        --color-primary-900: 54 33 20;
       }
       .dark {
-        /* Dark Mode: Amber */
         --color-primary-50: 255 251 235;
         --color-primary-100: 254 243 199;
-        --color-primary-200: 253 230 138;
-        --color-primary-300: 252 211 77;
-        --color-primary-400: 251 191 36;
         --color-primary-500: 245 158 11;
         --color-primary-600: 217 119 6;
         --color-primary-700: 180 83 9;
-        --color-primary-800: 146 64 14;
-        --color-primary-900: 120 53 15;
       }
 
       body {
         font-family: 'Inter', sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        overscroll-behavior-y: none; /* Prevent pull-to-refresh on mobile PWA */
+        overscroll-behavior-y: none;
       }
-      /* Hide scrollbar for Chrome, Safari and Opera */
-      .no-scrollbar::-webkit-scrollbar {
-          display: none;
-      }
-      /* Hide scrollbar for IE, Edge and Firefox */
-      .no-scrollbar {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
-      }
+
+      /* Hide scrollbar */
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       
-      /* Star Field Utility - Generates stars via box-shadow */
+      /* Star Field Utility */
       .stars-sm { width: 1px; height: 1px; background: transparent; }
       .stars-md { width: 2px; height: 2px; background: transparent; }
       .stars-lg { width: 3px; height: 3px; background: transparent; }
 
-      /* Custom Quill Overrides for sticky toolbar and scrolling */
-      .ql-toolbar.ql-snow {
-        border: none !important;
-        border-bottom: 1px solid #e2e8f0 !important;
-        padding: 12px 16px !important;
-        background: #ffffff; /* Ensure background is solid for sticky */
-        position: sticky !important;
-        top: 0;
-        z-index: 10;
-        border-radius: 2rem 2rem 0 0; /* Match container */
-      }
-      .ql-container.ql-snow {
-        border: none !important;
-        flex: 1; /* Take remaining height */
-        display: flex;
-        flex-direction: column;
-        overflow: hidden; /* Let ql-editor handle scroll */
-      }
-      .ql-editor {
-        padding: 24px 32px !important;
-        font-family: 'Inter', sans-serif !important;
-        font-size: 1rem !important;
-        line-height: 1.75 !important;
-        color: #334155;
-        overflow-y: auto !important; /* Enable scroll here */
-        height: 100%;
-      }
-      .ql-editor.ql-blank::before {
-        font-style: normal !important;
-        color: #94a3b8 !important;
-      }
-      
-      /* Force Quill tooltip to center horizontally to avoid cut-off */
-      .ql-tooltip {
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        white-space: nowrap !important;
-        z-index: 50 !important;
-      }
-      
-      /* Highlight.js overrides for Quill */
-      .ql-syntax {
-        background-color: #282c34;
-        color: #abb2bf;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-      }
-
-      /* React Phone Input Customization for Dark Mode & Consistency */
+      /* React Phone Input Overrides */
       .react-tel-input .form-control {
         width: 100% !important;
-        height: 50px !important; /* Matched to LoginModal inputs */
+        height: 50px !important;
         border-radius: 0.75rem !important;
         border: 1px solid #e2e8f0 !important;
         background-color: #f8fafc !important;
-        font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace' !important;
-        font-size: 0.875rem !important;
-        color: #0f172a !important;
+        font-family: 'Inter', sans-serif !important;
       }
       .dark .react-tel-input .form-control {
         background-color: #0a0f1e !important;
         border-color: #1e293b !important;
         color: white !important;
       }
-      .react-tel-input .flag-dropdown {
-        border-color: #e2e8f0 !important;
-        border-radius: 0.75rem 0 0 0.75rem !important;
-        background-color: transparent !important;
+      /* (保留了你之前的 Phone Input 样式，这部分不冲突) */
+      .react-tel-input .flag-dropdown { border-color: #e2e8f0 !important; background-color: transparent !important; }
+      .dark .react-tel-input .flag-dropdown { border-color: #1e293b !important; }
+      .react-tel-input .country-list { background-color: white !important; color: #334155 !important; border: 1px solid #e2e8f0 !important; }
+      .dark .react-tel-input .country-list { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #1e293b !important; }
+
+      /* 🔥🔥🔥 ZenEditor Highlight.js 适配 🔥🔥🔥 */
+      /* 这里非常关键：我们删除了 Quill 样式，现在要确保自定义编辑器的样式
+         能完美契合 Atom One Dark 主题。
+      */
+      
+      /* 编辑器容器内的代码块 */
+      .code-block-wrapper {
+        font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+        font-size: 0.875rem; /* 14px */
+        line-height: 1.5;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+        /* 使用 Atom One Dark 的背景色 #282c34 */
+        background-color: #282c34 !important; 
+        color: #abb2bf !important;
+        padding: 1rem;
+        overflow-x: auto;
       }
-      .dark .react-tel-input .flag-dropdown {
-        border-color: #1e293b !important;
-        background-color: transparent !important;
+
+      /* 确保 pre 标签内的 code 元素不被浏览器默认样式干扰 */
+      .code-block-wrapper code {
+        font-family: inherit;
+        background-color: transparent !important; /* 避免双重背景 */
+        padding: 0 !important;
+        color: inherit !important;
       }
-      .react-tel-input .selected-flag:hover, .react-tel-input .selected-flag.open {
-        background-color: rgba(0,0,0,0.05) !important;
-        border-radius: 0.75rem 0 0 0.75rem !important;
+
+      /* 如果 highlight.js 加上了 .hljs 类，确保它没有多余的 padding */
+      .hljs {
+        background: transparent !important;
+        padding: 0 !important;
       }
-      .dark .react-tel-input .selected-flag:hover, .dark .react-tel-input .selected-flag.open {
-        background-color: rgba(255,255,255,0.05) !important;
-      }
-      .react-tel-input .country-list {
-        border-radius: 0.5rem !important;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
-        font-family: 'Inter', sans-serif !important;
-        background-color: white !important;
-        color: #334155 !important;
-        border: 1px solid #e2e8f0 !important;
-      }
-      .dark .react-tel-input .country-list {
-        background-color: #0f172a !important;
-        color: #e2e8f0 !important;
-        border-color: #1e293b !important;
-      }
-      .react-tel-input .country-list .country:hover {
-        background-color: #f1f5f9 !important;
-      }
-      .dark .react-tel-input .country-list .country:hover {
-        background-color: #1e293b !important;
-      }
-      .react-tel-input .country-list .country.highlight {
-        background-color: #e2e8f0 !important;
-      }
-      .dark .react-tel-input .country-list .country.highlight {
-        background-color: #334155 !important;
-      }
+
     </style>
     <script type="importmap">
 {
@@ -283,7 +179,6 @@
     "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "quill": "https://cdn.jsdelivr.net/npm/quill@2.0.3/+esm",
     "socket.io-client": "https://cdn.socket.io/4.7.4/socket.io.esm.min.js",
     "recharts": "https://esm.sh/recharts@2.12.0?external=react,react-dom",
     "echarts": "https://esm.sh/echarts@5.5.0",
@@ -291,7 +186,10 @@
     "react-phone-input-2": "https://esm.sh/react-phone-input-2@2.15.1?external=react,react-dom",
     "react-router-dom": "https://esm.sh/react-router-dom@6.22.0?external=react,react-dom",
     "@remix-run/router": "https://esm.sh/@remix-run/router@1.15.0",
-    "@vercel/analytics": "https://esm.sh/@vercel/analytics@^1.6.1"
+    "@vercel/analytics": "https://esm.sh/@vercel/analytics@^1.6.1",
+    
+    "@remixicon/react": "https://esm.sh/@remixicon/react@4.2.0?external=react,react-dom",
+    "remixicon": "https://esm.sh/remixicon@4.2.0"
   }
 }
 </script>

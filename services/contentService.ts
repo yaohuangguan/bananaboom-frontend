@@ -1,8 +1,19 @@
-
 import { fetchClient } from './core';
 import { toast } from '../components/Toast';
-import { uploadImage, compressImage, fileToBase64 } from './media';
-import { BlogPost, Comment, User, Project, PortfolioProject, ResumeItem, ResumeData, Log, Photo, PaginatedResponse, PaginationData } from '../types';
+import { uploadImage } from './media';
+import {
+  BlogPost,
+  Comment,
+  User,
+  Project,
+  PortfolioProject,
+  ResumeItem,
+  ResumeData,
+  Log,
+  Photo,
+  PaginatedResponse,
+  PaginationData
+} from '../types';
 
 // Fallback data
 const MOCK_BLOGS: BlogPost[] = [
@@ -15,7 +26,8 @@ const MOCK_BLOGS: BlogPost[] = [
     date: '2023-10-24',
     createdDate: '2023-10-24',
     likes: 156,
-    image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=1000&auto=format&fit=crop',
+    image:
+      'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=1000&auto=format&fit=crop',
     content: '<p>In the rapidly evolving landscape of frontend development...</p>',
     isPrivate: false
   },
@@ -28,7 +40,8 @@ const MOCK_BLOGS: BlogPost[] = [
     date: '2023-11-15',
     createdDate: '2023-11-15',
     likes: 92,
-    image: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1000&auto=format&fit=crop',
+    image:
+      'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1000&auto=format&fit=crop',
     content: '<p>As AI models become more capable...</p>',
     isPrivate: false
   }
@@ -36,17 +49,24 @@ const MOCK_BLOGS: BlogPost[] = [
 
 export const contentService = {
   // --- Posts ---
-  getPosts: async (page: number = 1, limit: number = 10, search: string = '', tag: string = ''): Promise<{ data: BlogPost[], pagination: PaginationData }> => {
+  getPosts: async (
+    page: number = 1,
+    limit: number = 10,
+    search: string = '',
+    tag: string = ''
+  ): Promise<{ data: BlogPost[]; pagination: PaginationData }> => {
     try {
       const queryParams = new URLSearchParams({
         page: page.toString(),
-        limit: limit.toString(),
+        limit: limit.toString()
       });
       if (search) queryParams.append('q', search);
       if (tag) queryParams.append('tag', tag);
 
-      const response = await fetchClient<PaginatedResponse<BlogPost>>(`/posts?${queryParams.toString()}`);
-      
+      const response = await fetchClient<PaginatedResponse<BlogPost>>(
+        `/posts?${queryParams.toString()}`
+      );
+
       const posts = response.data || [];
 
       const backendPagination = response.pagination as any;
@@ -64,29 +84,36 @@ export const contentService = {
       console.warn('API unavailable, falling back to mock');
       return {
         data: [...MOCK_BLOGS],
-        pagination: { 
-          currentPage: 1, 
-          totalPages: 1, 
-          totalItems: MOCK_BLOGS.length, 
-          itemsPerPage: 10, 
-          hasNextPage: false, 
-          hasPrevPage: false 
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: MOCK_BLOGS.length,
+          itemsPerPage: 10,
+          hasNextPage: false,
+          hasPrevPage: false
         }
       };
     }
   },
 
-  getPrivatePosts: async (page: number = 1, limit: number = 10, search: string = '', tag: string = ''): Promise<{ data: BlogPost[], pagination: PaginationData }> => {
+  getPrivatePosts: async (
+    page: number = 1,
+    limit: number = 10,
+    search: string = '',
+    tag: string = ''
+  ): Promise<{ data: BlogPost[]; pagination: PaginationData }> => {
     try {
       const queryParams = new URLSearchParams({
         page: page.toString(),
-        limit: limit.toString(),
+        limit: limit.toString()
       });
       if (search) queryParams.append('q', search);
       if (tag) queryParams.append('tag', tag);
 
-      const response = await fetchClient<PaginatedResponse<BlogPost>>(`/posts/private/posts?${queryParams.toString()}`);
-      
+      const response = await fetchClient<PaginatedResponse<BlogPost>>(
+        `/posts/private/posts?${queryParams.toString()}`
+      );
+
       const backendPagination = response.pagination as any;
       const pagination: PaginationData = {
         currentPage: backendPagination.currentPage,
@@ -99,16 +126,16 @@ export const contentService = {
 
       return { data: response.data, pagination };
     } catch (error) {
-      console.error("Failed to fetch private blogs (safely handled):", error);
+      console.error('Failed to fetch private blogs (safely handled):', error);
       return {
         data: [],
-        pagination: { 
-          currentPage: 1, 
-          totalPages: 1, 
-          totalItems: 0, 
-          itemsPerPage: limit, 
-          hasNextPage: false, 
-          hasPrevPage: false 
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: 0,
+          itemsPerPage: limit,
+          hasNextPage: false,
+          hasPrevPage: false
         }
       };
     }
@@ -119,7 +146,7 @@ export const contentService = {
       const result = await fetchClient<BlogPost[]>(`/posts/${id}`);
       return result[0];
     } catch (e) {
-      return MOCK_BLOGS.find(b => b._id === id);
+      return MOCK_BLOGS.find((b) => b._id === id);
     }
   },
 
@@ -130,7 +157,7 @@ export const contentService = {
     });
     toast.success('Entry successfully logged.');
   },
-  
+
   updatePost: async (id: string, postData: any): Promise<void> => {
     await fetchClient(`/posts/${id}`, {
       method: 'PUT',
@@ -168,26 +195,31 @@ export const contentService = {
   addPhoto: async (fileOrUrl: File | string, name: string, date?: string): Promise<Photo[]> => {
     let url = '';
     if (typeof fileOrUrl !== 'string') {
-        url = await uploadImage(fileOrUrl);
+      url = await uploadImage(fileOrUrl);
     } else {
       url = fileOrUrl;
     }
-    
+
     const res = await fetchClient<Photo[]>('/photos', {
       method: 'POST',
-      body: JSON.stringify({ url, name, createdDate: date }) 
+      body: JSON.stringify({ url, name, createdDate: date })
     });
     return res;
   },
 
-  updatePhoto: async (id: string, name?: string, fileOrUrl?: File | string, date?: string): Promise<Photo[]> => {
+  updatePhoto: async (
+    id: string,
+    name?: string,
+    fileOrUrl?: File | string,
+    date?: string
+  ): Promise<Photo[]> => {
     const payload: any = {};
     if (name) payload.name = name;
-    if (date) payload.createdDate = date; 
-    
+    if (date) payload.createdDate = date;
+
     if (fileOrUrl) {
       if (typeof fileOrUrl !== 'string') {
-         payload.url = await uploadImage(fileOrUrl);
+        payload.url = await uploadImage(fileOrUrl);
       } else {
         payload.url = fileOrUrl;
       }
@@ -224,25 +256,25 @@ export const contentService = {
   getRecentImages: async (): Promise<{ url: string; public_id: string }[]> => {
     try {
       const res = await fetchClient<any>('/cloudinary/resources');
-      
+
       let list: any[] = [];
-      
+
       // Handle both direct array and object wrapper responses
       if (Array.isArray(res)) {
-         list = res;
+        list = res;
       } else {
-         list = res.data || res.resources || [];
+        list = res.data || res.resources || [];
       }
 
       if (list && Array.isArray(list)) {
         return list.map((r: any) => ({
-            url: r.secure_url,
-            public_id: r.public_id
+          url: r.secure_url,
+          public_id: r.public_id
         }));
       }
       return [];
     } catch (e) {
-      console.error("Failed to fetch library", e);
+      console.error('Failed to fetch library', e);
       return [];
     }
   },
@@ -270,7 +302,12 @@ export const contentService = {
     }
   },
 
-  addComment: async (postId: string, user: User, comment: string, photoURL?: string): Promise<Comment[]> => {
+  addComment: async (
+    postId: string,
+    user: User,
+    comment: string,
+    photoURL?: string
+  ): Promise<Comment[]> => {
     const res = await fetchClient<any>(`/comments/${postId}?user_id=${user._id}`, {
       method: 'POST',
       body: JSON.stringify({ user, comment, photoURL })
@@ -286,7 +323,13 @@ export const contentService = {
     return Array.isArray(res) ? res : [];
   },
 
-  addReply: async (commentId: string, user: User, reply: string, targetUser: any, photoURL?: string): Promise<Comment[]> => {
+  addReply: async (
+    commentId: string,
+    user: User,
+    reply: string,
+    targetUser: any,
+    photoURL?: string
+  ): Promise<Comment[]> => {
     const res = await fetchClient<any>(`/comments/reply/${commentId}`, {
       method: 'POST',
       body: JSON.stringify({ user, reply, photoURL, targetUser })
@@ -333,22 +376,22 @@ export const contentService = {
     return await fetchClient<Log[]>('/homepage/logs');
   },
 
-  getHomeLikes: async (): Promise<{_id: string, likes: number}[]> => {
+  getHomeLikes: async (): Promise<{ _id: string; likes: number }[]> => {
     try {
-      const data = await fetchClient<{_id: string, likes: number}[]>('/homepage/likes');
+      const data = await fetchClient<{ _id: string; likes: number }[]>('/homepage/likes');
       return Array.isArray(data) ? data : [data];
     } catch (e) {
-      console.warn("Failed to fetch home stats", e);
+      console.warn('Failed to fetch home stats', e);
       return [];
     }
   },
 
-  addHomeLike: async (id: string): Promise<{likes: number}> => {
-    return await fetchClient<{likes: number}>(`/homepage/likes/${id}/add`, { method: 'POST' });
+  addHomeLike: async (id: string): Promise<{ likes: number }> => {
+    return await fetchClient<{ likes: number }>(`/homepage/likes/${id}/add`, { method: 'POST' });
   },
 
-  removeHomeLike: async (id: string): Promise<{likes: number}> => {
-    return await fetchClient<{likes: number}>(`/homepage/likes/${id}/remove`, { method: 'POST' });
+  removeHomeLike: async (id: string): Promise<{ likes: number }> => {
+    return await fetchClient<{ likes: number }>(`/homepage/likes/${id}/remove`, { method: 'POST' });
   },
 
   // --- Resume ---
@@ -360,12 +403,15 @@ export const contentService = {
     return await fetchClient<ResumeData>(`/resumes?user=${userSlug}`);
   },
 
-  updateResume: async (data: Partial<ResumeData>, userSlug: string = 'sam'): Promise<ResumeData> => {
+  updateResume: async (
+    data: Partial<ResumeData>,
+    userSlug: string = 'sam'
+  ): Promise<ResumeData> => {
     const res = await fetchClient<ResumeData>(`/resumes?user=${userSlug}`, {
       method: 'PUT',
       body: JSON.stringify(data)
     });
     toast.success('Resume updated successfully');
     return res;
-  },
+  }
 };

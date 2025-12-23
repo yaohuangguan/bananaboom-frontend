@@ -283,7 +283,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
       return;
     }
     try {
-      const compressedBase64 = await compressImage(file, 0.7, 1024);
+      const compressedBase64 = await compressImage(file, { quality: 0.7, maxWidth: 1024 });
       setSelectedImage(compressedBase64);
       inputRef.current?.focus();
     } catch (e) {
