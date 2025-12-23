@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ProjectShowcase } from '../components/profile/ProjectShowcase';
 import { ResumeDocument } from '../components/profile/ResumeDocument';
 import { useTranslation } from '../i18n/LanguageContext';
@@ -10,7 +11,21 @@ interface PortfolioPageProps {
 
 export const PortfolioPage: React.FC<PortfolioPageProps> = ({ currentUser }) => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'PROJECTS' | 'RESUME'>('PROJECTS');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Derived state from URL, default to 'PROJECTS'
+  const activeTabRaw = searchParams.get('tab');
+  const activeTab = activeTabRaw === 'resume' ? 'RESUME' : 'PROJECTS';
+
+  const handleTabChange = (tab: 'PROJECTS' | 'RESUME') => {
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set('tab', tab.toLowerCase());
+      // Clean up demo param when switching tabs to avoid confusion
+      newParams.delete('demo');
+      return newParams;
+    });
+  };
 
   return (
     <div className="container mx-auto px-6 py-24 pt-32 max-w-6xl animate-fade-in relative z-10 min-h-screen">
@@ -28,7 +43,7 @@ export const PortfolioPage: React.FC<PortfolioPageProps> = ({ currentUser }) => 
       <div className="flex justify-center mb-16">
         <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-1.5 rounded-full border border-slate-200 dark:border-slate-800 inline-flex shadow-sm">
           <button
-            onClick={() => setActiveTab('RESUME')}
+            onClick={() => handleTabChange('RESUME')}
             className={`px-8 py-3 rounded-full text-sm font-bold uppercase tracking-widest transition-all duration-300 ${
               activeTab === 'RESUME'
                 ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-md'
@@ -38,7 +53,7 @@ export const PortfolioPage: React.FC<PortfolioPageProps> = ({ currentUser }) => 
             {t.portfolio.resume}
           </button>
           <button
-            onClick={() => setActiveTab('PROJECTS')}
+            onClick={() => handleTabChange('PROJECTS')}
             className={`px-8 py-3 rounded-full text-sm font-bold uppercase tracking-widest transition-all duration-300 ${
               activeTab === 'PROJECTS'
                 ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-md'

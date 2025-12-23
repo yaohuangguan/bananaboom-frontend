@@ -1,7 +1,6 @@
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useSearchParams } from 'react-router-dom';
 import { apiService } from '../../services/api';
 import { PortfolioProject, User } from '../../types';
 import { useTranslation } from '../../i18n/LanguageContext';
@@ -14,25 +13,27 @@ interface ProjectShowcaseProps {
 
 export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser }) => {
   const { language, t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [projects, setProjects] = useState<PortfolioProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Admin State
   const [isEditing, setIsEditing] = useState(false);
   const [currentProject, setCurrentProject] = useState<Partial<PortfolioProject>>({});
   const [projectToDelete, setProjectToDelete] = useState<PortfolioProject | null>(null);
-  
+
   // Upload State
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Demo Modal State
   const [demoProject, setDemoProject] = useState<PortfolioProject | null>(null);
   const [viewMode, setViewMode] = useState<'CHOICE' | 'IFRAME' | null>(null);
   const [iframeLoading, setIframeLoading] = useState(true);
-  
+
   const isVip = currentUser?.vip && currentUser?.private_token === 'ilovechenfangting';
 
+  // 1. Load Projects
   useEffect(() => {
     loadProjects();
   }, []);
@@ -42,24 +43,58 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
       const data = await apiService.getPortfolioProjects();
       setProjects(data);
     } catch (e) {
-      console.error("Failed to load projects", e);
+      console.error('Failed to load projects', e);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // 2. Deep Linking Logic: Sync URL 'demo' param with Modal State
+  useEffect(() => {
+    const demoId = searchParams.get('demo');
+
+    // Only proceed if projects are loaded
+    if (isLoading || projects.length === 0) return;
+
+    if (demoId) {
+      // If we have a demo ID in URL
+      const target = projects.find((p) => p._id === demoId);
+      if (target) {
+        // Only update state if needed to prevent infinite loops
+        if (demoProject?._id !== target._id || viewMode !== 'IFRAME') {
+          setDemoProject(target);
+          setViewMode('IFRAME'); // Directly go to Iframe view as requested
+        }
+      }
+    } else {
+      // If URL param is removed externally (back button), and we are in IFRAME mode, close modal
+      // We check for IFRAME mode to allow CHOICE mode to exist without URL param
+      if (viewMode === 'IFRAME') {
+        closeDemoModal(false);
+      }
+    }
+  }, [searchParams, projects, isLoading, viewMode, demoProject]);
+
   const getLocalized = (obj: any, field: string) => {
-    return language === 'zh' ? (obj[`${field}_zh`] || obj[`${field}_en`]) : (obj[`${field}_en`] || obj[`${field}_zh`]);
+    return language === 'zh'
+      ? obj[`${field}_zh`] || obj[`${field}_en`]
+      : obj[`${field}_en`] || obj[`${field}_zh`];
   };
 
   const handleCreate = () => {
     setCurrentProject({
-      title_zh: '', title_en: '',
-      summary_zh: '', summary_en: '',
-      description_zh: '', description_en: '',
+      title_zh: '',
+      title_en: '',
+      summary_zh: '',
+      summary_en: '',
+      description_zh: '',
+      description_en: '',
       techStack: [],
-      repoUrl: '', demoUrl: '', coverImage: '',
-      order: 0, isVisible: true
+      repoUrl: '',
+      demoUrl: '',
+      coverImage: '',
+      order: 0,
+      isVisible: true
     });
     setIsEditing(true);
   };
@@ -97,37 +132,70 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
 
   const handleTechStackChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    setCurrentProject(prev => ({
+    setCurrentProject((prev) => ({
       ...prev,
-      techStack: val.split(',').map(s => s.trim()).filter(s => s)
+      techStack: val
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => s)
     }));
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  // Logic to process file upload (reused by input change and paste)
+  const processUpload = async (file: File) => {
     setIsUploading(true);
     try {
       const url = await apiService.uploadImage(file);
-      setCurrentProject(prev => ({ ...prev, coverImage: url }));
-      toast.success("Image uploaded successfully");
+      setCurrentProject((prev) => ({ ...prev, coverImage: url }));
+      toast.success('Image uploaded successfully');
     } catch (error) {
       console.error(error);
-      toast.error("Failed to upload image");
+      toast.error('Failed to upload image');
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processUpload(file);
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          e.preventDefault(); // Prevent pasting binary string
+          processUpload(file);
+          return;
+        }
+      }
+    }
+  };
+
   // Demo Logic
   const handleLiveDemoClick = (project: PortfolioProject) => {
+    // Just open the choice modal locally.
+    // We do NOT update the URL here to keep the choice modal "clean" of deep links
+    // until the user actually selects a specific viewing mode that supports deep linking (like Iframe).
     setDemoProject(project);
     setViewMode('CHOICE');
   };
 
   const handleOpenLocal = () => {
+    // Update URL to trigger Iframe view via Effect
+    // This allows browser back button to work naturally
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      if (demoProject) newParams.set('demo', demoProject._id);
+      return newParams;
+    });
+    // Optimistically update state
     setViewMode('IFRAME');
     setIframeLoading(true);
   };
@@ -136,19 +204,28 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
     if (demoProject?.demoUrl) {
       window.open(demoProject.demoUrl, '_blank');
     }
-    closeDemoModal();
+    // Just close modal, don't update URL since we aren't showing anything inside the app
+    closeDemoModal(false);
   };
 
-  const closeDemoModal = () => {
+  const closeDemoModal = (updateUrl = true) => {
     setDemoProject(null);
     setViewMode(null);
     setIframeLoading(true);
+
+    if (updateUrl) {
+      setSearchParams((prev) => {
+        const newParams = new URLSearchParams(prev);
+        newParams.delete('demo');
+        return newParams;
+      });
+    }
   };
 
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-pulse">
-        {[1, 2, 3, 4].map(i => (
+        {[1, 2, 3, 4].map((i) => (
           <div key={i} className="h-80 bg-slate-200 dark:bg-slate-800 rounded-3xl"></div>
         ))}
       </div>
@@ -156,13 +233,16 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
   }
 
   // Styles for the "Kraft Paper" vs "Star Chart" theme in editor
-  const modalBaseClass = "fixed z-[9999] inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4";
-  const editorClass = "w-full max-w-4xl p-8 max-h-[90vh] overflow-y-auto shadow-2xl rounded-2xl border bg-white text-slate-900 border-slate-200 dark:bg-[#020617] dark:text-slate-100 dark:border-slate-700 animate-slide-up";
-  const inputClass = "w-full p-3 rounded-lg outline-none border focus:border-primary-500 bg-slate-50 border-slate-200 dark:bg-[#1e293b] dark:border-slate-700";
+  const modalBaseClass =
+    'fixed z-[9999] inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4';
+  const editorClass =
+    'w-full max-w-4xl p-8 max-h-[90vh] overflow-y-auto shadow-2xl rounded-2xl border bg-white text-slate-900 border-slate-200 dark:bg-[#020617] dark:text-slate-100 dark:border-slate-700 animate-slide-up';
+  const inputClass =
+    'w-full p-3 rounded-lg outline-none border focus:border-primary-500 bg-slate-50 border-slate-200 dark:bg-[#1e293b] dark:border-slate-700';
 
   return (
     <div className="relative pb-20">
-      <DeleteModal 
+      <DeleteModal
         isOpen={!!projectToDelete}
         onClose={() => setProjectToDelete(null)}
         onConfirm={handleDelete}
@@ -171,7 +251,7 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
 
       {isVip && (
         <div className="mb-8 flex justify-end">
-          <button 
+          <button
             onClick={handleCreate}
             className="px-6 py-2 bg-primary-600 dark:bg-amber-500 text-white dark:text-black rounded-xl font-bold uppercase text-sm hover:bg-primary-700 dark:hover:bg-amber-400 transition-colors shadow-lg shadow-primary-500/20 dark:shadow-amber-500/20"
           >
@@ -181,267 +261,319 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
       )}
 
       {/* Edit Modal */}
-      {isEditing && createPortal(
-        <div className={modalBaseClass}>
-          <div className={editorClass}>
-            <h2 className="text-2xl font-bold mb-6 font-display">
-              {currentProject._id ? 'Edit Project' : 'New Project'}
-            </h2>
-            
-            <form onSubmit={handleSave} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="font-bold text-xs uppercase tracking-wider opacity-60 border-b border-current pb-2">Chinese Content</h3>
-                  <input 
-                    className={inputClass}
-                    placeholder="Title (ZH)"
-                    value={currentProject.title_zh || ''}
-                    onChange={e => setCurrentProject(p => ({...p, title_zh: e.target.value}))}
-                    required
-                  />
-                  <textarea 
-                    className={`${inputClass} h-24`}
-                    placeholder="Summary (ZH)"
-                    value={currentProject.summary_zh || ''}
-                    onChange={e => setCurrentProject(p => ({...p, summary_zh: e.target.value}))}
-                  />
-                  <textarea 
-                    className={`${inputClass} h-40 font-mono text-sm`}
-                    placeholder="Description Markdown (ZH)"
-                    value={currentProject.description_zh || ''}
-                    onChange={e => setCurrentProject(p => ({...p, description_zh: e.target.value}))}
-                  />
+      {isEditing &&
+        createPortal(
+          <div className={modalBaseClass}>
+            <div className={editorClass}>
+              <h2 className="text-2xl font-bold mb-6 font-display">
+                {currentProject._id ? 'Edit Project' : 'New Project'}
+              </h2>
+
+              <form onSubmit={handleSave} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-xs uppercase tracking-wider opacity-60 border-b border-current pb-2">
+                      Chinese Content
+                    </h3>
+                    <input
+                      className={inputClass}
+                      placeholder="Title (ZH)"
+                      value={currentProject.title_zh || ''}
+                      onChange={(e) =>
+                        setCurrentProject((p) => ({ ...p, title_zh: e.target.value }))
+                      }
+                      required
+                    />
+                    <textarea
+                      className={`${inputClass} h-24`}
+                      placeholder="Summary (ZH)"
+                      value={currentProject.summary_zh || ''}
+                      onChange={(e) =>
+                        setCurrentProject((p) => ({ ...p, summary_zh: e.target.value }))
+                      }
+                    />
+                    <textarea
+                      className={`${inputClass} h-40 font-mono text-sm`}
+                      placeholder="Description Markdown (ZH)"
+                      value={currentProject.description_zh || ''}
+                      onChange={(e) =>
+                        setCurrentProject((p) => ({ ...p, description_zh: e.target.value }))
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-xs uppercase tracking-wider opacity-60 border-b border-current pb-2">
+                      English Content
+                    </h3>
+                    <input
+                      className={inputClass}
+                      placeholder="Title (EN)"
+                      value={currentProject.title_en || ''}
+                      onChange={(e) =>
+                        setCurrentProject((p) => ({ ...p, title_en: e.target.value }))
+                      }
+                      required
+                    />
+                    <textarea
+                      className={`${inputClass} h-24`}
+                      placeholder="Summary (EN)"
+                      value={currentProject.summary_en || ''}
+                      onChange={(e) =>
+                        setCurrentProject((p) => ({ ...p, summary_en: e.target.value }))
+                      }
+                    />
+                    <textarea
+                      className={`${inputClass} h-40 font-mono text-sm`}
+                      placeholder="Description Markdown (EN)"
+                      value={currentProject.description_en || ''}
+                      onChange={(e) =>
+                        setCurrentProject((p) => ({ ...p, description_en: e.target.value }))
+                      }
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h3 className="font-bold text-xs uppercase tracking-wider opacity-60 border-b border-current pb-2">English Content</h3>
-                  <input 
-                    className={inputClass}
-                    placeholder="Title (EN)"
-                    value={currentProject.title_en || ''}
-                    onChange={e => setCurrentProject(p => ({...p, title_en: e.target.value}))}
-                    required
-                  />
-                  <textarea 
-                    className={`${inputClass} h-24`}
-                    placeholder="Summary (EN)"
-                    value={currentProject.summary_en || ''}
-                    onChange={e => setCurrentProject(p => ({...p, summary_en: e.target.value}))}
-                  />
-                  <textarea 
-                    className={`${inputClass} h-40 font-mono text-sm`}
-                    placeholder="Description Markdown (EN)"
-                    value={currentProject.description_en || ''}
-                    onChange={e => setCurrentProject(p => ({...p, description_en: e.target.value}))}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-current opacity-80">
-                 <div className="space-y-4">
-                    <label className="block text-xs font-bold uppercase opacity-60">Tech Stack (comma separated)</label>
-                    <input 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-current opacity-80">
+                  <div className="space-y-4">
+                    <label className="block text-xs font-bold uppercase opacity-60">
+                      Tech Stack (comma separated)
+                    </label>
+                    <input
                       className={inputClass}
                       placeholder="React, Node.js, TypeScript"
                       value={currentProject.techStack?.join(', ') || ''}
                       onChange={handleTechStackChange}
                     />
-                 </div>
-                 <div className="space-y-4">
-                    <label className="block text-xs font-bold uppercase opacity-60">Links & Media</label>
-                    <input 
+                  </div>
+                  <div className="space-y-4">
+                    <label className="block text-xs font-bold uppercase opacity-60">
+                      Links & Media
+                    </label>
+                    <input
                       className={inputClass}
                       placeholder="Demo URL"
                       value={currentProject.demoUrl || ''}
-                      onChange={e => setCurrentProject(p => ({...p, demoUrl: e.target.value}))}
+                      onChange={(e) =>
+                        setCurrentProject((p) => ({ ...p, demoUrl: e.target.value }))
+                      }
                     />
-                    <input 
+                    <input
                       className={inputClass}
                       placeholder="Repo URL"
                       value={currentProject.repoUrl || ''}
-                      onChange={e => setCurrentProject(p => ({...p, repoUrl: e.target.value}))}
+                      onChange={(e) =>
+                        setCurrentProject((p) => ({ ...p, repoUrl: e.target.value }))
+                      }
                     />
-                    
-                    <div className="flex gap-2">
-                      <input 
+
+                    <div className="flex gap-2 relative">
+                      <input
                         className={inputClass}
-                        placeholder="Cover Image URL"
+                        placeholder="Cover Image URL (Paste image supported)"
                         value={currentProject.coverImage || ''}
-                        onChange={e => setCurrentProject(p => ({...p, coverImage: e.target.value}))}
+                        onChange={(e) =>
+                          setCurrentProject((p) => ({ ...p, coverImage: e.target.value }))
+                        }
+                        onPaste={handlePaste}
                       />
-                      <button 
+                      <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading}
                         className="px-4 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg text-slate-600 dark:text-slate-300 transition-colors flex items-center justify-center min-w-[3rem]"
                         title="Upload Image"
                       >
-                        {isUploading ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-upload"></i>}
+                        {isUploading ? (
+                          <i className="fas fa-circle-notch fa-spin"></i>
+                        ) : (
+                          <i className="fas fa-upload"></i>
+                        )}
                       </button>
-                      <input 
-                        type="file" 
-                        ref={fileInputRef} 
-                        className="hidden" 
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
                         accept="image/*"
-                        onChange={handleImageUpload} 
+                        onChange={handleImageUpload}
                       />
                     </div>
-                 </div>
-              </div>
+                  </div>
+                </div>
 
-              <div className="flex items-center gap-6 pt-4">
-                 <div className="flex items-center gap-2">
+                <div className="flex items-center gap-6 pt-4">
+                  <div className="flex items-center gap-2">
                     <label className="text-sm font-bold">Order Priority:</label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       className={`${inputClass} w-24 text-center`}
                       value={currentProject.order || 0}
-                      onChange={e => setCurrentProject(p => ({...p, order: parseInt(e.target.value)}))}
+                      onChange={(e) =>
+                        setCurrentProject((p) => ({ ...p, order: parseInt(e.target.value) }))
+                      }
                     />
-                 </div>
-                 <label className="flex items-center gap-2 cursor-pointer">
-                    <input 
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
                       type="checkbox"
                       checked={currentProject.isVisible ?? true}
-                      onChange={e => setCurrentProject(p => ({...p, isVisible: e.target.checked}))}
+                      onChange={(e) =>
+                        setCurrentProject((p) => ({ ...p, isVisible: e.target.checked }))
+                      }
                       className="accent-primary-500 w-5 h-5"
                     />
                     <span className="text-sm font-bold">Visible</span>
-                 </label>
-              </div>
+                  </label>
+                </div>
 
-              <div className="flex justify-end gap-3 pt-6 border-t border-current opacity-80">
-                <button 
-                  type="button" 
-                  onClick={() => setIsEditing(false)}
-                  className="px-6 py-2.5 rounded-lg font-bold hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  className="px-8 py-2.5 bg-primary-500 hover:bg-primary-600 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-black rounded-lg font-bold shadow-lg shadow-primary-500/20 dark:shadow-amber-500/20 transition-all"
-                >
-                  Save Project
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>,
-        document.body
-      )}
+                <div className="flex justify-end gap-3 pt-6 border-t border-current opacity-80">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="px-6 py-2.5 rounded-lg font-bold hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-8 py-2.5 bg-primary-500 hover:bg-primary-600 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-black rounded-lg font-bold shadow-lg shadow-primary-500/20 dark:shadow-amber-500/20 transition-all"
+                  >
+                    Save Project
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* Demo View Modals */}
-      {viewMode === 'CHOICE' && demoProject && createPortal(
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-           <div className="bg-white dark:bg-[#0f172a] rounded-2xl shadow-2xl p-8 max-w-sm w-full border border-slate-200 dark:border-slate-700 relative overflow-hidden">
+      {viewMode === 'CHOICE' &&
+        demoProject &&
+        createPortal(
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+            <div className="bg-white dark:bg-[#0f172a] rounded-2xl shadow-2xl p-8 max-w-sm w-full border border-slate-200 dark:border-slate-700 relative overflow-hidden">
               <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none"></div>
-              
-              <button 
-                onClick={closeDemoModal}
+
+              <button
+                onClick={() => closeDemoModal(false)}
                 className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
               >
-                 <i className="fas fa-times"></i>
+                <i className="fas fa-times"></i>
               </button>
 
               <div className="text-center mb-8 relative z-10">
-                 <div className="w-16 h-16 rounded-full bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mx-auto mb-4 text-primary-500 dark:text-primary-400">
-                    <i className="fas fa-desktop text-2xl"></i>
-                 </div>
-                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t.portfolio.demoOptions.title}</h3>
-                 <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1">{getLocalized(demoProject, 'title')}</p>
+                <div className="w-16 h-16 rounded-full bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mx-auto mb-4 text-primary-500 dark:text-primary-400">
+                  <i className="fas fa-desktop text-2xl"></i>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                  {t.portfolio.demoOptions.title}
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1">
+                  {getLocalized(demoProject, 'title')}
+                </p>
               </div>
 
               <div className="flex flex-col gap-3 relative z-10">
-                 <button 
-                   onClick={handleOpenLocal}
-                   className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
-                 >
-                    <i className="fas fa-window-maximize"></i> {t.portfolio.demoOptions.local}
-                 </button>
-                 <button 
-                   onClick={handleOpenNewTab}
-                   className="w-full py-3.5 bg-primary-600 text-white rounded-xl font-bold text-sm hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all flex items-center justify-center gap-2"
-                 >
-                    <i className="fas fa-external-link-alt"></i> {t.portfolio.demoOptions.newTab}
-                 </button>
+                <button
+                  onClick={handleOpenLocal}
+                  className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                >
+                  <i className="fas fa-window-maximize"></i> {t.portfolio.demoOptions.local}
+                </button>
+                <button
+                  onClick={handleOpenNewTab}
+                  className="w-full py-3.5 bg-primary-600 text-white rounded-xl font-bold text-sm hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all flex items-center justify-center gap-2"
+                >
+                  <i className="fas fa-external-link-alt"></i> {t.portfolio.demoOptions.newTab}
+                </button>
               </div>
-           </div>
-        </div>,
-        document.body
-      )}
+            </div>
+          </div>,
+          document.body
+        )}
 
-      {viewMode === 'IFRAME' && demoProject && createPortal(
-        <div className="fixed inset-0 z-[10000] flex flex-col bg-slate-900 animate-fade-in">
-           {/* Header */}
-           <div className="h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 md:px-6 shadow-lg relative z-20">
+      {viewMode === 'IFRAME' &&
+        demoProject &&
+        createPortal(
+          <div className="fixed inset-0 z-[10000] flex flex-col bg-slate-900 animate-fade-in">
+            {/* Header */}
+            <div className="h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 md:px-6 shadow-lg relative z-20">
               <div className="flex items-center gap-4">
-                 <button 
-                   onClick={closeDemoModal}
-                   className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 flex items-center justify-center transition-colors"
-                 >
-                    <i className="fas fa-arrow-left"></i>
-                 </button>
-                 <h3 className="text-white font-bold text-sm md:text-base hidden sm:block truncate max-w-xs md:max-w-md">
-                    {t.portfolio.demoOptions.iframeTitle}: {getLocalized(demoProject, 'title')}
-                 </h3>
+                <button
+                  onClick={() => closeDemoModal(true)}
+                  className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 flex items-center justify-center transition-colors"
+                >
+                  <i className="fas fa-arrow-left"></i>
+                </button>
+                <h3 className="text-white font-bold text-sm md:text-base hidden sm:block truncate max-w-xs md:max-w-md">
+                  {t.portfolio.demoOptions.iframeTitle}: {getLocalized(demoProject, 'title')}
+                </h3>
               </div>
               <div className="flex items-center gap-3">
-                 <a 
-                   href={demoProject.demoUrl}
-                   target="_blank"
-                   rel="noreferrer"
-                   className="text-slate-400 hover:text-primary-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors"
-                 >
-                    <span className="hidden sm:inline">{t.portfolio.demoOptions.newTab}</span>
-                    <i className="fas fa-external-link-alt"></i>
-                 </a>
-                 <button 
-                   onClick={closeDemoModal}
-                   className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-red-400 hover:bg-slate-700 flex items-center justify-center transition-colors"
-                 >
-                    <i className="fas fa-times"></i>
-                 </button>
+                <a
+                  href={demoProject.demoUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-slate-400 hover:text-primary-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors"
+                >
+                  <span className="hidden sm:inline">{t.portfolio.demoOptions.newTab}</span>
+                  <i className="fas fa-external-link-alt"></i>
+                </a>
+                <button
+                  onClick={() => closeDemoModal(true)}
+                  className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-red-400 hover:bg-slate-700 flex items-center justify-center transition-colors"
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
-           </div>
+            </div>
 
-           {/* Iframe Content */}
-           <div className="flex-1 relative bg-black w-full">
+            {/* Iframe Content */}
+            <div className="flex-1 relative bg-black w-full">
               {iframeLoading && (
-                 <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 z-0">
-                    <i className="fas fa-circle-notch fa-spin text-3xl mb-4 text-primary-500"></i>
-                    <p className="text-xs uppercase tracking-widest font-mono">Loading Application...</p>
-                 </div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 z-0">
+                  <i className="fas fa-circle-notch fa-spin text-3xl mb-4 text-primary-500"></i>
+                  <p className="text-xs uppercase tracking-widest font-mono">
+                    Loading Application...
+                  </p>
+                </div>
               )}
-              <iframe 
+              <iframe
                 src={demoProject.demoUrl}
                 className="w-full h-full border-0 relative z-10"
                 onLoad={() => setIframeLoading(false)}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
-           </div>
-        </div>,
-        document.body
-      )}
+            </div>
+          </div>,
+          document.body
+        )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {projects.map((project) => (
-          <div 
+          <div
             key={project._id}
             className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
           >
             {/* Admin Controls */}
             {isVip && (
               <div className="absolute top-4 right-4 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button 
-                  onClick={(e) => { e.stopPropagation(); handleEdit(project); }}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(project);
+                  }}
                   className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 text-blue-500 flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
                 >
                   <i className="fas fa-pencil-alt text-xs"></i>
                 </button>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); setProjectToDelete(project); }}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setProjectToDelete(project);
+                  }}
                   className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 text-red-500 flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
                 >
                   <i className="fas fa-trash text-xs"></i>
@@ -452,9 +584,9 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
             {/* Cover Image */}
             <div className="aspect-[16/9] bg-slate-100 dark:bg-slate-950 overflow-hidden relative">
               {project.coverImage ? (
-                <img 
-                  src={project.coverImage} 
-                  alt={getLocalized(project, 'title')} 
+                <img
+                  src={project.coverImage}
+                  alt={getLocalized(project, 'title')}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
               ) : (
@@ -462,14 +594,17 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
                   <i className="fas fa-cube text-4xl text-slate-300 dark:text-slate-600"></i>
                 </div>
               )}
-              
+
               {/* Overlay Gradient */}
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
-              
+
               {/* Tech Stack Overlay */}
               <div className="absolute bottom-4 left-4 right-4 flex flex-wrap gap-2">
                 {project.techStack.map((tech, i) => (
-                  <span key={i} className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-white/20 backdrop-blur-md text-white rounded border border-white/10">
+                  <span
+                    key={i}
+                    className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-white/20 backdrop-blur-md text-white rounded border border-white/10"
+                  >
                     {tech}
                   </span>
                 ))}
@@ -495,9 +630,9 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
                   </button>
                 )}
                 {project.repoUrl && (
-                  <a 
-                    href={project.repoUrl} 
-                    target="_blank" 
+                  <a
+                    href={project.repoUrl}
+                    target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
