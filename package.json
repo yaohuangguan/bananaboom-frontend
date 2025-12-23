@@ -23,7 +23,6 @@
     "@remix-run/router": "1.15.0",
     "@vercel/analytics": "^1.6.1",
     "echarts": "^6.0.0",
-    "highlight.js": "^11.11.1",
     "leaflet": "^1.9.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

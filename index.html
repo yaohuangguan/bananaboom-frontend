@@ -85,20 +85,44 @@
         },
       }
     </script>
+
     <style>
+      /* 
+        COLOR VARIABLES 
+        Defined in standard CSS to ensure reliability.
+        Using Space-Separated RGB values for Tailwind opacity compatibility.
+      */
+      
       :root {
-        --color-primary-50: 253 248 246;
-        --color-primary-100: 249 241 236;
-        --color-primary-500: 153 102 70;
-        --color-primary-600: 125 78 50;
-        --color-primary-700: 97 58 35;
+        /* Light Mode: Brownish / Milky Theme */
+        --color-primary-50: 253 251 247;
+        --color-primary-100: 247 244 237;
+        --color-primary-200: 232 226 210;
+        --color-primary-300: 210 199 176;
+        --color-primary-400: 180 160 130;
+        --color-primary-500: 168 121 84;
+        --color-primary-600: 140 98 65;
+        --color-primary-700: 115 78 50;
+        --color-primary-800: 94 62 40;
+        --color-primary-900: 70 45 30;
       }
-      .dark {
-        --color-primary-50: 255 251 235;
-        --color-primary-100: 254 243 199;
-        --color-primary-500: 245 158 11;
-        --color-primary-600: 217 119 6;
-        --color-primary-700: 180 83 9;
+
+      /* 
+        Dark Mode: Orange Gold Theme
+        Using 'html.dark' selector with !important to strictly enforce overrides 
+        when the dark class is active.
+      */
+      html.dark {
+        --color-primary-50: 255 251 235 !important;
+        --color-primary-100: 254 243 199 !important;
+        --color-primary-200: 253 230 138 !important;
+        --color-primary-300: 252 211 77 !important;
+        --color-primary-400: 251 191 36 !important;
+        --color-primary-500: 255 170 0 !important;   /* Orange Gold (Vibrant) */
+        --color-primary-600: 234 140 0 !important;   /* Darker Gold */
+        --color-primary-700: 180 83 9 !important;
+        --color-primary-800: 146 64 14 !important;
+        --color-primary-900: 120 53 15 !important;
       }
 
       body {
@@ -131,40 +155,31 @@
         border-color: #1e293b !important;
         color: white !important;
       }
-      /* (保留了你之前的 Phone Input 样式，这部分不冲突) */
       .react-tel-input .flag-dropdown { border-color: #e2e8f0 !important; background-color: transparent !important; }
       .dark .react-tel-input .flag-dropdown { border-color: #1e293b !important; }
       .react-tel-input .country-list { background-color: white !important; color: #334155 !important; border: 1px solid #e2e8f0 !important; }
       .dark .react-tel-input .country-list { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #1e293b !important; }
 
-      /* 🔥🔥🔥 ZenEditor Highlight.js 适配 🔥🔥🔥 */
-      /* 这里非常关键：我们删除了 Quill 样式，现在要确保自定义编辑器的样式
-         能完美契合 Atom One Dark 主题。
-      */
-      
-      /* 编辑器容器内的代码块 */
+      /* ZenEditor Highlight.js Adaptation */
       .code-block-wrapper {
         font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
-        font-size: 0.875rem; /* 14px */
+        font-size: 0.875rem;
         line-height: 1.5;
         border-radius: 0.5rem;
         margin: 1rem 0;
-        /* 使用 Atom One Dark 的背景色 #282c34 */
         background-color: #282c34 !important; 
         color: #abb2bf !important;
         padding: 1rem;
         overflow-x: auto;
       }
 
-      /* 确保 pre 标签内的 code 元素不被浏览器默认样式干扰 */
       .code-block-wrapper code {
         font-family: inherit;
-        background-color: transparent !important; /* 避免双重背景 */
+        background-color: transparent !important;
         padding: 0 !important;
         color: inherit !important;
       }
 
-      /* 如果 highlight.js 加上了 .hljs 类，确保它没有多余的 padding */
       .hljs {
         background: transparent !important;
         padding: 0 !important;
@@ -187,9 +202,9 @@
     "react-router-dom": "https://esm.sh/react-router-dom@6.22.0?external=react,react-dom",
     "@remix-run/router": "https://esm.sh/@remix-run/router@1.15.0",
     "@vercel/analytics": "https://esm.sh/@vercel/analytics@^1.6.1",
-    
     "@remixicon/react": "https://esm.sh/@remixicon/react@4.2.0?external=react,react-dom",
-    "remixicon": "https://esm.sh/remixicon@4.2.0"
+    "remixicon": "https://esm.sh/remixicon@4.2.0",
+    "remixicon/": "https://esm.sh/remixicon@^4.7.0/"
   }
 }
 </script>

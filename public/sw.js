@@ -1,60 +1,30 @@
-const CACHE_NAME = 'orion-v1766460647613'; // 🔥 升级一下版本号，强迫浏览器更新缓存
-const URLS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/logo.svg',
-  '/ios-share-icon-192.png', // ✅ 关键：缓存主屏幕图标
-];
-
-// 1. 安装阶段：预缓存关键静态资源
 self.addEventListener('install', (event) => {
-  console.log('👷 SW: Installing...');
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('📦 SW: Caching App Shell');
-        return cache.addAll(URLS_TO_CACHE);
-      })
-      .then(() => self.skipWaiting()) // 🔥 强制立即接管，不用等下次刷新
-  );
+  console.log('👷 SW: Installing (No Cache Mode)...');
+  // 强制立即接管，跳过等待
+  self.skipWaiting();
 });
 
-// 2. 拦截请求：Cache First 策略 (API 除外)
-self.addEventListener('fetch', (event) => {
-  // 🛡️ 过滤：如果是 API 请求，直接走网络，绝不查缓存
-  if (event.request.url.includes('/api/')) {
-    return; 
-  }
-
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // 命中缓存：直接返回
-        if (response) {
-          return response;
-        }
-        // 未命中：去网络拉取
-        return fetch(event.request);
-      })
-  );
-});
-
-// 3. 激活阶段：清理旧版本缓存
+// 2. 激活阶段：🔥 暴力清理所有旧缓存
+// 这是为了挽救之前已经缓存了旧文件的用户，确保他们切到这个新版本时，旧缓存被彻底干掉
 self.addEventListener('activate', (event) => {
-  console.log('🚀 SW: Activating...');
-  const cacheWhitelist = [CACHE_NAME];
+  console.log('🚀 SW: Activating & Cleaning...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            console.log('🧹 SW: Deleting old cache', cacheName);
-            return caches.delete(cacheName);
-          }
+          console.log('🧹 SW: Deleting old cache:', cacheName);
+          return caches.delete(cacheName); // 见一个删一个，绝不留情
         })
       );
     })
-    .then(() => self.clients.claim()) // 🔥 立即控制所有页面
+    .then(() => self.clients.claim()) // 立即控制页面
   );
+});
+
+// 3. 拦截请求：🌐 纯网络模式 (Network Only)
+self.addEventListener('fetch', (event) => {
+  // 我们监听了 fetch 事件（这是 PWA 安装的必要条件之一），
+  // 但我们不做任何复杂逻辑，直接把请求扔回给网络。
+  // 如果断网了，就直接失败（浏览器默认行为）。
+  event.respondWith(fetch(event.request));
 });
