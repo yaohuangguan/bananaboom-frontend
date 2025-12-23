@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 
 interface BlogContentProps {
@@ -9,18 +8,28 @@ interface BlogContentProps {
   clean?: boolean;
 }
 
-export const BlogContent: React.FC<BlogContentProps> = ({ content, isLoading, shadowClass = 'shadow-2xl', forceLight = false, clean = false }) => {
-  
-  // Custom Markdown Rendering logic
+export const BlogContent: React.FC<BlogContentProps> = ({
+  content,
+  isLoading,
+  shadowClass = 'shadow-2xl',
+  forceLight = false,
+  clean = false
+}) => {
+  // Custom Content Rendering logic
   const renderedContent = useMemo(() => {
-    if (isLoading) return '<div class="flex items-center gap-3 text-slate-400 animate-pulse font-mono py-12 justify-center"><i class="fas fa-circle-notch fa-spin"></i> Retrieving data stream...</div>';
+    if (isLoading)
+      return '<div class="flex items-center gap-3 text-slate-400 animate-pulse font-mono py-12 justify-center"><i class="fas fa-circle-notch fa-spin"></i> Retrieving data stream...</div>';
     if (!content) return '';
-    
-    if (window.marked) {
+
+    // Heuristic: If content contains common block-level HTML tags, treat as HTML and bypass Markdown parsing
+    // ZenEditor produces HTML directly. Markdown parser might escape or mangle complex HTML.
+    const hasBlockHtml = /<(h[1-6]|div|p|blockquote|pre|ul|ol|table|img)/i.test(content);
+
+    if (!hasBlockHtml && window.marked) {
       try {
         return window.marked.parse(content);
       } catch (e) {
-        console.warn("Markdown parse error, falling back to raw", e);
+        console.warn('Markdown parse error, falling back to raw', e);
         return content;
       }
     }
@@ -45,7 +54,9 @@ export const BlogContent: React.FC<BlogContentProps> = ({ content, isLoading, sh
       --bc-img-border: #e5e7eb;
     }
 
-    ${!forceLight ? `
+    ${
+      !forceLight
+        ? `
     .dark .blog-content-wrapper {
       /* Dark Mode Overrides (Matching provided snippet) */
       --bc-text: #d1d5db; /* gray-300 */
@@ -61,7 +72,9 @@ export const BlogContent: React.FC<BlogContentProps> = ({ content, isLoading, sh
       --bc-link: #60a5fa;
       --bc-img-border: #333;
     }
-    ` : ''}
+    `
+        : ''
+    }
 
     .blog-content-body {
       font-family: 'Inter', system-ui, sans-serif;
@@ -179,20 +192,24 @@ export const BlogContent: React.FC<BlogContentProps> = ({ content, isLoading, sh
 
   return (
     <div className={containerClasses}>
-        <style>{customStyles}</style>
-        
-        {/* Subtle decorative gradient - Only if clean is false */}
-        {!clean && (
-          <>
-            <div className={`absolute -top-32 -right-32 w-96 h-96 rounded-full blur-[100px] pointer-events-none transition-colors duration-700 ${forceLight ? 'bg-pink-500/10' : 'bg-primary-500/5'}`}></div>
-            <div className={`absolute -bottom-32 -left-32 w-96 h-96 rounded-full blur-[100px] pointer-events-none transition-colors duration-700 ${forceLight ? 'bg-rose-500/10' : 'bg-blue-500/5'}`}></div>
-          </>
-        )}
+      <style>{customStyles}</style>
 
-        <div 
-            className="blog-content-body relative z-10"
-            dangerouslySetInnerHTML={{ __html: renderedContent }} 
-        />
+      {/* Subtle decorative gradient - Only if clean is false */}
+      {!clean && (
+        <>
+          <div
+            className={`absolute -top-32 -right-32 w-96 h-96 rounded-full blur-[100px] pointer-events-none transition-colors duration-700 ${forceLight ? 'bg-pink-500/10' : 'bg-primary-500/5'}`}
+          ></div>
+          <div
+            className={`absolute -bottom-32 -left-32 w-96 h-96 rounded-full blur-[100px] pointer-events-none transition-colors duration-700 ${forceLight ? 'bg-rose-500/10' : 'bg-blue-500/5'}`}
+          ></div>
+        </>
+      )}
+
+      <div
+        className="blog-content-body relative z-10"
+        dangerouslySetInnerHTML={{ __html: renderedContent }}
+      />
     </div>
   );
 };

@@ -1,9 +1,10 @@
-import React, { useReducer, useEffect, useState } from 'react';
+import React, { useReducer, useEffect, useState, useRef } from 'react';
 import { apiService } from '../../services/api';
 import { User, BlogPost, Tag } from '../../types';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { toast } from '../Toast';
 import { ZenEditor } from './ZenEditor';
+import { JournalTemplates, JournalTemplate } from './JournalTemplates';
 
 interface SimpleEditorProps {
   user?: User | null;
@@ -79,6 +80,11 @@ export const SimpleEditor: React.FC<SimpleEditorProps> = ({
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
 
+  // History Stack for Undo/Redo (Main State Only)
+  const [history, setHistory] = useState<any[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const ignoreHistoryRef = useRef(false);
+
   // Initialize state with cached values if available and NOT editing
   const getInitialState = () => {
     if (editingPost) {
@@ -106,6 +112,65 @@ export const SimpleEditor: React.FC<SimpleEditorProps> = ({
   const [state, dispatch] = useReducer(reducer, null, getInitialState);
 
   const { content, author, info, title, tags, isPrivate, loading } = state;
+
+  // History Snapshots (Debounced slightly or on specific actions)
+  const addToHistory = (newState: any) => {
+    // Basic implementation: Keep last 20 states
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newState);
+    if (newHistory.length > 20) newHistory.shift();
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const prev = history[historyIndex - 1];
+      ignoreHistoryRef.current = true;
+      dispatch({ type: C.SET_ALL, payload: prev });
+      setHistoryIndex(historyIndex - 1);
+      setTimeout(() => {
+        ignoreHistoryRef.current = false;
+      }, 100);
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const next = history[historyIndex + 1];
+      ignoreHistoryRef.current = true;
+      dispatch({ type: C.SET_ALL, payload: next });
+      setHistoryIndex(historyIndex + 1);
+      setTimeout(() => {
+        ignoreHistoryRef.current = false;
+      }, 100);
+    }
+  };
+
+  const handleClearAll = () => {
+    // Save current state before clearing for Undo
+    if (!ignoreHistoryRef.current) addToHistory(state);
+
+    dispatch({ type: C.RESET });
+    // Restore author if needed or just blank everything
+    // The RESET action sets it to INITIAL_STATE, which has author="".
+    // If we want to keep author, we can re-dispatch. But "Clear All" usually implies clear everything.
+
+    // Clear cache too
+    localStorage.removeItem('cachedText');
+    localStorage.removeItem('titleText');
+    localStorage.removeItem('tagText');
+    localStorage.removeItem('infoText');
+
+    toast.info('Editor cleared.');
+  };
+
+  // Init History
+  useEffect(() => {
+    if (history.length === 0) {
+      addToHistory(state);
+    }
+  }, []);
 
   // Load Tags (Fetch 'all' to allow mixing public/private tags easily in editor)
   useEffect(() => {
@@ -199,7 +264,6 @@ export const SimpleEditor: React.FC<SimpleEditorProps> = ({
 
         // Clear Cache
         localStorage.removeItem('cachedText');
-        localStorage.removeItem('authorText');
         localStorage.removeItem('infoText');
         localStorage.removeItem('titleText');
         localStorage.removeItem('tagText');
@@ -207,6 +271,7 @@ export const SimpleEditor: React.FC<SimpleEditorProps> = ({
         // Reset State
         dispatch({ type: C.RESET });
         setLastSavedTime(null);
+        setHistory([]); // Reset history on submit
       }
 
       if (onPostCreated) onPostCreated();
@@ -229,6 +294,23 @@ export const SimpleEditor: React.FC<SimpleEditorProps> = ({
     }
   };
 
+  const handleTemplateSelect = (template: JournalTemplate) => {
+    // Snapshot before apply
+    addToHistory(state);
+
+    dispatch({ type: C.TITLE, payload: template.title });
+    dispatch({ type: C.CONTENT, payload: template.content });
+    // Merge existing tags with template tags
+    const currentTags = tags
+      .split(' ')
+      .map((t: string) => t.trim())
+      .filter((t: string) => t);
+    const newTagsSet = new Set([...currentTags, ...template.tags]);
+    dispatch({ type: C.TAGS, payload: Array.from(newTagsSet).join(' ') });
+
+    toast.info(`Applied template: ${template.name}`);
+  };
+
   return (
     <div className="flex flex-col h-full bg-white rounded-[2rem] border border-rose-100 shadow-xl overflow-hidden relative">
       {/* HEADER: Title & Metadata */}
@@ -242,8 +324,32 @@ export const SimpleEditor: React.FC<SimpleEditorProps> = ({
             className="w-full text-2xl md:text-4xl font-display font-bold text-slate-800 placeholder:text-slate-300 outline-none bg-transparent"
           />
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleUndo}
+              disabled={historyIndex <= 0}
+              className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              title="Undo"
+            >
+              <i className="fas fa-undo"></i>
+            </button>
+            <button
+              onClick={handleRedo}
+              disabled={historyIndex >= history.length - 1}
+              className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              title="Redo"
+            >
+              <i className="fas fa-redo"></i>
+            </button>
+            <button
+              onClick={handleClearAll}
+              className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors"
+              title="Clear All"
+            >
+              <i className="fas fa-trash-alt"></i>
+            </button>
+
             {!editingPost && (
-              <div className="flex items-center gap-2 mr-2">
+              <div className="flex items-center gap-2 ml-2 mr-2">
                 {isAutoSaving ? (
                   <span className="text-xs font-mono text-amber-500 animate-pulse hidden sm:flex items-center gap-1">
                     <i className="fas fa-sync fa-spin"></i> {t.privateSpace.editor.saving}
@@ -359,14 +465,24 @@ export const SimpleEditor: React.FC<SimpleEditorProps> = ({
               placeholder="..."
             />
           </div>
+          {/* Templates Bar */}
+          {!editingPost && (
+            <div className="border-t border-slate-50 pt-2">
+              <JournalTemplates onSelect={handleTemplateSelect} />
+            </div>
+          )}
         </div>
       </div>
 
       {/* EDITOR AREA */}
       <div className="flex-1 min-h-0 relative bg-white flex flex-col p-4 md:p-6 bg-slate-50">
         <ZenEditor
+          key={title} // Force re-render when template changes title
           initialContent={content}
-          onChange={(html) => dispatch({ type: C.CONTENT, payload: html })}
+          onChange={(html) => {
+            // Only dispatch change, don't history every key stroke here, handled by ZenEditor internally for text
+            dispatch({ type: C.CONTENT, payload: html });
+          }}
           placeholder={t.privateSpace.editor.tellStory}
         />
       </div>
