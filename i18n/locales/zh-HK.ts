@@ -6,7 +6,7 @@ export const zhHK = {
     privateSpace: '艦長室',
     chat: '星際通訊',
     signOut: '斷開',
-    signIn: '接入',
+    signIn: '登录',
     profile: '個人中心',
     settings: '系統設置',
     audit: '系統審計',

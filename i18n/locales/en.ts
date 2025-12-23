@@ -6,7 +6,7 @@ export const en = {
     privateSpace: "Captain's Cabin",
     chat: 'Comm Link',
     signOut: 'Disconnect',
-    signIn: 'Connect',
+    signIn: 'Login',
     profile: 'Personal Center',
     settings: 'System Settings',
     audit: 'System Audit',
