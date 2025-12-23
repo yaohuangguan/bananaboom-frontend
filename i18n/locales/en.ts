@@ -17,9 +17,9 @@ export const en = {
     system: 'System Management'
   },
   pwa: {
-    title: "Orion",
-    desc: "Install to home screen for a better experience",
-    install: "Install",
+    title: 'Orion',
+    desc: 'Install to home screen for a better experience',
+    install: 'Install',
     ios: "Tap share icon <i class='fas fa-share-square'></i> then select <b>'Add to Home Screen'</b>"
   },
   bottomNav: {
@@ -34,7 +34,8 @@ export const en = {
     title2: 'the Unknown',
     introPrefix: 'I am ',
     introName: 'Sam',
-    introSuffix: '. Navigating the digital cosmos, building robust architectures, and exploring the frontiers of Artificial Intelligence.',
+    introSuffix:
+      '. Navigating the digital cosmos, building robust architectures, and exploring the frontiers of Artificial Intelligence.',
     ctaPrimary: 'Explore Journal',
     ctaSecondary: 'System Profile'
   },
@@ -46,10 +47,10 @@ export const en = {
     liveDemo: 'Live Demo',
     sourceCode: 'Source Code',
     demoOptions: {
-      title: "Select Viewing Mode",
-      local: "Preview Here",
-      newTab: "New Tab",
-      iframeTitle: "Live Preview"
+      title: 'Select Viewing Mode',
+      local: 'Preview Here',
+      newTab: 'New Tab',
+      iframeTitle: 'Live Preview'
     }
   },
   blogList: {
@@ -272,60 +273,65 @@ export const en = {
       title: 'System Architecture',
       subtitle: 'Overview of the modules available in this digital space.',
       journalTitle: 'Public Journal',
-      journalDesc: 'My personal transmission log. Sharing insights on technology, coding, and life experiences.',
-      profileTitle: 'Captain\'s Profile',
-      profileDesc: 'A dossier of my journey: Big tech experience, startups, and financial exploration.',
+      journalDesc:
+        'My personal transmission log. Sharing insights on technology, coding, and life experiences.',
+      profileTitle: "Captain's Profile",
+      profileDesc:
+        'A dossier of my journey: Big tech experience, startups, and financial exploration.',
       chatTitle: 'Interstellar Chat',
-      chatDesc: 'Real-time quantum link. Login required. Connect and chat with other voyagers in the system.',
+      chatDesc:
+        'Real-time quantum link. Login required. Connect and chat with other voyagers in the system.',
       privateTitle: "Captain's Cabin",
-      privateDesc: 'Encrypted vault for my personal love story and memories. Strictly for the Captain\'s eyes (haha).'
+      privateDesc:
+        "Encrypted vault for my personal love story and memories. Strictly for the Captain's eyes (haha)."
     },
     websiteIntro: {
       title: 'About This System',
-      description: "Orion is a modern Personal Knowledge Management (PKM) and Digital Garden system. It acts as a bridge between public expression and private introspection, powered by React 19 and Gemini AI.",
-      viewSpecs: "View Full Architecture",
-      modalTitle: "Orion System Architecture",
+      description:
+        'Orion is a modern Personal Knowledge Management (PKM) and Digital Garden system. It acts as a bridge between public expression and private introspection, powered by React 19 and Gemini AI.',
+      viewSpecs: 'View Full Architecture',
+      modalTitle: 'Orion System Architecture',
       sections: {
         public: {
-          title: "Public Sector (The Bridge)",
-          desc: "The outward-facing interface accessible to all voyagers.",
+          title: 'Public Sector (The Bridge)',
+          desc: 'The outward-facing interface accessible to all voyagers.',
           features: [
-            "Interactive 3D-style Hero with dynamic status indicators.",
-            "Transmission Log (Blog) with Markdown, tagging, and search.",
-            "Dual-mode Portfolio (Resume Document / Project Cards).",
-            "AI Agents: Thinking Agent (Gemini 3.0 Pro) & Live Agent (Multimodal)."
+            'Interactive 3D-style Hero with dynamic status indicators.',
+            'Transmission Log (Blog) with Markdown, tagging, and search.',
+            'Dual-mode Portfolio (Resume Document / Project Cards).',
+            'AI Agents: Thinking Agent (Gemini 3.0 Pro) & Live Agent (Multimodal).'
           ]
         },
         private: {
           title: "Captain's Cabin (Private Space)",
-          desc: "A restricted area protected by JWT authentication and RBAC.",
+          desc: 'A restricted area protected by JWT authentication and RBAC.',
           features: [
-            "Second Brain: RAG-style context-aware AI chat with memory.",
-            "Fitness Space: Holistic tracking (Weight, BMI, Sleep, Workout Log).",
+            'Second Brain: RAG-style context-aware AI chat with memory.',
+            'Fitness Space: Holistic tracking (Weight, BMI, Sleep, Workout Log).',
             "Leisure: AI Smart Kitchen (Chef's Wheel), Moon Cycle Tracker, Pirate Lords Game.",
-            "Star Map: ECharts & Leaflet based travel footprint tracking.",
-            "Capsule Gallery: Draggable corkboard UI for memories."
+            'Star Map: ECharts & Leaflet based travel footprint tracking.',
+            'Capsule Gallery: Draggable corkboard UI for memories.'
           ]
         },
         admin: {
-          title: "System Management",
-          desc: "Administrative controls and monitoring.",
+          title: 'System Management',
+          desc: 'Administrative controls and monitoring.',
           features: [
-            "RBAC: Granular control over Users, Roles, and Permissions.",
-            "Audit Log: Comprehensive tracking of all system actions.",
-            "Resource Monitor: Real-time Cloudinary usage stats."
+            'RBAC: Granular control over Users, Roles, and Permissions.',
+            'Audit Log: Comprehensive tracking of all system actions.',
+            'Resource Monitor: Real-time usage stats for Cloudinary (Storage, Bandwidth).'
           ]
         },
         stack: {
-          title: "Tech Stack",
+          title: 'Tech Stack',
           list: [
-            "React 19 & Vite",
-            "TypeScript",
-            "Tailwind CSS",
-            "Google GenAI SDK",
-            "Recharts & ECharts",
-            "Socket.io",
-            "PWA"
+            'React 19 & Vite',
+            'TypeScript',
+            'Tailwind CSS',
+            'Google GenAI SDK',
+            'Recharts & ECharts',
+            'Socket.io',
+            'PWA'
           ]
         }
       }
@@ -333,7 +339,8 @@ export const en = {
     orion: {
       etymology1: '(French: Gold)',
       etymology2: '(The Hunter)',
-      description: 'The brightest constellation in the night sky. A navigational star guiding you through the digital cosmos to discover your value.',
+      description:
+        'The brightest constellation in the night sky. A navigational star guiding you through the digital cosmos to discover your value.',
       slogan: 'Navigate your Value'
     },
     education: 'Database: Education',
@@ -347,19 +354,22 @@ export const en = {
       {
         company: 'Gold Woodbath Capital',
         role: 'Founder / Investor',
-        description: 'Founded a private equity firm focusing on tech and emerging markets. Managed portfolio strategies.',
+        description:
+          'Founded a private equity firm focusing on tech and emerging markets. Managed portfolio strategies.',
         color: 'bg-amber-500'
       },
       {
         company: 'Lalamove',
         role: 'Senior Frontend Engineer',
-        description: 'Optimized core logistics dispatch system. Enhanced driver and user app webviews.',
+        description:
+          'Optimized core logistics dispatch system. Enhanced driver and user app webviews.',
         color: 'bg-orange-500'
       },
       {
         company: 'Tencent Cloud',
         role: 'Frontend Developer',
-        description: 'Spearheaded frontend development for the Coding OA platform. Implemented DevOps toolchains.',
+        description:
+          'Spearheaded frontend development for the Coding OA platform. Implemented DevOps toolchains.',
         color: 'bg-blue-500'
       },
       {
@@ -415,163 +425,168 @@ export const en = {
   },
   privateSpace: {
     tabs: {
-      secondBrain: "Second Brain",
-      journal: "Journal",
-      leisure: "Leisure",
-      gallery: "Gallery",
-      fitness: "Fitness"
+      secondBrain: 'Second Brain',
+      journal: 'Journal',
+      leisure: 'Leisure',
+      gallery: 'Gallery',
+      fitness: 'Fitness'
     },
     secondBrain: {
-      title: "Digital Twin",
-      subtitle: "Omniscient AI Core",
-      welcome: "Hello. I am your Second Brain. I have access to your journal, fitness logs, and project data. How can I assist you?",
-      placeholder: "Ask me anything about your data..."
+      title: 'Digital Twin',
+      subtitle: 'Omniscient AI Core',
+      welcome:
+        'Hello. I am your Second Brain. I have access to your journal, fitness logs, and project data. How can I assist you?',
+      placeholder: 'Ask me anything about your data...'
     },
     hotSearch: {
-      title: "News Center",
-      hot: "Hot Trends",
-      finance: "Finance",
-      game: "Gaming",
-      guonei: "Domestic",
-      world: "World",
-      updated: "Updated",
-      loading: "Scanning network..."
+      title: 'News Center',
+      hot: 'Hot Trends',
+      finance: 'Finance',
+      game: 'Gaming',
+      guonei: 'Domestic',
+      world: 'World',
+      updated: 'Updated',
+      loading: 'Scanning network...'
     },
     leisure: {
-      musicTitle: "Sonic Player",
-      playUrl: "Play URL",
-      search: "Library",
-      placeholderUrl: "MP3 URL...",
-      placeholderSearch: "Search...",
-      nowPlaying: "Playing",
-      stopped: "Idle",
-      mahjong: "Mahjong Soul Zone",
-      mahjongDesc: "Access the Maj-Soul network.",
+      musicTitle: 'Sonic Player',
+      playUrl: 'Play URL',
+      search: 'Library',
+      placeholderUrl: 'MP3 URL...',
+      placeholderSearch: 'Search...',
+      nowPlaying: 'Playing',
+      stopped: 'Idle',
+      mahjong: 'Mahjong Soul Zone',
+      mahjongDesc: 'Access the Maj-Soul network.',
+      drawingBoard: 'Creative Canvas',
+      drawingDesc: 'Unleash your imagination.',
       clock: {
-        title: "Smart Hub",
-        subtitle: "Shenzhen Live"
+        title: 'Smart Hub',
+        subtitle: 'Shenzhen Live'
       },
       cycle: {
-        title: "Moon Cycle",
-        subtitle: "Bio-Tracker",
-        prediction: "Prediction",
-        nextPeriod: "Next Period",
-        inDays: "in {days} days",
-        log: "Log Period",
-        save: "Save Log",
-        flow: "Flow",
-        symptoms: "Symptoms",
-        note: "Note",
-        delete: "Delete Record",
-        startDate: "Start Date",
-        endDate: "End Date",
-        color: "Color",
+        title: 'Moon Cycle',
+        subtitle: 'Bio-Tracker',
+        prediction: 'Prediction',
+        nextPeriod: 'Next Period',
+        inDays: 'in {days} days',
+        log: 'Log Period',
+        save: 'Save Log',
+        flow: 'Flow',
+        symptoms: 'Symptoms',
+        note: 'Note',
+        delete: 'Delete Record',
+        startDate: 'Start Date',
+        endDate: 'End Date',
+        color: 'Color',
         flows: {
-          light: "Light",
-          medium: "Medium",
-          heavy: "Heavy"
+          light: 'Light',
+          medium: 'Medium',
+          heavy: 'Heavy'
         },
         symptomList: {
-          cramps: "Cramps",
-          headache: "Headache",
-          backpain: "Back Pain",
-          fatigue: "Fatigue",
-          bloating: "Bloating",
-          acne: "Acne",
-          moody: "Moody"
+          cramps: 'Cramps',
+          headache: 'Headache',
+          backpain: 'Back Pain',
+          fatigue: 'Fatigue',
+          bloating: 'Bloating',
+          acne: 'Acne',
+          moody: 'Moody'
         },
         legend: {
-          period: "Period",
-          predicted: "Predicted",
-          fertile: "Fertile",
-          ovulation: "Ovulation"
+          period: 'Period',
+          predicted: 'Predicted',
+          fertile: 'Fertile',
+          ovulation: 'Ovulation'
         }
       },
       chefWheel: {
-        title: "AI Smart Kitchen",
-        subtitle: "Automated Meal Selection System",
-        spin: "START DRAW",
-        spinning: "ANALYZING...",
-        confirm: "Confirm Selection",
-        retry: "Back & Retry",
-        recommending: "Gemini is suggesting...",
-        recommendations: "You might also like:",
-        manage: "Manage Menu",
-        viewRecipe: "View Recipe",
-        searchMode: "Search Recipes",
-        wheelMode: "Wheel Mode",
-        backToSearch: "Back to Search",
-        searchPlaceholder: "Search for a recipe (e.g. Kung Pao Chicken)...",
-        searching: "Searching...",
-        library: "Library Management",
+        title: 'AI Smart Kitchen',
+        subtitle: 'Automated Meal Selection System',
+        spin: 'START DRAW',
+        spinning: 'ANALYZING...',
+        confirm: 'Confirm Selection',
+        retry: 'Back & Retry',
+        recommending: 'Gemini is suggesting...',
+        recommendations: 'You might also like:',
+        manage: 'Manage Menu',
+        viewRecipe: 'View Recipe',
+        searchMode: 'Search Recipes',
+        wheelMode: 'Wheel Mode',
+        backToSearch: 'Back to Search',
+        searchPlaceholder: 'Search for a recipe (e.g. Kung Pao Chicken)...',
+        searching: 'Searching...',
+        library: 'Library Management',
         smartPlan: {
-          button: "AI Smart Plan",
-          title: "Smart Plan",
-          nutritionist: "AI Nutritionist",
-          personalized: "Personalized Menu Plan",
-          target: "Target",
-          fallbackTitle: "Priority Logic (Fallback)",
-          fallback1: "If you logged your weight in Fitness recently, AI prioritizes the latest log.",
-          fallback2: "If you explicitly set a different goal (e.g., 'Bulk') in your Fitness diet log today, AI recommends for that goal instead of your long-term User Profile goal.",
-          error: "Nutritional AI is busy. Try again later."
+          button: 'AI Smart Plan',
+          title: 'Smart Plan',
+          nutritionist: 'AI Nutritionist',
+          personalized: 'Personalized Menu Plan',
+          target: 'Target',
+          fallbackTitle: 'Priority Logic (Fallback)',
+          fallback1:
+            'If you logged your weight in Fitness recently, AI prioritizes the latest log.',
+          fallback2:
+            "If you explicitly set a different goal (e.g., 'Bulk') in your Fitness diet log today, AI recommends for that goal instead of your long-term User Profile goal.",
+          error: 'Nutritional AI is busy. Try again later.'
         },
         form: {
-          add: "Add Dish",
-          edit: "Edit Dish",
-          name: "Dish Name",
-          image: "Image URL",
-          category: "Category",
-          tags: "Tags",
-          cancel: "Cancel",
-          save: "Save"
+          add: 'Add Dish',
+          edit: 'Edit Dish',
+          name: 'Dish Name',
+          image: 'Image URL',
+          category: 'Category',
+          tags: 'Tags',
+          cancel: 'Cancel',
+          save: 'Save'
         },
         filters: {
-          healthy: "Healthy Mode",
-          cooldown: "Variety Mode",
-          category: "Category",
-          calories: "Calories",
-          tags: "Tags",
+          healthy: 'Healthy Mode',
+          cooldown: 'Variety Mode',
+          category: 'Category',
+          calories: 'Calories',
+          tags: 'Tags',
           options: {
-            any: "All",
-            lunch: "Lunch",
-            dinner: "Dinner",
-            supper: "Supper",
-            low: "Low Cal",
-            medium: "Medium",
-            high: "High Cal"
+            any: 'All',
+            lunch: 'Lunch',
+            dinner: 'Dinner',
+            supper: 'Supper',
+            low: 'Low Cal',
+            medium: 'Medium',
+            high: 'High Cal'
           },
           tooltips: {
-            healthy: "Prioritizes low-calorie and balanced meals.",
-            variety: "Avoids dishes eaten recently to ensure variety."
+            healthy: 'Prioritizes low-calorie and balanced meals.',
+            variety: 'Avoids dishes eaten recently to ensure variety.'
           }
         },
         menu: {
-          add: "Add Dish",
-          edit: "Edit Dish",
-          name: "Dish Name",
-          category: "Category",
-          weight: "Priority (1-10)",
-          calories: "Calorie Level",
-          save: "Save Dish"
+          add: 'Add Dish',
+          edit: 'Edit Dish',
+          name: 'Dish Name',
+          category: 'Category',
+          weight: 'Priority (1-10)',
+          calories: 'Calorie Level',
+          save: 'Save Dish'
         },
         ingredients: {},
         styles: {},
         cats: {}
       },
       pirate: {
-        title: "The Four Pirate Lords",
-        reset: "Reshuffle",
-        moves: "Moves",
-        victory: "CONQUERED",
-        victoryDesc: "The seas are tamed.",
-        playAgain: "Play Again",
-        rulesTitle: "Mission Parameters",
+        title: 'The Four Pirate Lords',
+        reset: 'Reshuffle',
+        moves: 'Moves',
+        victory: 'CONQUERED',
+        victoryDesc: 'The seas are tamed.',
+        playAgain: 'Play Again',
+        rulesTitle: 'Mission Parameters',
         rules: [
-          "Objective: Coordinate the 4 Factions (Red, Blue, Green, Yellow) to their home territories simultaneously.",
-          "Home Territories: Red (Top-Left), Blue (Top-Right), Green (Bottom-Left), Yellow (Bottom-Right).",
-          "Units: Each faction has 4 units (Captain, Ship, Treasure, Map). All 4 must be inside their specific 3x3 colored zone.",
-          "Neutral Zone: The center column and empty spaces allow for movement.",
-          "Difficulty: Hard. Requires look-ahead planning."
+          'Objective: Coordinate the 4 Factions (Red, Blue, Green, Yellow) to their home territories simultaneously.',
+          'Home Territories: Red (Top-Left), Blue (Top-Right), Green (Bottom-Left), Yellow (Bottom-Right).',
+          'Units: Each faction has 4 units (Captain, Ship, Treasure, Map). All 4 must be inside their specific 3x3 colored zone.',
+          'Neutral Zone: The center column and empty spaces allow for movement.',
+          'Difficulty: Hard. Requires look-ahead planning.'
         ]
       }
     },
@@ -586,16 +601,46 @@ export const en = {
       calendar: {
         weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
         holidays: {
-          '1-1': 'New Year', '2-14': 'Valentine', '3-8': 'Women Day', '3-12': 'Arbor Day',
-          '4-1': 'April Fools', '5-1': 'Labor Day', '5-4': 'Youth Day', '6-1': 'Children Day',
-          '7-1': 'CCP Day', '8-1': 'Army Day', '9-10': 'Teacher Day', '10-1': 'National Day',
-          '12-24': 'Xmas Eve', '12-25': 'Christmas'
+          '1-1': 'New Year',
+          '2-14': 'Valentine',
+          '3-8': 'Women Day',
+          '3-12': 'Arbor Day',
+          '4-1': 'April Fools',
+          '5-1': 'Labor Day',
+          '5-4': 'Youth Day',
+          '6-1': 'Children Day',
+          '7-1': 'CCP Day',
+          '8-1': 'Army Day',
+          '9-10': 'Teacher Day',
+          '10-1': 'National Day',
+          '12-24': 'Xmas Eve',
+          '12-25': 'Christmas'
         },
         terms: [
-          "Minor Cold", "Major Cold", "Start of Spring", "Rain Water", "Awakening of Insects", "Spring Equinox", 
-          "Pure Brightness", "Grain Rain", "Start of Summer", "Grain Buds", "Grain in Ear", "Summer Solstice",
-          "Minor Heat", "Major Heat", "Start of Autumn", "End of Heat", "White Dew", "Autumn Equinox", 
-          "Cold Dew", "Frost's Descent", "Start of Winter", "Minor Snow", "Major Snow", "Winter Solstice"
+          'Minor Cold',
+          'Major Cold',
+          'Start of Spring',
+          'Rain Water',
+          'Awakening of Insects',
+          'Spring Equinox',
+          'Pure Brightness',
+          'Grain Rain',
+          'Start of Summer',
+          'Grain Buds',
+          'Grain in Ear',
+          'Summer Solstice',
+          'Minor Heat',
+          'Major Heat',
+          'Start of Autumn',
+          'End of Heat',
+          'White Dew',
+          'Autumn Equinox',
+          'Cold Dew',
+          "Frost's Descent",
+          'Start of Winter',
+          'Minor Snow',
+          'Major Snow',
+          'Winter Solstice'
         ],
         noActivity: 'No activity',
         summaryTitle: 'Daily Activity Summary'
@@ -673,84 +718,84 @@ export const en = {
       save: 'Save Record',
       saved: 'Record Updated'
     },
-    journal: "Our Journal",
-    memories: "MEMORIES",
-    together: "Together",
-    years: "Years",
-    days: "Days",
-    loveMsg: "Love you forever! ❤",
+    journal: 'Our Journal',
+    memories: 'MEMORIES',
+    together: 'Together',
+    years: 'Years',
+    days: 'Days',
+    loveMsg: 'Love you forever! ❤',
     bucketList: {
-      title: "Bucket List",
-      subtitle: "Dreams & Goals",
+      title: 'Bucket List',
+      subtitle: 'Dreams & Goals',
       tabs: {
-        todo: "Wishlist",
-        in_progress: "In Progress",
-        done: "Achieved"
+        todo: 'Wishlist',
+        in_progress: 'In Progress',
+        done: 'Achieved'
       },
       actions: {
-          start: "Start",
-          complete: "Done",
-          later: "Later",
-          wishlist: "Wishlist",
-          restart: "Restart"
+        start: 'Start',
+        complete: 'Done',
+        later: 'Later',
+        wishlist: 'Wishlist',
+        restart: 'Restart'
       },
-      add: "Make a Wish",
-      edit: "Edit Wish",
-      placeholder: "What is your dream?",
-      description: "Plan / Guide / Description",
-      targetDate: "Target Date",
-      evidence: "Evidence / Photos",
-      uploadEvidence: "Upload Photo",
-      empty: "No wishes yet. Dream big!",
-      status: "Current Status",
-      save: "Save Wish",
-      update: "Update Wish",
-      delete: "Delete Wish"
+      add: 'Make a Wish',
+      edit: 'Edit Wish',
+      placeholder: 'What is your dream?',
+      description: 'Plan / Guide / Description',
+      targetDate: 'Target Date',
+      evidence: 'Evidence / Photos',
+      uploadEvidence: 'Upload Photo',
+      empty: 'No wishes yet. Dream big!',
+      status: 'Current Status',
+      save: 'Save Wish',
+      update: 'Update Wish',
+      delete: 'Delete Wish'
     },
-    tasks: "Tasks",
-    newTask: "New Task...",
-    caughtUp: "All caught up!",
-    emptyJournal: "The journal is empty.",
-    writeFirst: "Write your first memory on the right.",
-    read: "Read",
-    preview: "No preview available...",
-    unknownDate: "Unknown Date",
+    tasks: 'Tasks',
+    newTask: 'New Task...',
+    caughtUp: 'All caught up!',
+    emptyJournal: 'The journal is empty.',
+    writeFirst: 'Write your first memory on the right.',
+    read: 'Read',
+    preview: 'No preview available...',
+    unknownDate: 'Unknown Date',
     editor: {
-      titlePlaceholder: "Title...",
-      author: "Author",
-      tags: "Tags (space separated)",
-      private: "Private",
-      public: "Public",
-      summary: "Summary",
-      code: "Code / Script",
-      publish: "Publish Entry",
-      update: "Update Entry",
-      cancel: "Cancel Edit",
-      chars: "Chars",
-      tellStory: "Write your story...",
-      saving: "Saving...",
-      saved: "Saved",
-      saveDraft: "Save Draft",
-      processing: "Processing..."
+      titlePlaceholder: 'Title...',
+      author: 'Author',
+      tags: 'Tags (space separated)',
+      private: 'Private',
+      public: 'Public',
+      summary: 'Summary',
+      code: 'Code / Script',
+      publish: 'Publish Entry',
+      update: 'Update Entry',
+      cancel: 'Cancel Edit',
+      chars: 'Chars',
+      tellStory: 'Write your story...',
+      saving: 'Saving...',
+      saved: 'Saved',
+      saveDraft: 'Save Draft',
+      processing: 'Processing...'
     },
     gallery: {
-      title: "Capsule Gallery",
-      subtitle: "Eternal moments connected by light.",
-      upload: "Upload Photo",
-      caption: "Caption",
-      location: "Location",
-      save: "Pin to Board",
-      cancel: "Discard",
-      replace: "Replace Image",
-      delete: "Delete",
-      deleteConfirm: "Remove Photo?",
-      pinTitle: "Record Memory",
-      captionLabel: "Title",
-      captionPlaceholder: "Name this memory...",
-      dateLabel: "Date",
-      pinButton: "Pin It",
-      developing: "Developing Photo...",
-      reserved: "Reserved"
+      title: 'Capsule Gallery',
+      subtitle: 'Eternal moments connected by light.',
+      upload: 'Upload Photo',
+      caption: 'Caption',
+      location: 'Location',
+      save: 'Pin to Board',
+      cancel: 'Discard',
+      replace: 'Replace Image',
+      delete: 'Delete',
+      deleteConfirm: 'Remove Photo?',
+      pinTitle: 'Record Memory',
+      captionLabel: 'Title',
+      captionPlaceholder: 'Name this memory...',
+      dateLabel: 'Date',
+      pinButton: 'Pin It',
+      developing: 'Developing Photo...',
+      reserved: 'Reserved'
     }
   }
 };

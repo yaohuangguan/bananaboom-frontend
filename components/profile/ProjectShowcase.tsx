@@ -20,6 +20,9 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
   // Admin State
   const [isEditing, setIsEditing] = useState(false);
   const [currentProject, setCurrentProject] = useState<Partial<PortfolioProject>>({});
+  // Fix: Dedicated state for Tech Stack input to allow free typing of commas/spaces
+  const [techStackInput, setTechStackInput] = useState('');
+
   const [projectToDelete, setProjectToDelete] = useState<PortfolioProject | null>(null);
 
   // Upload State
@@ -96,11 +99,13 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
       order: 0,
       isVisible: true
     });
+    setTechStackInput('');
     setIsEditing(true);
   };
 
   const handleEdit = (project: PortfolioProject) => {
     setCurrentProject({ ...project });
+    setTechStackInput(project.techStack ? project.techStack.join(', ') : '');
     setIsEditing(true);
   };
 
@@ -117,28 +122,27 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Parse the tech stack string into array
+    const processedProject = {
+      ...currentProject,
+      techStack: techStackInput
+        .split(/[,，]/)
+        .map((s) => s.trim())
+        .filter((s) => s) // Split by comma (EN or CN)
+    };
+
     try {
-      if (currentProject._id) {
-        await apiService.updateProject(currentProject._id, currentProject);
+      if (processedProject._id) {
+        await apiService.updateProject(processedProject._id, processedProject);
       } else {
-        await apiService.createProject(currentProject);
+        await apiService.createProject(processedProject);
       }
       setIsEditing(false);
       loadProjects();
     } catch (e) {
       console.error(e);
     }
-  };
-
-  const handleTechStackChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setCurrentProject((prev) => ({
-      ...prev,
-      techStack: val
-        .split(',')
-        .map((s) => s.trim())
-        .filter((s) => s)
-    }));
   };
 
   // Logic to process file upload (reused by input change and paste)
@@ -242,6 +246,13 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
 
   return (
     <div className="relative pb-20">
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(156, 163, 175, 0.3); border-radius: 20px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(156, 163, 175, 0.5); }
+      `}</style>
+
       <DeleteModal
         isOpen={!!projectToDelete}
         onClose={() => setProjectToDelete(null)}
@@ -342,8 +353,8 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
                     <input
                       className={inputClass}
                       placeholder="React, Node.js, TypeScript"
-                      value={currentProject.techStack?.join(', ') || ''}
-                      onChange={handleTechStackChange}
+                      value={techStackInput}
+                      onChange={(e) => setTechStackInput(e.target.value)}
                     />
                   </div>
                   <div className="space-y-4">
@@ -552,10 +563,10 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
         )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {projects.map((project) => (
+        {projects.map((project, index) => (
           <div
             key={project._id}
-            className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+            className="group relative flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
           >
             {/* Admin Controls */}
             {isVip && (
@@ -582,7 +593,45 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
             )}
 
             {/* Cover Image */}
-            <div className="aspect-[16/9] bg-slate-100 dark:bg-slate-950 overflow-hidden relative">
+            <div className="aspect-[16/9] shrink-0 bg-slate-100 dark:bg-slate-950 overflow-hidden relative">
+              {/* Badge for Top Projects */}
+              {index < 10 && (
+                <div
+                  className={`absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md shadow-lg border ${
+                    index < 5
+                      ? 'bg-red-500/80 border-red-400/50 text-white'
+                      : 'bg-black/50 border-white/20 text-white'
+                  }`}
+                >
+                  <div className="flex -space-x-1.5">
+                    <i
+                      className={`fas fa-fire ${index < 5 ? 'text-yellow-300 animate-pulse' : 'text-orange-400'}`}
+                    ></i>
+                    {index < 5 && (
+                      <i
+                        className="fas fa-fire text-orange-300 animate-pulse"
+                        style={{ animationDelay: '0.1s' }}
+                      ></i>
+                    )}
+                    {index < 5 && (
+                      <i
+                        className="fas fa-fire text-red-300 animate-pulse"
+                        style={{ animationDelay: '0.2s' }}
+                      ></i>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider leading-none pt-0.5">
+                    {index < 5
+                      ? language === 'zh'
+                        ? '热门'
+                        : 'HOT'
+                      : language === 'zh'
+                        ? '推荐'
+                        : 'Pick'}
+                  </span>
+                </div>
+              )}
+
               {project.coverImage ? (
                 <img
                   src={project.coverImage}
@@ -612,15 +661,44 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
             </div>
 
             {/* Content */}
-            <div className="p-6 md:p-8">
-              <h3 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-2 group-hover:text-amber-500 transition-colors">
+            <div className="p-6 md:p-8 flex flex-col flex-1">
+              <h3 className="shrink-0 text-2xl font-display font-bold text-slate-900 dark:text-white mb-2 group-hover:text-amber-500 transition-colors">
                 {getLocalized(project, 'title')}
               </h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6 line-clamp-3">
-                {getLocalized(project, 'summary')}
-              </p>
 
-              <div className="flex gap-4 border-t border-slate-100 dark:border-slate-800 pt-6">
+              {/* Scrollable Summary & Description Container */}
+              <div className="h-60 overflow-y-auto custom-scrollbar pr-2 mb-6 flex flex-col gap-4">
+                {/* Summary Section */}
+                {getLocalized(project, 'summary') && (
+                  <div className="relative pl-3 border-l-2 border-amber-500/30">
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">
+                      {language === 'zh' ? '简介' : 'SUMMARY'}
+                    </h4>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                      {getLocalized(project, 'summary')}
+                    </p>
+                  </div>
+                )}
+
+                {/* Description Section */}
+                {getLocalized(project, 'description') && (
+                  <div>
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 mt-2 border-b border-slate-100 dark:border-slate-800 pb-1">
+                      {language === 'zh' ? '项目详情' : 'DESCRIPTION'}
+                    </h4>
+                    <div
+                      className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{
+                        __html: window.marked
+                          ? window.marked.parse(getLocalized(project, 'description') || '')
+                          : (getLocalized(project, 'description') || '').replace(/\n/g, '<br/>')
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-auto flex gap-4 border-t border-slate-100 dark:border-slate-800 pt-6 shrink-0">
                 {project.demoUrl && (
                   <button
                     onClick={() => handleLiveDemoClick(project)}
