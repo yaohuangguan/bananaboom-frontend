@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "prepare": "husky",
     "sitemap": "node scripts/generate-sitemap.js",
-    "postbuild": "node scripts/run-snap.js"
+    "postbuild": "npx puppeteer browsers install chrome && node scripts/run-snap.js"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
