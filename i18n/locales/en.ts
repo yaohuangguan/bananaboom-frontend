@@ -37,7 +37,7 @@ export const en = {
     introSuffix:
       '. Navigating the digital cosmos, building robust architectures, and exploring the frontiers of Artificial Intelligence.',
     ctaPrimary: 'Explore Journal',
-    ctaSecondary: 'System Profile'
+    ctaSecondary: 'Orion Applications'
   },
   portfolio: {
     title: 'Orion App Store',

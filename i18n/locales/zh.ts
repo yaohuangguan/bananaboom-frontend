@@ -36,10 +36,10 @@ export const zh = {
     introName: 'Sam',
     introSuffix: '。漫游在数字宇宙，构建稳健的架构，探索人工智能的疆界。',
     ctaPrimary: '查阅日志',
-    ctaSecondary: '系统档案'
+    ctaSecondary: 'Orion 应用广场'
   },
   portfolio: {
-    title: 'Orion 应用商店',
+    title: 'Orion 应用广场',
     subtitle: '应用作品集：工程项目与职业生涯的合集。',
     resume: '站长简介',
     projects: '应用 & 项目',
