@@ -224,7 +224,8 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className={headerClasses}>
-      <div className="w-full px-6 md:px-12 max-w-[1600px] mx-auto flex justify-between items-center relative">
+      {/* Removed max-w-[1600px] to occupy full screen width as requested */}
+      <div className="w-full px-6 md:px-12 mx-auto flex justify-between items-center relative">
         {/* Logo - Redesigned to be native CSS composition */}
         <Link to="/" className="flex items-center gap-3 cursor-pointer group z-20 relative mr-auto">
           <div className="relative w-10 h-10 flex items-center justify-center">

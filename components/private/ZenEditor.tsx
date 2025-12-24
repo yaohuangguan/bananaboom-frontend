@@ -19,7 +19,7 @@ const FONT_FAMILIES = [
 ];
 
 const FONT_SIZES = [
-  { name: 'Small', value: '2' }, // execCommand 只能识别 1-7
+  { name: 'Small', value: '2' },
   { name: 'Normal', value: '3' },
   { name: 'Large', value: '5' },
   { name: 'Huge', value: '7' }
@@ -43,6 +43,77 @@ const EMOJIS = [
   '⭐'
 ];
 
+// --- Helper: HTML Cleaner (源头治理核心) ---
+const cleanPastedHTML = (html: string): string => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  // 1. 移除垃圾元素 (Google/Gemini 复制带来的 UI 噪音)
+  const garbageSelectors = [
+    '.buttons', // 复制按钮容器
+    'mat-icon', // Material Icons
+    '.mat-mdc-button-touch-target',
+    'svg', // 大部分内联 SVG 都是图标，文章里很少用
+    'button', // 按钮
+    'script', // 脚本
+    'style' // 内联样式块
+  ];
+
+  garbageSelectors.forEach((selector) => {
+    const elements = doc.querySelectorAll(selector);
+    elements.forEach((el) => el.remove());
+  });
+
+  // 2. 遍历所有元素清洗样式
+  const allElements = doc.querySelectorAll('*');
+  allElements.forEach((el) => {
+    if (el instanceof HTMLElement) {
+      // A. 移除背景色 (彻底解决白底/黑底问题)
+      el.style.removeProperty('background-color');
+      el.style.removeProperty('background');
+
+      // B. 智能处理字体颜色
+      const color = el.style.color;
+      if (color) {
+        // 移除 Google 常用的深灰/纯黑，让编辑器主题接管颜色
+        // 保留其他颜色（如红色、蓝色高亮）
+        const isGarbageColor = [
+          'rgb(31, 31, 31)',
+          'rgb(68, 71, 70)',
+          '#1f1f1f',
+          '#202124',
+          '#000000',
+          'black'
+        ].some((c) => color.includes(c) || color === c);
+
+        if (isGarbageColor) {
+          el.style.removeProperty('color');
+        }
+      }
+
+      // C. 修复布局问题
+      // 移除 margin-top: 0，防止段落粘连
+      if (el.style.marginTop === '0px') {
+        el.style.removeProperty('margin-top');
+      }
+      // 移除固定宽度，防止撑破移动端布局
+      if (el.style.width || el.style.maxWidth) {
+        el.style.removeProperty('width');
+        el.style.removeProperty('max-width');
+      }
+
+      // D. 转换特殊的 Google Code Block
+      if (el.tagName.toLowerCase() === 'code-block') {
+        // 这里可以做更复杂的转换，目前保留标签但清除样式，靠 CSS 处理
+        el.removeAttribute('style');
+        el.classList.add('code-block-wrapper'); // 适配你的 CSS
+      }
+    }
+  });
+
+  return doc.body.innerHTML;
+};
+
 export const ZenEditor: React.FC<ZenEditorProps> = ({
   initialContent = '',
   onChange,
@@ -55,20 +126,13 @@ export const ZenEditor: React.FC<ZenEditorProps> = ({
   // --- UI States ---
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // Independent Theme State (Default White)
   const [isDark, setIsDark] = useState(false);
-
-  // Video Popup State
   const [showVideoInput, setShowVideoInput] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
 
   // Initialize
   useEffect(() => {
     if (editorRef.current && initialContent) {
-      // Only set if current content is empty to avoid overwriting user progress if they navigate back/forth quickly
-      // But for templates (new post), we want to set it.
-      // The parent uses key={title} to force remount on template change, so this runs fresh.
       editorRef.current.innerHTML = initialContent;
 
       const checkHljs = setInterval(() => {
@@ -80,7 +144,7 @@ export const ZenEditor: React.FC<ZenEditorProps> = ({
 
       return () => clearInterval(checkHljs);
     }
-  }, []); // Run once on mount
+  }, []);
 
   // --- 高亮逻辑 ---
   const highlightAllBlocks = () => {
@@ -89,7 +153,6 @@ export const ZenEditor: React.FC<ZenEditorProps> = ({
 
     const blocks = editorRef.current.querySelectorAll('pre code');
     blocks.forEach((block) => {
-      // 清理旧属性，强制重新高亮
       block.removeAttribute('data-highlighted');
       hljs.highlightElement(block as HTMLElement);
     });
@@ -101,7 +164,7 @@ export const ZenEditor: React.FC<ZenEditorProps> = ({
     exec('insertHTML', html);
   };
 
-  // --- 1. Selection Core ---
+  // --- Selection Core ---
   const saveSelection = () => {
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0) {
@@ -131,7 +194,7 @@ export const ZenEditor: React.FC<ZenEditorProps> = ({
     setActiveDropdown(null);
   };
 
-  // --- 3. Feature: Insert Video ---
+  // --- Feature: Insert Video ---
   const confirmInsertVideo = () => {
     if (!videoUrl) {
       setShowVideoInput(false);
@@ -159,7 +222,7 @@ export const ZenEditor: React.FC<ZenEditorProps> = ({
     setShowVideoInput(false);
   };
 
-  // --- 4. Feature: Insert Table ---
+  // --- Feature: Insert Table ---
   const insertTable = () => {
     const borderColor = isDark ? 'border-gray-600' : 'border-gray-300';
     const headerBg = isDark ? 'bg-gray-800' : 'bg-gray-100';
@@ -276,7 +339,7 @@ export const ZenEditor: React.FC<ZenEditorProps> = ({
     range.deleteContents();
   };
 
-  // --- 6. Image Logic ---
+  // --- Image Logic ---
   const processAndInsertImage = async (file: File) => {
     if (!file.type.startsWith('image/')) return;
     setIsProcessing(true);
@@ -304,8 +367,40 @@ export const ZenEditor: React.FC<ZenEditorProps> = ({
     saveSelection();
   };
 
-  // --- 7. UI Sub-Components ---
+  // --- Handle Paste (Modified for Cleaning) ---
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    // 1. 优先处理图片文件粘贴
+    const items = e.clipboardData.items;
+    let hasImage = false;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile();
+        if (file) {
+          e.preventDefault();
+          processAndInsertImage(file);
+          hasImage = true;
+          break;
+        }
+      }
+    }
+    if (hasImage) return;
 
+    // 2. 处理 HTML/Text 粘贴 (源头清洗)
+    const htmlData = e.clipboardData.getData('text/html');
+    const textData = e.clipboardData.getData('text/plain');
+
+    if (htmlData) {
+      e.preventDefault(); // 阻止浏览器默认的肮脏粘贴行为
+      const cleanHTML = cleanPastedHTML(htmlData);
+      document.execCommand('insertHTML', false, cleanHTML);
+      handleChange();
+    } else if (textData) {
+      // 如果只有纯文本，让浏览器处理，或者手动插入纯文本
+      // 这里不 preventDefault 通常可以，但为了统一体验，也可以手动处理
+    }
+  };
+
+  // --- UI Sub-Components ---
   const ToolbarBtn = ({ icon, cmd, val, title, onMouseDown, isActive }: any) => (
     <button
       onMouseDown={(e) => {
@@ -589,13 +684,10 @@ export const ZenEditor: React.FC<ZenEditorProps> = ({
       </div>
 
       {/* --- Editor Content --- */}
-      {/* Explicit text color classes added to ensure visibility regardless of global theme */}
       <div
         ref={editorRef}
         className={`flex-1 p-6 outline-none overflow-y-auto prose max-w-none custom-scrollbar zen-editor-content ${
-          isDark
-            ? 'prose-invert text-gray-100' // Dark mode: Light text
-            : 'text-gray-900' // Light mode: Dark text (forces black text even if body has global white text)
+          isDark ? 'prose-invert text-gray-100' : 'text-gray-900'
         }`}
         contentEditable
         suppressContentEditableWarning
@@ -603,6 +695,7 @@ export const ZenEditor: React.FC<ZenEditorProps> = ({
         onKeyDown={handleKeyDown}
         onKeyUp={saveSelection}
         onMouseUp={saveSelection}
+        onPaste={handlePaste} // <--- 绑定我们新的 Paste Handler
         onBlur={() => {
           saveSelection();
           highlightAllBlocks();
@@ -629,22 +722,6 @@ export const ZenEditor: React.FC<ZenEditorProps> = ({
           }
         }}
         onDragOver={(e) => e.preventDefault()}
-        onPaste={(e) => {
-          const items = e.clipboardData.items;
-          let hasImage = false;
-          for (let i = 0; i < items.length; i++) {
-            if (items[i].type.startsWith('image/')) {
-              const file = items[i].getAsFile();
-              if (file) {
-                e.preventDefault();
-                processAndInsertImage(file);
-                hasImage = true;
-                break;
-              }
-            }
-          }
-          // If not image, let default paste happen
-        }}
         data-placeholder={placeholder}
       />
 
@@ -669,12 +746,11 @@ export const ZenEditor: React.FC<ZenEditorProps> = ({
         .zen-editor-content td, .zen-editor-content th { border: 1px solid #e5e7eb; padding: 0.5rem; }
         .zen-theme-dark .zen-editor-content td, .zen-theme-dark .zen-editor-content th { border-color: #374151; }
         
-        /* Ensure normal text isn't monospaced unless it's code */
         .zen-editor-content { font-family: 'Inter', sans-serif; }
         
         img::selection { background: transparent; }
         
-        /* Code Block Styling - Scoped to Editor Content */
+        /* Code Block Styling */
         .zen-theme-light .zen-editor-content pre,
         .zen-theme-light .zen-editor-content .code-block-wrapper {
             background-color: #f8fafc !important;
@@ -689,7 +765,6 @@ export const ZenEditor: React.FC<ZenEditorProps> = ({
             border: 1px solid #374151;
         }
 
-        /* Generic pre tag styling within editor */
         .zen-editor-content pre { 
             white-space: pre-wrap; 
             word-wrap: break-word; 

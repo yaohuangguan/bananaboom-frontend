@@ -30,23 +30,28 @@ import { SettingsPage } from './pages/SettingsPage';
 import { ChatRoom } from './pages/ChatRoom';
 import { AuditLogViewer } from './pages/AuditLogViewer';
 import { SystemManagement } from './pages/SystemManagement';
+import { createLazyComponent } from './components/LazyLoader';
 
 // Lazy Load Heavy Pages
-const PrivateSpaceDashboard = lazy(() => import('./pages/private/PrivateSpaceDashboard'));
-const FootprintSpace = lazy(() => import('./pages/FootprintSpace'));
+const PrivateSpaceDashboard = createLazyComponent(
+  () => import('./pages/private/PrivateSpaceDashboard')
+);
+const FootprintSpace = createLazyComponent(() => import('./pages/FootprintSpace'));
 
 // Lazy Load Private Sub-Spaces
-const JournalSpace = lazy(() => import('./pages/private/JournalSpace'));
-const SecondBrainSpace = lazy(() => import('./pages/private/SecondBrainSpace'));
-const LeisureSpace = lazy(() => import('./pages/private/LeisureSpace'));
-const PhotoGallery = lazy(() => import('./pages/private/PhotoGallery'));
-const FitnessSpace = lazy(() => import('./pages/private/FitnessSpace'));
+const JournalSpace = createLazyComponent(() => import('./pages/private/JournalSpace'));
+const SecondBrainSpace = createLazyComponent(() => import('./pages/private/SecondBrainSpace'));
+const LeisureSpace = createLazyComponent(() => import('./pages/private/LeisureSpace'));
+const PhotoGallery = createLazyComponent(() => import('./pages/private/PhotoGallery'));
+const FitnessSpace = createLazyComponent(() => import('./pages/private/FitnessSpace'));
 
 const SOCKET_URL = 'https://bananaboom-api-242273127238.asia-east1.run.app';
 
 declare global {
   interface Window {
-    marked: any;
+    marked: {
+      parse: (text: string) => string;
+    };
     hljs: any;
   }
 }
@@ -63,11 +68,21 @@ const Layout: React.FC<{
 }> = ({ user, socket, theme, toggleTheme, onLogin, onLogout, onNavigateToChat }) => {
   const location = useLocation();
   const isPrivateSpace = location.pathname.startsWith('/captain-cabin');
-  const mainBgClass = isPrivateSpace
-    ? 'bg-gradient-to-br from-pink-200 via-rose-200 to-pink-200'
-    : theme === Theme.DARK
-      ? 'bg-slate-950'
-      : 'bg-transparent';
+
+  // Logic to identify Article View (slug based route) to remove animations
+  const isArticleView = /^\/blogs\/.+/.test(location.pathname);
+
+  // Determine Main Background
+  let mainBgClass = '';
+  if (isPrivateSpace) {
+    mainBgClass = 'bg-gradient-to-br from-pink-200 via-rose-200 to-pink-200';
+  } else if (isArticleView) {
+    // Specific solid backgrounds for Article View
+    mainBgClass = theme === Theme.DARK ? 'bg-[#111]' : 'bg-white';
+  } else {
+    // Default Public Pages
+    mainBgClass = theme === Theme.DARK ? 'bg-slate-950' : 'bg-transparent';
+  }
 
   // Helper to map path to PageView enum for Header highlight
   const getCurrentPageView = (path: string): PageView => {
@@ -96,7 +111,8 @@ const Layout: React.FC<{
       <ToastContainer />
       <InstallPwa />
 
-      {!isPrivateSpace && (
+      {/* Hide Background Animations on Private Space OR Article View */}
+      {!isPrivateSpace && !isArticleView && (
         <>{theme === Theme.DARK ? <CosmicBackground theme={theme} /> : <ScenicBackground />}</>
       )}
 

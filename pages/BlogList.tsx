@@ -348,7 +348,7 @@ export const BlogList: React.FC<BlogListProps> = ({
 
                   {/* Content Section */}
                   <div className="p-6 flex-1 flex flex-col relative">
-                    <div className="flex items-center justify-between mb-4 font-mono text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    <div className="flex items-center justify-between mb-4 font-mono text-[10px] text-slate-400 dark:text-slate-400 uppercase tracking-wider">
                       <div className="flex items-center gap-2">
                         <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
                         <span>ID: {blog._id.substring(0, 6)}</span>
@@ -360,8 +360,9 @@ export const BlogList: React.FC<BlogListProps> = ({
                       {blog.name}
                     </h3>
 
+                    {/* Updated: Brightened text for dark mode (slate-200) */}
                     <p
-                      className={`text-slate-600 dark:text-slate-400 font-light leading-relaxed mb-6 ${hasImage ? 'line-clamp-3 text-sm' : 'line-clamp-6 text-sm'}`}
+                      className={`text-slate-600 dark:text-slate-200 font-light leading-relaxed mb-6 ${hasImage ? 'line-clamp-3 text-sm' : 'line-clamp-6 text-sm'}`}
                     >
                       {blog.info}
                     </p>
@@ -371,7 +372,7 @@ export const BlogList: React.FC<BlogListProps> = ({
                         {blog.tags.slice(0, 3).map((tag) => (
                           <span
                             key={tag}
-                            className="px-2 py-0.5 border border-slate-300 dark:border-slate-700 text-[10px] font-mono uppercase text-slate-500 dark:text-slate-400 rounded-sm"
+                            className="px-2 py-0.5 border border-slate-300 dark:border-slate-700 text-[10px] font-mono uppercase text-slate-500 dark:text-slate-300 rounded-sm"
                           >
                             {tag}
                           </span>
@@ -382,7 +383,7 @@ export const BlogList: React.FC<BlogListProps> = ({
                         <div className="flex flex-col items-end group/author">
                           {blog.user && (
                             <div className="flex items-center gap-2 mb-0.5">
-                              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 group-hover/author:text-amber-500 transition-colors truncate max-w-[80px]">
+                              <span className="text-xs font-bold text-slate-500 dark:text-slate-300 group-hover/author:text-amber-500 transition-colors truncate max-w-[80px]">
                                 {blog.user.displayName}
                               </span>
                               <div className="w-5 h-5 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 ring-1 ring-slate-200 dark:ring-slate-700">
@@ -399,7 +400,7 @@ export const BlogList: React.FC<BlogListProps> = ({
                           )}
                           {!blog.user && (
                             <div className="flex items-center gap-1">
-                              <span className="text-[10px] text-slate-400 font-mono uppercase">
+                              <span className="text-[10px] text-slate-400 dark:text-slate-300 font-mono uppercase">
                                 <span className="flex items-center gap-1.5">
                                   <span>{blog.author}</span>
                                   <span className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 inline-block overflow-hidden">

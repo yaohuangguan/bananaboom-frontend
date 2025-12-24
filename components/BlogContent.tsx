@@ -1,212 +1,208 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 
 interface BlogContentProps {
   content: string;
   isLoading?: boolean;
   shadowClass?: string;
   forceLight?: boolean;
-  clean?: boolean;
 }
 
 export const BlogContent: React.FC<BlogContentProps> = ({
   content,
   isLoading,
-  shadowClass = 'shadow-2xl',
-  forceLight = false,
-  clean = false
+  shadowClass,
+  forceLight = false
 }) => {
-  // Custom Content Rendering logic
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // ===========================================================================
+  // 核心逻辑：精准清洗字符串
+  // ===========================================================================
   const renderedContent = useMemo(() => {
     if (isLoading)
       return '<div class="flex items-center gap-3 text-slate-400 animate-pulse font-mono py-12 justify-center"><i class="fas fa-circle-notch fa-spin"></i> Retrieving data stream...</div>';
     if (!content) return '';
 
-    // Heuristic: If content contains common block-level HTML tags, treat as HTML and bypass Markdown parsing
-    // ZenEditor produces HTML directly. Markdown parser might escape or mangle complex HTML.
-    const hasBlockHtml = /<(h[1-6]|div|p|blockquote|pre|ul|ol|table|img)/i.test(content);
+    let processed = content;
 
+    // 1. 【精准去黑】：移除 Google/Gemini 复制带来的特定黑色硬编码
+    const googleBlackRegex =
+      /color:\s*(rgb\(31,\s*31,\s*31\)|rgb\(68,\s*71,\s*70\)|#1f1f1f|#202124|#000000|black);?/gi;
+    processed = processed.replace(googleBlackRegex, '');
+
+    // 2. 【去白背景】：移除硬编码的白色背景
+    const whiteBgRegex = /background(-color)?:\s*(rgb\(255,\s*255,\s*255\)|#ffffff|white|none);?/gi;
+    processed = processed.replace(whiteBgRegex, '');
+
+    // 3. 解析 Markdown
+    const hasBlockHtml = /<(div|p|h[1-6]|code-block|response-element|pre)/i.test(processed);
     if (!hasBlockHtml && window.marked) {
       try {
-        return window.marked.parse(content);
+        return window.marked.parse(processed);
       } catch (e) {
-        console.warn('Markdown parse error, falling back to raw', e);
-        return content;
+        return processed;
       }
     }
-    return content;
+    return processed;
   }, [content, isLoading]);
 
-  // Dynamic CSS to support Light/Dark modes while adhering to the requested design style
-  const customStyles = `
-    .blog-content-wrapper {
-      /* Light Mode Defaults */
-      --bc-text: #374151; /* gray-700 */
-      --bc-heading: #111827; /* gray-900 */
-      --bc-bold: #000;
-      --bc-quote-border: #e5e7eb;
-      --bc-quote-text: #6b7280;
-      --bc-code-bg: #f3f4f6;
-      --bc-code-text: #db2777; /* pink-600 for inline code in light mode */
-      --bc-pre-bg: #1e1e1e; /* Dark pre blocks by default even in light mode for contrast */
-      --bc-pre-border: #374151;
-      --bc-pre-text: #f3f4f6;
-      --bc-link: #2563eb;
-      --bc-img-border: #e5e7eb;
-    }
+  // ===========================================================================
+  // DOM 清洗：处理布局垃圾
+  // ===========================================================================
+  useEffect(() => {
+    if (!contentRef.current) return;
 
-    ${
-      !forceLight
-        ? `
-    .dark .blog-content-wrapper {
-      /* Dark Mode Overrides (Matching provided snippet) */
-      --bc-text: #d1d5db; /* gray-300 */
-      --bc-heading: #f3f4f6; /* gray-100 */
-      --bc-bold: #fff;
+    const elements = contentRef.current.querySelectorAll('*');
+    elements.forEach((el) => {
+      if (el instanceof HTMLElement) {
+        // 移除 margin-top: 0px !important
+        if (el.style.marginTop === '0px') {
+          el.style.removeProperty('margin-top');
+        }
+        // 移除可能撑破布局的宽度限制
+        if (el.style.width || el.style.maxWidth) {
+          el.style.removeProperty('width');
+          el.style.removeProperty('max-width');
+        }
+      }
+    });
+  }, [renderedContent]);
+
+  // ===========================================================================
+  // 样式定义
+  // ===========================================================================
+  const darkModeStyles = `
+    /* DARK MODE VARIABLES */
+    html.dark .blog-content-wrapper {
+      --bc-bg: rgb(29, 29, 29);
+      --bc-text: #e2e8f0;           /* 默认文字：柔和白 */
+      --bc-heading: #ffffff;
+      --bc-bold: #ffffff;
+      --bc-quote-bg: #3a3a3a;
       --bc-quote-border: #4b5563;
-      --bc-quote-text: #9ca3af;
-      --bc-code-bg: #2f2f2f;
-      --bc-code-text: #e5e7eb;
-      --bc-pre-bg: #0d0d0d;
-      --bc-pre-border: #333;
-      --bc-pre-text: #e5e7eb;
       --bc-link: #60a5fa;
-      --bc-img-border: #333;
-    }
-    `
-        : ''
-    }
-
-    .blog-content-body {
-      font-family: 'Inter', system-ui, sans-serif;
-      font-size: 1.125rem; /* text-lg */
-      line-height: 1.8;
-      color: var(--bc-text);
-    }
-
-    .blog-content-body p {
-      margin-bottom: 1.5em;
-    }
-    .blog-content-body p:last-child {
-      margin-bottom: 0;
-    }
-
-    .blog-content-body h1, 
-    .blog-content-body h2, 
-    .blog-content-body h3, 
-    .blog-content-body h4 {
-      color: var(--bc-heading);
-      font-weight: 700;
-      margin-top: 2em;
-      margin-bottom: 0.75em;
-      line-height: 1.3;
-      font-family: 'Sen', sans-serif;
-    }
-    
-    .blog-content-body h1 { font-size: 2.25rem; letter-spacing: -0.025em; }
-    .blog-content-body h2 { font-size: 1.875rem; letter-spacing: -0.025em; }
-    .blog-content-body h3 { font-size: 1.5rem; }
-    .blog-content-body h4 { font-size: 1.25rem; }
-
-    .blog-content-body ul, 
-    .blog-content-body ol {
-      margin-left: 1.5em;
-      margin-bottom: 1.5em;
-    }
-    .blog-content-body ul { list-style-type: disc; }
-    .blog-content-body ol { list-style-type: decimal; }
-    .blog-content-body li { margin-bottom: 0.5em; }
-
-    .blog-content-body strong {
-      color: var(--bc-bold);
-      font-weight: 700;
-    }
-
-    .blog-content-body blockquote {
-      border-left: 4px solid var(--bc-quote-border);
-      padding-left: 1.5em;
-      color: var(--bc-quote-text);
-      font-style: italic;
-      margin: 2em 0;
-      background: rgba(128, 128, 128, 0.05);
-      padding: 1em 1em 1em 1.5em;
-      border-radius: 0 12px 12px 0;
-    }
-
-    .blog-content-body code {
-      background-color: var(--bc-code-bg);
-      padding: 0.2em 0.4em;
-      border-radius: 6px;
-      font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-      font-size: 0.9em;
-      color: var(--bc-code-text);
-    }
-
-    .blog-content-body pre {
-      background-color: var(--bc-pre-bg);
-      padding: 1.5em;
-      border-radius: 12px;
-      overflow-x: auto;
-      margin: 2em 0;
-      border: 1px solid var(--bc-pre-border);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    }
-
-    .blog-content-body pre code {
-      background-color: transparent;
-      padding: 0;
-      border-radius: 0;
-      color: var(--bc-pre-text);
-      font-size: 0.9em;
-      font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-    }
-
-    .blog-content-body a {
-      color: var(--bc-link);
-      text-decoration: underline;
-      text-underline-offset: 4px;
-      transition: opacity 0.2s;
-    }
-    .blog-content-body a:hover {
-      opacity: 0.8;
-    }
-
-    .blog-content-body img {
-      border-radius: 12px;
-      margin: 2em auto;
-      display: block;
-      max-width: 100%;
-      border: 1px solid var(--bc-img-border);
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    }
-    
-    .blog-content-body hr {
-      border-color: var(--bc-quote-border);
-      margin: 3em 0;
     }
   `;
 
-  // Base styling classes for the card container
-  const containerClasses = forceLight
-    ? `bg-white rounded-[2rem] p-8 md:p-16 border border-slate-200 ${shadowClass} relative overflow-hidden group transition-colors duration-500 blog-content-wrapper`
-    : `bg-white dark:bg-[#050914] rounded-[2rem] p-8 md:p-16 border border-slate-200 dark:border-slate-800 ${shadowClass} relative overflow-hidden group transition-colors duration-500 blog-content-wrapper`;
+  const customStyles = `
+    .blog-content-wrapper {
+      /* LIGHT MODE VARIABLES */
+      --bc-bg: #ffffff;
+      --bc-text: #374151;
+      --bc-heading: #111827;
+      --bc-bold: #000000;
+      --bc-quote-bg: #f3f4f6;
+      --bc-quote-border: #e5e7eb;
+      --bc-link: #2563eb;
+
+      /* 【核心修改】代码块变量：无论黑白模式，统一使用深色背景 #222222 */
+      --bc-code-bg: #222222;
+      --bc-code-text: #f8f8f2; /* 代码文字统一为浅色，保证在 #222 背景上可见 */
+    }
+
+    ${forceLight ? '' : darkModeStyles}
+
+    .blog-content-body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 1.125rem;
+      line-height: 1.8;
+      color: var(--bc-text); 
+      overflow-wrap: break-word;
+    }
+
+    /* --- 布局修复 --- */
+    .blog-content-body p { 
+        margin-bottom: 1.5em !important; 
+        margin-top: 0 !important; 
+    }
+    
+    .blog-content-body h1, .blog-content-body h2, .blog-content-body h3 {
+        color: var(--bc-heading) !important;
+        font-weight: 700;
+        margin-top: 2em !important;
+        margin-bottom: 0.75em !important;
+    }
+
+    /* --- 代码块适配 (Gemini + Legacy Quill 兼容) --- */
+    /* 包含: code-block, .code-container, pre, .ql-code-block-container */
+    .blog-content-body code-block,
+    .blog-content-body .code-container,
+    .blog-content-body pre,
+    .blog-content-body .ql-code-block-container {
+        display: block;
+        background-color: var(--bc-code-bg) !important; /* 强制 #222 */
+        color: var(--bc-code-text) !important;          /* 强制浅色字 */
+        border: none !important;                        /* 去掉边框 */
+        border-radius: 8px !important;                  /* 稍微给点圆角，不然 #222 色块太生硬，如果完全不要圆角改为 0 */
+        padding: 1.25rem;                               /* 增加内边距 */
+        margin: 1.5rem 0;
+        overflow-x: auto;
+        
+        /* 字体设置：Fira Code, Menlo, monospace */
+        font-family: 'Fira Code', 'Menlo', monospace; 
+        font-size: 1.1em;                               /* 字号加大 */
+        line-height: 1.6;
+    }
+
+    /* 针对 Quill 的单行代码块特殊处理 */
+    .blog-content-body .ql-code-block {
+        font-family: 'Fira Code', 'Menlo', monospace;
+        font-size: 1.1em;
+        line-height: 1.6;
+        background-color: transparent !important; /* 避免嵌套背景 */
+        color: inherit !important;
+        border: none !important;
+    }
+
+    /* 隐藏代码块头部丑陋的装饰条或按钮 */
+    .blog-content-body .buttons, 
+    .blog-content-body mat-icon,
+    .blog-content-body .mat-mdc-button-touch-target { 
+        display: none !important; 
+    }
+    
+    /* 代码块头部装饰文字 */
+    .blog-content-body .code-block-decoration {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* 浅色分割线 */
+        padding-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+        font-size: 0.9em;
+        color: var(--bc-code-text); /* 跟随代码颜色 */
+        opacity: 0.6;
+    }
+
+    /* 链接样式 */
+    .blog-content-body a {
+        color: var(--bc-link);
+        text-decoration: underline;
+        text-underline-offset: 4px;
+    }
+    
+    /* 引用样式 */
+    .blog-content-body blockquote {
+        border-left: 4px solid var(--bc-quote-border);
+        padding-left: 1rem;
+        font-style: italic;
+        background: var(--bc-quote-bg);
+        padding: 1rem;
+        border-radius: 0 8px 8px 0;
+    }
+    
+    /* 粗体修正 */
+    .blog-content-body b, .blog-content-body strong {
+        color: var(--bc-bold);
+        font-weight: 700;
+    }
+  `;
+
+  const containerClasses = `rounded-[2rem] p-8 md:p-14 relative overflow-hidden group blog-content-wrapper shadow-xl ${shadowClass || ''}`;
 
   return (
-    <div className={containerClasses}>
+    <div className={containerClasses} style={{ backgroundColor: 'var(--bc-bg)' }}>
       <style>{customStyles}</style>
-
-      {/* Subtle decorative gradient - Only if clean is false */}
-      {!clean && (
-        <>
-          <div
-            className={`absolute -top-32 -right-32 w-96 h-96 rounded-full blur-[100px] pointer-events-none transition-colors duration-700 ${forceLight ? 'bg-pink-500/10' : 'bg-primary-500/5'}`}
-          ></div>
-          <div
-            className={`absolute -bottom-32 -left-32 w-96 h-96 rounded-full blur-[100px] pointer-events-none transition-colors duration-700 ${forceLight ? 'bg-rose-500/10' : 'bg-blue-500/5'}`}
-          ></div>
-        </>
-      )}
-
       <div
+        ref={contentRef}
         className="blog-content-body relative z-10"
         dangerouslySetInnerHTML={{ __html: renderedContent }}
       />

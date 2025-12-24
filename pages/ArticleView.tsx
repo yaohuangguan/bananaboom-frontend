@@ -7,6 +7,8 @@ import { BlogContent } from '../components/BlogContent';
 import { CommentsSection } from '../components/CommentsSection';
 import { ExternalFramePost } from '../components/ExternalFramePost';
 import { formatUserDate } from '../utils/date';
+import { useTranslation } from '../i18n/LanguageContext';
+import { toast } from '../components/Toast';
 
 interface ArticleViewProps {
   onBack: () => void;
@@ -21,6 +23,7 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
   currentUser,
   onLoginRequest
 }) => {
+  const { t } = useTranslation();
   // Use slug from params
   const { slug } = useParams<{ slug: string }>();
 
@@ -29,6 +32,10 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isCopied, setIsCopied] = useState(false);
   const [isImageError, setIsImageError] = useState(false);
+
+  // Like State
+  const [likeCount, setLikeCount] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
 
   // Fetch related posts
   const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
@@ -51,6 +58,7 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
           if (post) {
             setBlog(post);
             setContent(post.content || '');
+            setLikeCount(post.likes || 0);
 
             // Fetch related if tags exist
             if (post.tags && post.tags.length > 0) {
@@ -69,6 +77,7 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
             const post = data[0];
             setBlog(post);
             setContent(post.content || '');
+            setLikeCount(post.likes || 0);
           } else {
             setContent('<p>Post not found.</p>');
           }
@@ -84,34 +93,76 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
     fetchPost();
   }, [slug]);
 
+  // Check Local Storage for Likes
+  useEffect(() => {
+    if (!blog) return;
+    const savedLikes = localStorage.getItem('liked_posts');
+    if (savedLikes) {
+      try {
+        const likesSet = new Set(JSON.parse(savedLikes));
+        setIsLiked(likesSet.has(blog._id));
+      } catch (e) {}
+    }
+  }, [blog]);
+
   const handleCopyLink = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
       setIsCopied(true);
+      toast.success(t.articleView.copied);
       setTimeout(() => setIsCopied(false), 2000);
     });
   };
 
+  const handleToggleLike = async () => {
+    if (!blog) return;
+    const id = blog._id;
+
+    try {
+      // Optimistic UI Update
+      if (isLiked) {
+        setLikeCount((prev) => Math.max(0, prev - 1));
+        setIsLiked(false);
+        await apiService.unlikePost(id);
+
+        // Update Storage
+        const savedLikes = localStorage.getItem('liked_posts');
+        const likesSet = new Set(savedLikes ? JSON.parse(savedLikes) : []);
+        likesSet.delete(id);
+        localStorage.setItem('liked_posts', JSON.stringify(Array.from(likesSet)));
+      } else {
+        setLikeCount((prev) => prev + 1);
+        setIsLiked(true);
+        // Trigger heart animation here if we had one
+        await apiService.likePost(id);
+
+        // Update Storage
+        const savedLikes = localStorage.getItem('liked_posts');
+        const likesSet = new Set(savedLikes ? JSON.parse(savedLikes) : []);
+        likesSet.add(id);
+        localStorage.setItem('liked_posts', JSON.stringify(Array.from(likesSet)));
+      }
+    } catch (e) {
+      console.error('Like failed', e);
+      // Revert on error could be implemented here
+    }
+  };
+
   // --- 🌟 SEO: 准备 JSON-LD 结构化数据 ---
-  // 只有当 blog 数据存在时才生成
   const structuredData = blog
     ? {
         '@context': 'https://schema.org',
         '@type': 'BlogPosting',
         headline: blog.name,
         description: blog.info ? blog.info.substring(0, 160) : `Read ${blog.name} on Orion.`,
-        // 确保有默认图片，Google 建议文章必须有图片
-        image: [
-          blog.image || 'https://www.ps5.space/og-image.png' // ⚠️ 请替换为你网站真实的默认封面图 URL
-        ],
-        // 必须是 ISO 8601 格式
+        image: [blog.image || 'https://www.ps5.space/og-image.png'],
         datePublished: new Date(blog.createdDate || blog.date).toISOString(),
         dateModified: new Date(blog.updatedDate || blog.createdDate || blog.date).toISOString(),
         author: [
           {
             '@type': 'Person',
             name: blog.author || 'Sam',
-            url: 'https://www.ps5.space/profile' // ⚠️ 替换为你的关于页面
+            url: 'https://www.ps5.space/profile'
           }
         ],
         publisher: {
@@ -119,7 +170,7 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
           name: 'Orion Journals',
           logo: {
             '@type': 'ImageObject',
-            url: 'https://www.ps5.space/og-image.png' // ⚠️ 替换为你的 Logo URL
+            url: 'https://www.ps5.space/og-image.png'
           }
         },
         mainEntityOfPage: {
@@ -129,8 +180,8 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
       }
     : null;
 
-  const containerClass =
-    'container mx-auto px-6 py-24 pt-32 max-w-4xl animate-fade-in relative z-10';
+  // Removed container and max-w-7xl to allow full width
+  const containerClass = 'w-full px-4 md:px-8 py-24 pt-32 animate-fade-in relative z-10';
 
   if (!blog && !isLoading) {
     return (
@@ -147,12 +198,7 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
     <article className={containerClass}>
       {blog && (
         <Helmet>
-          {/* 1. Title: 核心关键词(文章名)最前，品牌(Orion Journals)殿后。
-     这种结构 Google 权重最高，且 "Journals" 这个词中英文语境都显得很高级。 */}
           <title>{`${blog.name} | Orion Journals`}</title>
-
-          {/* 2. Keywords (新增): 这是一个隐藏的 SEO 加分项。
-     直接把文章的 tags 拿出来做关键词，搜索引擎超爱这个。 */}
           <meta
             name="keywords"
             content={
@@ -161,11 +207,6 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
                 : 'Sam, Engineering, Blog, Life, Orion'
             }
           />
-
-          {/* 3. Description: 智能摘要逻辑。
-     - 优先用 info (你写的简介)。
-     - 如果没有 info，自动生成一段包含 "Author" + "Topic" 的双语通用句式。
-     - 强制截断 160 字符，防止在搜索结果页被省略号截断关键信息。 */}
           <meta
             name="description"
             content={
@@ -174,8 +215,6 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
                 : `Read "${blog.name}" by ${blog.author || 'Sam'}. A digital memoir on engineering, code, and life recorded on Orion.`
             }
           />
-
-          {/* 4. Open Graph / Social Cards: 让你的链接发在微信、Twitter、Slack 里带有漂亮的预览卡片 */}
           <meta property="og:site_name" content="Orion" />
           <meta property="og:type" content="article" />
           <meta property="og:title" content={`${blog.name} | Orion Journals`} />
@@ -190,82 +229,116 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
             property="og:url"
             content={typeof window !== 'undefined' ? window.location.href : ''}
           />
-
-          {/* 5. Article Author (可选，但对 SEO 很友好): 告诉搜索引擎作者是谁 */}
           <meta property="article:author" content={blog.author || 'Sam'} />
-
-          {/* 6. Image: 有图出图，无图拉倒 (或者你可以设置一个默认的 Orion Logo 图片) */}
           {blog.image && <meta property="og:image" content={blog.image} />}
+          {structuredData && (
+            <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+          )}
         </Helmet>
       )}
 
-      <button
-        onClick={onBack}
-        className="group mb-12 flex items-center text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
-      >
-        <div className="w-8 h-8 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur flex items-center justify-center mr-3 group-hover:bg-primary-50 dark:group-hover:bg-primary-900/20 transition-colors shadow-sm">
-          <i className="fas fa-arrow-left text-xs transition-transform group-hover:-translate-x-1"></i>
-        </div>
-        Back to Insights
-      </button>
+      {/* Back Button Wrapper (Centered max width for navigation consistency) */}
+      <div className="container mx-auto max-w-[1800px] mb-8">
+        <button
+          onClick={onBack}
+          className="group flex items-center text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
+        >
+          <div className="w-8 h-8 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur flex items-center justify-center mr-3 group-hover:bg-primary-50 dark:group-hover:bg-primary-900/20 transition-colors shadow-sm">
+            <i className="fas fa-arrow-left text-xs transition-transform group-hover:-translate-x-1"></i>
+          </div>
+          Back to Insights
+        </button>
+      </div>
 
       {blog && (
-        <header className="mb-16 text-center max-w-3xl mx-auto">
-          <div className="flex justify-center gap-2 mb-8">
-            {blog.tags.map((tag) => (
-              <span
-                key={tag}
-                className="px-4 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-widest"
-              >
-                {tag}
-              </span>
-            ))}
-            {blog.isPrivate && (
-              <span className="px-4 py-1.5 rounded-full bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                <i className="fas fa-lock text-[10px]"></i> Encrypted
-              </span>
-            )}
-          </div>
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-8 text-slate-900 dark:text-white leading-tight">
-            {blog.name}
-          </h1>
+        <div className="mb-12 relative w-full">
+          {/* Header Card Container - Distinct Background - Full Width Available */}
+          <div className="bg-slate-100 dark:bg-[#111] rounded-[2.5rem] p-8 md:p-16 text-center border border-slate-200 dark:border-slate-900 shadow-sm relative overflow-hidden w-full">
+            {/* Ambient Background Effect */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-4xl bg-gradient-to-b from-white/40 to-transparent dark:from-white/5 dark:to-transparent pointer-events-none rounded-full blur-3xl opacity-50"></div>
 
-          <div className="flex flex-col items-center gap-4 text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-widest">
-            {/* User Info */}
-            {blog.user && (
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden ring-4 ring-slate-50 dark:ring-slate-900">
-                  <img
-                    src={
-                      blog.user.photoURL ||
-                      `https://ui-avatars.com/api/?name=${blog.user.displayName}&background=random`
-                    }
-                    alt={blog.user.displayName}
-                    className="w-full h-full object-cover"
-                  />
+            <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
+              {/* Tags */}
+              <div className="flex flex-wrap justify-center gap-2 mb-8">
+                {blog.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-3 py-1 rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold uppercase tracking-widest border border-slate-200 dark:border-slate-700 shadow-sm"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {blog.isPrivate && (
+                  <span className="px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 border border-rose-200 dark:border-rose-800">
+                    <i className="fas fa-lock text-[9px]"></i> Encrypted
+                  </span>
+                )}
+              </div>
+
+              {/* Title */}
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-slate-900 dark:text-white mb-8 leading-tight tracking-tight drop-shadow-sm">
+                {blog.name}
+              </h1>
+
+              {/* Meta Data Divider */}
+              <div className="w-16 h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent rounded-full mb-10 opacity-80"></div>
+
+              {/* Author & Date Box */}
+              <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
+                {/* Author */}
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-white dark:bg-slate-800 p-0.5 shadow-md ring-1 ring-slate-200 dark:ring-slate-700">
+                    <img
+                      src={
+                        blog.user?.photoURL ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(blog.user?.displayName || blog.author || 'Author')}`
+                      }
+                      className="w-full h-full rounded-full object-cover"
+                      alt={blog.author}
+                    />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-0.5">
+                      Author
+                    </p>
+                    <p className="font-bold text-slate-900 dark:text-white text-base">
+                      {blog.user?.displayName || blog.author}
+                    </p>
+                  </div>
                 </div>
-                <span className="font-bold text-slate-800 dark:text-slate-200">
-                  {blog.user.displayName}
-                </span>
-              </div>
-            )}
 
-            <div className="flex items-center gap-6 mt-2">
-              {/* Author Info */}
-              <div className="flex items-center gap-2">
-                <i className="fas fa-pen-nib text-xs opacity-50"></i>
-                <span>{blog.author}</span>
+                {/* Date */}
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-amber-500 shadow-md ring-1 ring-slate-200 dark:ring-slate-700 text-lg">
+                    <i className="far fa-calendar-alt"></i>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-0.5">
+                      Published
+                    </p>
+                    <p className="font-bold text-slate-900 dark:text-white text-base">
+                      {formatUserDate(blog.createdDate || blog.date, currentUser, 'detailed')}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <span className="opacity-30">|</span>
-              <span>{formatUserDate(blog.createdDate || blog.date, currentUser, 'detailed')}</span>
+
+              {/* Last Updated (Optional) */}
+              {blog.updatedDate && blog.updatedDate !== (blog.createdDate || blog.date) && (
+                <div className="mt-6 text-[10px] font-mono text-slate-400 bg-white/50 dark:bg-slate-800/50 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
+                  <i className="fas fa-edit mr-2 text-amber-500"></i>
+                  Last Updated: {formatUserDate(blog.updatedDate, currentUser, 'detailed')}
+                </div>
+              )}
             </div>
           </div>
-        </header>
+        </div>
       )}
 
       {blog?.iframeUrl ? (
         <ExternalFramePost src={blog.iframeUrl} title={blog.name} />
       ) : (
+        // Max width wrapper for text readability, but parent is full width
         <div className="max-w-4xl mx-auto">
           {/* Featured Image */}
           {blog?.image && !isImageError ? (
@@ -288,22 +361,54 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
         </div>
       )}
 
-      {/* Share Section */}
-      <div className="max-w-3xl mx-auto mt-20 pt-10 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center mb-24">
-        <div className="text-slate-400 text-sm font-mono uppercase tracking-widest">
-          End of Transmission
+      {/* Share & Like Section */}
+      <div className="max-w-3xl mx-auto mt-20 pt-12 border-t border-slate-200 dark:border-slate-800 mb-24">
+        <div className="bg-slate-50 dark:bg-slate-900/50 rounded-[2rem] p-8 border border-slate-200 dark:border-slate-800 text-center relative overflow-hidden group">
+          {/* Decorative Background Glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-primary-500/10 rounded-full blur-3xl group-hover:bg-primary-500/20 transition-colors"></div>
+
+          <div className="relative z-10">
+            <div className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-slate-400 mb-3">
+              {t.articleView.ctaTitle}
+            </div>
+            <p className="text-base text-slate-600 dark:text-slate-300 font-light max-w-lg mx-auto mb-8 leading-relaxed">
+              {t.articleView.ctaMessage}
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              {/* Like Button */}
+              <button
+                onClick={handleToggleLike}
+                className={`flex items-center gap-3 px-8 py-3.5 rounded-full text-sm font-bold uppercase tracking-wider transition-all duration-300 transform active:scale-95 shadow-lg ${
+                  isLiked
+                    ? 'bg-rose-500 text-white shadow-rose-500/30 ring-2 ring-rose-300 dark:ring-rose-900'
+                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-rose-50 dark:hover:bg-slate-700 hover:text-rose-500 border border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                <i className={`fas fa-heart text-lg ${isLiked ? 'animate-pulse' : ''}`}></i>
+                <span>{isLiked ? t.articleView.liked : t.articleView.like}</span>
+                <span
+                  className={`ml-1 px-2 py-0.5 rounded-full text-xs ${isLiked ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-700'}`}
+                >
+                  {likeCount}
+                </span>
+              </button>
+
+              {/* Share Button */}
+              <button
+                onClick={handleCopyLink}
+                className={`flex items-center gap-3 px-8 py-3.5 rounded-full text-sm font-bold uppercase tracking-wider transition-all duration-300 transform active:scale-95 ${
+                  isCopied
+                    ? 'bg-green-500 text-white shadow-lg shadow-green-500/20'
+                    : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700'
+                }`}
+              >
+                <i className={`fas ${isCopied ? 'fa-check' : 'fa-share-alt'} text-lg`}></i>
+                <span>{isCopied ? t.articleView.copied : t.articleView.share}</span>
+              </button>
+            </div>
+          </div>
         </div>
-        <button
-          onClick={handleCopyLink}
-          className={`flex items-center gap-3 px-6 py-3 rounded-full text-sm font-bold uppercase tracking-wider transition-all ${
-            isCopied
-              ? 'bg-green-500 text-white shadow-lg shadow-green-500/20'
-              : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
-          }`}
-        >
-          <i className={`fas ${isCopied ? 'fa-check' : 'fa-link'}`}></i>
-          {isCopied ? 'Link Copied' : 'Share Link'}
-        </button>
       </div>
 
       {/* Related Posts Section */}

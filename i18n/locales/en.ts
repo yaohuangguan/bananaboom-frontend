@@ -72,6 +72,15 @@ export const en = {
     clearFilters: 'Clear Filters',
     page: 'PAGE'
   },
+  articleView: {
+    ctaTitle: 'End of Transmission',
+    ctaMessage:
+      'Resonating with this signal? Boost the frequency with a like, or broadcast the link to your network.',
+    like: 'Like',
+    liked: 'Liked',
+    share: 'Share Link',
+    copied: 'Link Copied'
+  },
   auditLog: {
     title: 'System Activity Log',
     subtitle: 'Tracking all operational commands within the mainframe.',
@@ -318,7 +327,7 @@ export const en = {
           desc: 'Administrative controls and monitoring.',
           features: [
             'RBAC: Granular control over Users, Roles, and Permissions.',
-            'Audit Log: Comprehensive tracking of all system actions.',
+            'Audit Log: Comprehensive tracking of all system actions (Login, Delete, Edit).',
             'Resource Monitor: Real-time usage stats for Cloudinary (Storage, Bandwidth).'
           ]
         },

@@ -71,6 +71,14 @@ export const zh = {
     clearFilters: '清除筛选',
     page: '页码'
   },
+  articleView: {
+    ctaTitle: '传输结束',
+    ctaMessage: '如果这段信号引起了你的共鸣，请点亮红心，或将链接广播给更多探索者。',
+    like: '点赞',
+    liked: '已赞',
+    share: '分享链接',
+    copied: '链接已复制'
+  },
   auditLog: {
     title: '系统活动日志',
     subtitle: '追踪主机内所有操作指令。',
@@ -517,7 +525,7 @@ export const zh = {
           fallbackTitle: '优先级逻辑 (Fallback)',
           fallback1: 'AI 优先参考您最近在「运动空间」记录的体重数据。',
           fallback2:
-            '如果您今日在饮食记录中明确设置了临时目标（如“增肌”），AI 將优先基于该目标推荐，而非个人档案中的长期目标。',
+            '如果您今日在饮食记录中明确设置了临时目标（如“增肌”），AI 將优先基于该目标推荐，而非个人檔案中的长期目标。',
           error: '营养师 AI 正忙，请稍后再试。'
         },
         form: {
