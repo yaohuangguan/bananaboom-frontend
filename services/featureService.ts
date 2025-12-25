@@ -1,14 +1,29 @@
-
 import { fetchClient, API_BASE_URL } from './core';
 import { toast } from '../components/Toast';
-import { ChatMessage, Todo, FitnessRecord, FitnessStats, PeriodRecord, PeriodResponse, Footprint, FootprintStats, Menu, DrawResponse, DailyListResponse, DailyListType, SmartMenuResponse, CloudinaryUsage, Conversation } from '../types';
+import {
+  ChatMessage,
+  Todo,
+  FitnessRecord,
+  FitnessStats,
+  PeriodRecord,
+  PeriodResponse,
+  Footprint,
+  FootprintStats,
+  Menu,
+  DrawResponse,
+  DailyListResponse,
+  DailyListType,
+  SmartMenuResponse,
+  CloudinaryUsage,
+  Conversation
+} from '../types';
 
 export const featureService = {
   // --- Chat ---
   getPublicChatHistory: async (roomName: string): Promise<ChatMessage[]> => {
     try {
       const res = await fetchClient<any[]>(`/chat/public/${roomName}`);
-      return res.map(msg => ({
+      return res.map((msg) => ({
         message: msg.content || msg.message,
         author: msg.user?.name || msg.user?.displayName || 'Unknown',
         userId: msg.user?.id || msg.user?._id,
@@ -18,7 +33,7 @@ export const featureService = {
         room: msg.room
       }));
     } catch (e) {
-      console.warn("Public chat history fetch failed", e);
+      console.warn('Public chat history fetch failed', e);
       return [];
     }
   },
@@ -26,29 +41,29 @@ export const featureService = {
   getPrivateChatHistory: async (targetUserId: string): Promise<ChatMessage[]> => {
     try {
       const res = await fetchClient<any[]>(`/chat/private/${targetUserId}`);
-      return res.map(msg => {
+      return res.map((msg) => {
         let sender: any = {};
         let senderId = '';
-        
+
         if (msg.user && typeof msg.user === 'object') {
-            sender = msg.user;
+          sender = msg.user;
+          senderId = sender._id || sender.id;
+          if (sender.id && typeof sender.id === 'object') {
+            sender = sender.id;
             senderId = sender._id || sender.id;
-            if (sender.id && typeof sender.id === 'object') {
-                sender = sender.id;
-                senderId = sender._id || sender.id;
-            }
+          }
         } else if (msg.fromUser && typeof msg.fromUser === 'object') {
-             sender = msg.fromUser;
-             senderId = sender._id || sender.id;
+          sender = msg.fromUser;
+          senderId = sender._id || sender.id;
         } else {
-            senderId = msg.fromUserId || msg.userId || (typeof msg.user === 'string' ? msg.user : '');
+          senderId = msg.fromUserId || msg.userId || (typeof msg.user === 'string' ? msg.user : '');
         }
 
         let receiverId = '';
         if (msg.toUser && typeof msg.toUser === 'object') {
-             receiverId = msg.toUser._id || msg.toUser.id;
+          receiverId = msg.toUser._id || msg.toUser.id;
         } else {
-             receiverId = msg.toUserId || msg.toUser || msg.receiver;
+          receiverId = msg.toUserId || msg.toUser || msg.receiver;
         }
 
         return {
@@ -63,13 +78,13 @@ export const featureService = {
         };
       });
     } catch (e) {
-      console.warn("Private chat history fetch failed", e);
+      console.warn('Private chat history fetch failed', e);
       return [];
     }
   },
 
   // --- AI Chat History (Session Based) ---
-  
+
   // Get List of Conversations
   getAiConversations: async (): Promise<Conversation[]> => {
     return await fetchClient<Conversation[]>('/chat/ai/conversations');
@@ -78,17 +93,22 @@ export const featureService = {
   // Get messages for a specific session
   getAiChatHistory: async (sessionId?: string, page = 1, limit = 20): Promise<any[]> => {
     const params = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString()
+      page: page.toString(),
+      limit: limit.toString()
     });
     if (sessionId) {
-        params.append('sessionId', sessionId);
+      params.append('sessionId', sessionId);
     }
     return await fetchClient<any[]>(`/chat/ai?${params.toString()}`);
   },
 
   // Save message to specific session
-  saveAiChatMessage: async (text: string, role: 'user' | 'ai', sessionId: string, image?: string): Promise<any> => {
+  saveAiChatMessage: async (
+    text: string,
+    role: 'user' | 'ai',
+    sessionId: string,
+    image?: string
+  ): Promise<any> => {
     return await fetchClient('/chat/ai/save', {
       method: 'POST',
       body: JSON.stringify({ text, role, sessionId, image })
@@ -111,13 +131,13 @@ export const featureService = {
 
   // --- Second Brain (God Mode) Streaming ---
   askLifeStream: async (
-    prompt: string, 
-    history: { role: 'user' | 'assistant', content: string }[], 
+    prompt: string,
+    history: { role: 'user' | 'assistant'; content: string }[],
     onChunk: (text: string) => void,
     image?: string | null
   ): Promise<void> => {
     const token = localStorage.getItem('auth_token');
-    if (!token) throw new Error("No auth token");
+    if (!token) throw new Error('No auth token');
 
     try {
       // Updated endpoint path to include /ai prefix
@@ -139,7 +159,7 @@ export const featureService = {
       if (!response.body) return;
 
       const reader = response.body.getReader();
-      const decoder = new TextDecoder("utf-8");
+      const decoder = new TextDecoder('utf-8');
 
       while (true) {
         const { done, value } = await reader.read();
@@ -148,7 +168,7 @@ export const featureService = {
         onChunk(chunk);
       }
     } catch (e) {
-      console.error("Streaming error:", e);
+      console.error('Streaming error:', e);
       throw e;
     }
   },
@@ -158,11 +178,17 @@ export const featureService = {
     try {
       return await fetchClient<Todo[]>('/todo');
     } catch (e) {
-       return [];
+      return [];
     }
   },
 
-  addTodo: async (todo: string, description?: string, targetDate?: string, images?: string[], type?: 'wish' | 'routine'): Promise<Todo[]> => {
+  addTodo: async (
+    todo: string,
+    description?: string,
+    targetDate?: string,
+    images?: string[],
+    type?: 'wish' | 'routine'
+  ): Promise<Todo[]> => {
     try {
       const res = await fetchClient<Todo[]>('/todo', {
         method: 'POST',
@@ -195,7 +221,7 @@ export const featureService = {
   },
 
   toggleTodo: async (id: string): Promise<Todo[]> => {
-    throw new Error("Use updateTodo instead"); 
+    throw new Error('Use updateTodo instead');
   },
 
   // --- Hot Search & News (Unified Daily List) ---
@@ -215,11 +241,17 @@ export const featureService = {
   },
 
   // --- Fitness ---
-  updateFitnessGoal: async (goal: 'cut' | 'bulk' | 'maintain', userId?: string): Promise<{ success: boolean, msg: string, goal: string }> => {
-    return await fetchClient<{ success: boolean, msg: string, goal: string }>('/users/fitness-goal', {
-      method: 'PUT',
-      body: JSON.stringify({ goal, userId })
-    });
+  updateFitnessGoal: async (
+    goal: 'cut' | 'bulk' | 'maintain',
+    userId?: string
+  ): Promise<{ success: boolean; msg: string; goal: string }> => {
+    return await fetchClient<{ success: boolean; msg: string; goal: string }>(
+      '/users/fitness-goal',
+      {
+        method: 'PUT',
+        body: JSON.stringify({ goal, userId })
+      }
+    );
   },
 
   getFitnessRecords: async (start?: string, end?: string): Promise<FitnessRecord[]> => {
@@ -251,7 +283,10 @@ export const featureService = {
     return await fetchClient<PeriodResponse>(`/period${q}`);
   },
 
-  savePeriodRecord: async (data: Partial<PeriodRecord>, targetUserId?: string): Promise<PeriodResponse> => {
+  savePeriodRecord: async (
+    data: Partial<PeriodRecord>,
+    targetUserId?: string
+  ): Promise<PeriodResponse> => {
     const body = { ...data, targetUserId };
     if (data._id) {
       return await fetchClient<PeriodResponse>(`/period/${data._id}`, {
@@ -273,10 +308,12 @@ export const featureService = {
   },
 
   // --- Footprint / Star Map ---
-  getFootprints: async (status?: string): Promise<{ stats: FootprintStats, data: Footprint[] }> => {
+  getFootprints: async (status?: string): Promise<{ stats: FootprintStats; data: Footprint[] }> => {
     const params = new URLSearchParams();
     if (status) params.append('status', status);
-    return await fetchClient<{ stats: FootprintStats, data: Footprint[] }>(`/footprints?${params.toString()}`);
+    return await fetchClient<{ stats: FootprintStats; data: Footprint[] }>(
+      `/footprints?${params.toString()}`
+    );
   },
 
   createFootprint: async (data: Partial<Footprint>): Promise<Footprint> => {
@@ -331,7 +368,10 @@ export const featureService = {
   },
 
   confirmMenu: async (id: string, mealTime?: string): Promise<any> => {
-    return await fetchClient(`/menu/confirm/${id}`, { method: 'POST', body: JSON.stringify({ mealTime }) });
+    return await fetchClient(`/menu/confirm/${id}`, {
+      method: 'POST',
+      body: JSON.stringify({ mealTime })
+    });
   },
 
   getSmartMenuRecommendation: async (): Promise<SmartMenuResponse> => {
@@ -353,5 +393,21 @@ export const featureService = {
   // --- Cloudinary Usage ---
   getCloudinaryUsage: async (): Promise<CloudinaryUsage> => {
     return await fetchClient<CloudinaryUsage>('/cloudinary/usage');
+  },
+
+  // --- R2 Resource Management ---
+  getR2Files: async (limit = 20, cursor?: string): Promise<any> => {
+    const params = new URLSearchParams({ limit: limit.toString() });
+    if (cursor) params.append('cursor', cursor);
+    // Returning any here to allow for inconsistent backend responses (files vs objects)
+    return await fetchClient(`/upload/list?${params.toString()}`);
+  },
+
+  deleteR2File: async (key: string): Promise<void> => {
+    await fetchClient('/upload', {
+      method: 'DELETE',
+      body: JSON.stringify({ key })
+    });
+    toast.success('File deleted from R2.');
   }
 };

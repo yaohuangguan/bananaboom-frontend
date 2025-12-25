@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Tag } from '../types';
 
-export type TagTheme = 'amber' | 'rose' | 'blue' | 'slate';
+export type TagTheme = 'amber' | 'rose' | 'blue' | 'slate' | 'primary';
 
 interface TagCloudProps {
   tags: Tag[];
@@ -58,6 +58,13 @@ export const TagCloud: React.FC<TagCloudProps> = ({
       inactive: 'bg-slate-100 text-slate-500 hover:bg-slate-200 border-transparent',
       count: 'text-slate-400',
       labelIcon: 'text-slate-500'
+    },
+    primary: {
+      active: 'bg-primary-500 text-white shadow-lg shadow-primary-500/20 border-primary-500',
+      inactive:
+        'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-primary-50 dark:hover:bg-slate-700 hover:text-primary-600 border-transparent',
+      count: 'text-primary-500',
+      labelIcon: 'text-primary-500'
     }
   };
 

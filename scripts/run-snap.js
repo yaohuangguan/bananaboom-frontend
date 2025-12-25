@@ -1,64 +1,82 @@
 import { run } from 'react-snap';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer'; // 本地开发用
 import path from 'path';
 import fs from 'fs';
 import process from 'process';
 
+// 判断是否在 Vercel 环境
+const isVercel = process.env.VERCEL === '1';
+
 (async () => {
   try {
-    // 1. 获取原始路径 (Windows下是反斜杠)
-    // 例如: E:\Coding\...\chrome.exe
-    let rawPath = puppeteer.executablePath();
+    let executablePath;
+    let launchArgs = [];
 
-    // 使用 path.resolve 确保它是绝对路径且规范化
-    let standardPath = path.resolve(rawPath);
+    if (isVercel) {
+      console.log('☁️ Detected Vercel Environment. Loading @sparticuz/chromium...');
 
-    console.log(`🔍 Checking existence of: ${standardPath}`);
+      // 动态导入，防止本地开发报错
+      const chromium = await import('@sparticuz/chromium').then((m) => m.default);
 
-    // 2. 🔥 关键修改：在转换斜杠之前，先检查文件是否存在
-    // 这样使用的是 Windows 最喜欢的原生路径格式
-    if (!fs.existsSync(standardPath)) {
-      console.error(`❌ Chrome file NOT found at: ${standardPath}`);
-      console.error(`💡 Suggestion: Run 'npx puppeteer browsers install chrome' manually.`);
-      throw new Error('Chrome executable missing');
-    }
+      // Vercel 必须用这个专用图形库，它解决了 libnspr4.so 缺失的问题
+      // 这里的 executablePath() 会解压出一个能在极简 Linux 上跑的浏览器
+      executablePath = await chromium.executablePath();
 
-    console.log('✅ Chrome executable found!');
+      // Vercel 推荐的参数
+      launchArgs = chromium.args;
+    } else {
+      console.log('💻 Detected Local Environment. Using Standard Puppeteer...');
 
-    // 3. 准备传给 react-snap 的路径
-    let snapPath = standardPath;
+      // 本地逻辑保持不变
+      executablePath = puppeteer.executablePath();
+      executablePath = path.resolve(executablePath);
 
-    // 🩹 Windows 兼容：react-snap 内部调用 shell 时不喜欢反斜杠
-    if (process.platform === 'win32') {
-      snapPath = standardPath.split(path.sep).join('/');
-    }
+      // Windows 修复
+      if (process.platform === 'win32') {
+        executablePath = executablePath.split(path.sep).join('/');
+      }
 
-    console.log(`🚀 Feeding react-snap with: ${snapPath}`);
-
-    // 4. 运行 react-snap
-    await run({
-      puppeteerExecutablePath: snapPath,
-
-      source: 'dist',
-      destination: 'dist',
-
-      include: ['/', '/blogs'],
-
-      puppeteerArgs: [
+      // 本地参数
+      launchArgs = [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--single-process',
+        '--disable-gpu'
+      ];
+    }
+
+    console.log(`🚀 Final Executable Path: ${executablePath}`);
+
+    // 双重检查 (Vercel 上 sparticuz 会自动处理路径，通常不需要 fs.check，但保留无妨)
+    if (!isVercel && !fs.existsSync(executablePath)) {
+      throw new Error(`Chrome executable missing at ${executablePath}`);
+    }
+
+    // 运行 react-snap
+    await run({
+      puppeteerExecutablePath: executablePath,
+      source: 'dist',
+      destination: 'dist',
+      include: ['/', '/blogs'],
+
+      // 合并参数
+      puppeteerArgs: [
+        ...launchArgs,
+        '--single-process', // Vercel 必须单进程
         '--no-zygote'
       ],
 
-      pageLoadTimeout: 60000
+      // Vercel 这种解压版启动很慢，必须加长超时时间
+      pageLoadTimeout: 120000,
+      // 甚至可以增加延迟，等待 JS 执行
+      minifyCss: true,
+      inlineCss: true
     });
 
     console.log('✅ Pre-rendering complete!');
   } catch (error) {
-    console.error('⚠️ Pre-rendering failed, but continuing build...', error.message);
+    console.error('⚠️ Pre-rendering failed, but continuing build...', error);
+    // 依然保持 exit 0，先让你的网站上线再说
     process.exit(0);
   }
 })();

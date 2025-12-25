@@ -131,8 +131,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
 
     setIsUploadingAvatar(true);
     try {
-      // 1. Upload to Cloudinary
-      const photoURL = await apiService.uploadImage(file);
+      // 1. Upload to Cloudinary (Forced)
+      // Use Cloudinary for avatars to leverage face detection/cropping features if configured
+      const photoURL = await apiService.uploadImage(file, { forceCloudinary: true });
 
       // 2. Update User Profile on backend
       await apiService.updateProfile(user._id, {

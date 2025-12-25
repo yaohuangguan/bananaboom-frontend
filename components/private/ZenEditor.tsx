@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-// 假设你的图片压缩工具在这里
-import { compressImage } from '../../services/media';
+// 假设你的图片上传工具在这里
+import { uploadImage } from '../../services/media';
 // 推荐使用 RemixIcon，样式更现代
 import 'remixicon/fonts/remixicon.css';
 
@@ -339,14 +339,16 @@ export const ZenEditor: React.FC<ZenEditorProps> = ({
     range.deleteContents();
   };
 
-  // --- Image Logic ---
+  // --- Image Logic (UPDATED) ---
   const processAndInsertImage = async (file: File) => {
     if (!file.type.startsWith('image/')) return;
     setIsProcessing(true);
     try {
-      const base64 = await compressImage(file, { quality: 0.7, maxWidth: 1000 });
+      // Use the unified uploadImage helper (handles R2 -> Cloudinary -> Base64 fallback)
+      const imageUrl = await uploadImage(file);
+
       restoreSelection();
-      const imgHtml = `<img src="${base64}" class="max-w-full h-auto rounded-lg my-4 shadow-md hover:shadow-lg transition-shadow duration-300" />`;
+      const imgHtml = `<img src="${imageUrl}" class="max-w-full h-auto rounded-lg my-4 shadow-md hover:shadow-lg transition-shadow duration-300" />`;
       document.execCommand('insertHTML', false, imgHtml);
       handleChange();
     } catch (error) {

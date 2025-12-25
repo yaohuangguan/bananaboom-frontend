@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { featureService } from '../../services/featureService';
-import { compressImage } from '../../services/media';
+import { uploadImage } from '../../services/media';
 import { User, Conversation } from '../../types';
 import { toast } from '../../components/Toast';
 import { DeleteModal } from '../../components/DeleteModal';
@@ -26,7 +26,7 @@ interface BrainMessage {
   isStreaming?: boolean;
   avatar?: string;
   name?: string;
-  image?: string; // Base64 image
+  image?: string; // URL
 }
 
 const DEFAULT_AI_AVATAR = 'https://cdn-icons-png.flaticon.com/512/4712/4712027.png';
@@ -61,7 +61,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
   const [isInitializing, setIsInitializing] = useState(true);
 
   // Image Upload State
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null); // Now stores URL
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -232,9 +232,6 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
           interim += event.results[i][0].transcript;
         }
       }
-      // Update ref, prefer final, append interim for feedback if we were displaying it
-      // For simplicity in send-on-release, we just track the total accumulated text
-      // Note: `event.results` contains all results from start if continuous=true
       const allText = Array.from(event.results)
         .map((r: any) => r[0].transcript)
         .join('');
@@ -282,13 +279,19 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
       toast.error('Only image files are supported.');
       return;
     }
+
+    // Optimistic: show spinner or processing state?
+    // For now we assume upload is fast enough or handled by isProcessing blocking input if needed.
+    // Actually we should probably show a spinner overlay or block send.
+    // For simplicity, we just await uploadImage.
+
     try {
-      const compressedBase64 = await compressImage(file, { quality: 0.7, maxWidth: 1024 });
-      setSelectedImage(compressedBase64);
+      const uploadedUrl = await uploadImage(file);
+      setSelectedImage(uploadedUrl);
       inputRef.current?.focus();
     } catch (e) {
-      console.error('Image processing failed', e);
-      toast.error('Failed to process image.');
+      console.error('Image upload failed', e);
+      toast.error('Failed to upload image.');
     }
   };
 
@@ -327,7 +330,6 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
   };
 
   // --- Submission Logic ---
-  // Modified to accept direct text override (for voice)
   const handleSubmit = async (e?: React.FormEvent, overrideText?: string) => {
     if (e) e.preventDefault();
 

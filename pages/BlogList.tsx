@@ -198,7 +198,7 @@ export const BlogList: React.FC<BlogListProps> = ({
         {currentPage > 1 && (
           <button
             onClick={() => handlePageChange(1)}
-            className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-amber-500 transition-all rounded-xl shadow-sm"
+            className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary-500 transition-all rounded-xl shadow-sm"
             title="First Page"
           >
             <i className="fas fa-step-backward"></i>
@@ -208,21 +208,21 @@ export const BlogList: React.FC<BlogListProps> = ({
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-amber-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all rounded-xl shadow-sm"
+          className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all rounded-xl shadow-sm"
         >
           <i className="fas fa-chevron-left"></i>
         </button>
 
         <div className="flex items-center px-6 h-10 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-mono text-xs tracking-widest text-slate-500 rounded-xl shadow-sm">
           {t.blogList.page}{' '}
-          <span className="text-amber-500 font-bold mx-2 text-sm">{currentPage}</span> /{' '}
+          <span className="text-primary-500 font-bold mx-2 text-sm">{currentPage}</span> /{' '}
           {pagination.totalPages}
         </div>
 
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === pagination.totalPages}
-          className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-amber-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all rounded-xl shadow-sm"
+          className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all rounded-xl shadow-sm"
         >
           <i className="fas fa-chevron-right"></i>
         </button>
@@ -231,7 +231,7 @@ export const BlogList: React.FC<BlogListProps> = ({
         {currentPage < pagination.totalPages && (
           <button
             onClick={() => handlePageChange(pagination.totalPages)}
-            className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-amber-500 transition-all rounded-xl shadow-sm"
+            className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary-500 transition-all rounded-xl shadow-sm"
             title="Last Page"
           >
             <i className="fas fa-step-forward"></i>
@@ -272,11 +272,11 @@ export const BlogList: React.FC<BlogListProps> = ({
 
       {/* Title Header */}
       <div className="mb-12 border-b border-slate-200 dark:border-slate-800 pb-8 relative">
-        <div className="absolute bottom-0 left-0 w-24 h-[2px] bg-amber-500"></div>
+        <div className="absolute bottom-0 left-0 w-24 h-[2px] bg-primary-500"></div>
         <div className="flex flex-col md:flex-row justify-between items-end gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <i className="fas fa-database text-amber-500 text-xs"></i>
+              <i className="fas fa-database text-primary-500 text-xs"></i>
               <span className="text-xs font-mono uppercase tracking-widest text-slate-400">
                 {t.blogList.systemLog}
               </span>
@@ -313,14 +313,14 @@ export const BlogList: React.FC<BlogListProps> = ({
               </h3>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <i className="fas fa-search text-slate-400 group-focus-within:text-amber-500 transition-colors"></i>
+                  <i className="fas fa-search text-slate-400 group-focus-within:text-primary-500 transition-colors"></i>
                 </div>
                 <input
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   placeholder={t.blogList.searchPlaceholder}
-                  className="block w-full pl-10 pr-3 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 placeholder-slate-400 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 text-sm transition-all"
+                  className="block w-full pl-10 pr-3 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 placeholder-slate-400 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 text-sm transition-all"
                 />
               </div>
             </div>
@@ -331,7 +331,7 @@ export const BlogList: React.FC<BlogListProps> = ({
                 tags={tags}
                 selectedTag={selectedTag}
                 onSelect={handleTagClick}
-                theme="amber"
+                theme="primary"
                 limit={15}
                 label="Topics"
               />
@@ -366,10 +366,10 @@ export const BlogList: React.FC<BlogListProps> = ({
                   <article
                     key={blog._id}
                     onClick={() => onSelectBlog(blog)}
-                    className="group relative cursor-pointer bg-white dark:bg-[#0f1218] border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-amber-500/5 transition-all duration-300 hover:-translate-y-1 flex flex-col md:flex-row min-h-[180px]"
+                    className="group relative cursor-pointer bg-white dark:bg-[#0f1218] border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-primary-500/5 transition-all duration-300 hover:-translate-y-1 flex flex-col md:flex-row min-h-[180px]"
                   >
                     {/* Left Accent Bar */}
-                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-slate-100 dark:bg-slate-800 group-hover:bg-amber-500 transition-colors"></div>
+                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-slate-100 dark:bg-slate-800 group-hover:bg-primary-500 transition-colors"></div>
 
                     <div className="flex-1 p-6 md:p-8 pl-8 md:pl-10 flex flex-col justify-center">
                       {/* Meta Top */}
@@ -388,7 +388,7 @@ export const BlogList: React.FC<BlogListProps> = ({
                           </span>
                         </div>
 
-                        <span className="font-mono font-bold text-amber-600 dark:text-amber-500 uppercase tracking-wider">
+                        <span className="font-mono font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider">
                           {formatUserDate(
                             blog.createdAt || blog.createdDate || blog.date,
                             currentUser
@@ -410,7 +410,7 @@ export const BlogList: React.FC<BlogListProps> = ({
                       </div>
 
                       {/* Title */}
-                      <h3 className="font-display font-bold text-2xl md:text-3xl text-slate-900 dark:text-slate-100 mb-3 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors leading-tight">
+                      <h3 className="font-display font-bold text-2xl md:text-3xl text-slate-900 dark:text-slate-100 mb-3 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors leading-tight">
                         {blog.name}
                       </h3>
 
@@ -493,7 +493,7 @@ export const BlogList: React.FC<BlogListProps> = ({
                   setSearchInput('');
                   handleTagClick(null);
                 }}
-                className="mt-6 px-6 py-2 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full text-sm font-bold hover:bg-amber-500 hover:text-black transition-colors"
+                className="mt-6 px-6 py-2 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full text-sm font-bold hover:bg-primary-500 hover:text-black transition-colors"
               >
                 {t.blogList.clearFilters}
               </button>
