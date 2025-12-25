@@ -106,7 +106,8 @@ export const SystemResources: React.FC = () => {
         await apiService.deleteCloudinaryImage(id);
         fetchUsage(); // Refresh usage stats
       } else {
-        setR2Files((prev) => prev.filter((f) => f.key !== id));
+        // R2 Delete using ID
+        setR2Files((prev) => prev.filter((f) => f.id !== id));
         await featureService.deleteR2File(id);
       }
       toast.success('File deleted successfully');
@@ -441,37 +442,65 @@ export const SystemResources: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {r2Files.map((file) => (
                   <div
-                    key={file.key}
+                    key={file.id}
                     className="group relative aspect-square bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-slate-200 dark:border-slate-700"
                   >
-                    <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-900">
-                      {/* Simple check for image extension */}
-                      {/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file.key) ? (
+                    <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-900 relative">
+                      {/* Pattern background for transparency */}
+                      <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:8px_8px]"></div>
+
+                      {file.type === 'image' ||
+                      /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file.name) ? (
                         <img
-                          src={`${file.url}`}
-                          alt={file.key}
-                          className="w-full h-full object-cover"
+                          src={file.url}
+                          alt={file.name}
+                          className="w-full h-full object-contain p-2"
                           loading="lazy"
                         />
                       ) : (
-                        <i className="fas fa-file text-slate-400 text-3xl"></i>
+                        <div className="flex flex-col items-center justify-center text-slate-400">
+                          <i className="fas fa-file-alt text-3xl mb-2"></i>
+                          <span className="text-[10px] font-bold uppercase">
+                            {file.type || 'FILE'}
+                          </span>
+                        </div>
                       )}
                     </div>
 
-                    {/* Overlay */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex flex-col justify-between p-2 opacity-0 group-hover:opacity-100">
-                      <div className="flex justify-end">
+                    {/* Overlay Info */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-between p-3">
+                      <div className="flex justify-end transform translate-y-[-10px] group-hover:translate-y-0 transition-transform">
                         <button
-                          onClick={() => setFileToDelete({ id: file.key, type: 'R2' })}
-                          className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow-md"
-                          title="Delete Object"
+                          onClick={() => setFileToDelete({ id: file.id, type: 'R2' })}
+                          className="w-8 h-8 rounded-full bg-red-500/90 hover:bg-red-600 text-white flex items-center justify-center shadow-lg backdrop-blur-sm transition-transform hover:scale-110"
+                          title="Delete File"
                         >
                           <i className="fas fa-trash-alt text-xs"></i>
                         </button>
                       </div>
-                      <div className="bg-black/70 backdrop-blur p-1.5 rounded-lg text-[9px] text-white font-mono break-all leading-tight">
-                        {file.key}
-                        <div className="opacity-70 mt-1">{formatBytes(file.size)}</div>
+
+                      <div className="transform translate-y-[10px] group-hover:translate-y-0 transition-transform">
+                        <div
+                          className="text-white text-xs font-bold truncate mb-1"
+                          title={file.name}
+                        >
+                          {file.name}
+                        </div>
+                        <div className="flex justify-between items-end text-[10px] text-white/70 font-mono border-t border-white/10 pt-2">
+                          <div className="flex flex-col">
+                            <span>{formatBytes(file.size)}</span>
+                            <span>{new Date(file.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <a
+                            href={file.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-white hover:text-blue-300 transition-colors"
+                            title="Open Link"
+                          >
+                            <i className="fas fa-external-link-alt"></i>
+                          </a>
+                        </div>
                       </div>
                     </div>
                   </div>
