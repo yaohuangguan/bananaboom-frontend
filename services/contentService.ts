@@ -24,8 +24,9 @@ const MOCK_BLOGS: BlogPost[] = [
     info: 'Why we moved from Monoliths to Micro-frontends and back to Modular Monoliths with Next.js.',
     author: 'Sam',
     tags: ['Architecture', 'Next.js', 'React'],
-    date: '2023-10-24',
-    createdDate: '2023-10-24',
+    createdAt: '2023-10-24', // New standard
+    createdDate: '2023-10-24', // Legacy
+    date: '2023-10-24', // Legacy
     likes: 156,
     image:
       'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=1000&auto=format&fit=crop',
@@ -38,8 +39,9 @@ const MOCK_BLOGS: BlogPost[] = [
     info: 'Exploring the UX patterns required when interfacing with reasoning models like Gemini 3 Pro.',
     author: 'Sam',
     tags: ['AI', 'UX', 'Gemini'],
-    date: '2023-11-15',
-    createdDate: '2023-11-15',
+    createdAt: '2023-11-15', // New standard
+    createdDate: '2023-11-15', // Legacy
+    date: '2023-11-15', // Legacy
     likes: 92,
     image:
       'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1000&auto=format&fit=crop',
@@ -144,9 +146,13 @@ export const contentService = {
 
   getPostById: async (id: string): Promise<BlogPost | undefined> => {
     try {
-      const result = await fetchClient<BlogPost[]>(`/posts/${id}`);
-      return result[0];
+      // 适配修改：后端现在直接返回对象 {...}，而不是数组 [{...}]
+      // 如果后端返回 404，fetchClient 会抛出错误，我们在 catch 中处理
+      const result = await fetchClient<BlogPost>(`/posts/${id}`);
+      return result;
     } catch (e) {
+      // Fallback to mock if API fails or returns 404 for demo purposes
+      console.warn(`Post ${id} fetch failed or not found, falling back.`);
       return MOCK_BLOGS.find((b) => b._id === id);
     }
   },

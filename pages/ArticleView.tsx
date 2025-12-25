@@ -156,8 +156,10 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
         headline: blog.name,
         description: blog.info ? blog.info.substring(0, 160) : `Read ${blog.name} on Orion.`,
         image: [blog.image || 'https://www.ps5.space/og-image.png'],
-        datePublished: new Date(blog.createdDate || blog.date).toISOString(),
-        dateModified: new Date(blog.updatedDate || blog.createdDate || blog.date).toISOString(),
+        datePublished: new Date(blog.createdAt || blog.createdDate || blog.date).toISOString(),
+        dateModified: new Date(
+          blog.updatedAt || blog.updatedDate || blog.createdAt || blog.createdDate || blog.date
+        ).toISOString(),
         author: [
           {
             '@type': 'Person',
@@ -193,6 +195,21 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
       </div>
     );
   }
+
+  // --- Date Logic Helpers ---
+  const getPublishDate = () => {
+    if (!blog) return '';
+    // Prefer createdAt, then createdDate, fall back to date
+    return blog.createdAt || blog.createdDate || blog.date;
+  };
+
+  const shouldShowUpdatedDate = () => {
+    const updated = blog?.updatedAt || blog?.updatedDate;
+    if (!blog || !updated) return false;
+    const pub = getPublishDate();
+    // Only show if updatedDate is strictly different and valid
+    return updated !== pub && !isNaN(new Date(updated).getTime());
+  };
 
   return (
     <article className={containerClass}>
@@ -238,7 +255,7 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
       )}
 
       {/* Back Button Wrapper (Centered max width for navigation consistency) */}
-      <div className="container mx-auto max-w-[1800px] mb-8">
+      <div className="max-w-5xl mx-auto mb-8">
         <button
           onClick={onBack}
           className="group flex items-center text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
@@ -246,7 +263,7 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
           <div className="w-8 h-8 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur flex items-center justify-center mr-3 group-hover:bg-primary-50 dark:group-hover:bg-primary-900/20 transition-colors shadow-sm">
             <i className="fas fa-arrow-left text-xs transition-transform group-hover:-translate-x-1"></i>
           </div>
-          Back to Insights
+          {t.articleView.back}
         </button>
       </div>
 
@@ -317,17 +334,18 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
                       Published
                     </p>
                     <p className="font-bold text-slate-900 dark:text-white text-base">
-                      {formatUserDate(blog.createdDate || blog.date, currentUser, 'detailed')}
+                      {formatUserDate(getPublishDate(), currentUser, 'detailed')}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Last Updated (Optional) */}
-              {blog.updatedDate && blog.updatedDate !== (blog.createdDate || blog.date) && (
+              {/* Last Updated (Strict Logic: Only show if valid and different) */}
+              {shouldShowUpdatedDate() && (
                 <div className="mt-6 text-[10px] font-mono text-slate-400 bg-white/50 dark:bg-slate-800/50 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
                   <i className="fas fa-edit mr-2 text-amber-500"></i>
-                  Last Updated: {formatUserDate(blog.updatedDate, currentUser, 'detailed')}
+                  Last Updated:{' '}
+                  {formatUserDate(blog.updatedAt || blog.updatedDate, currentUser, 'detailed')}
                 </div>
               )}
             </div>
@@ -339,7 +357,7 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
         <ExternalFramePost src={blog.iframeUrl} title={blog.name} />
       ) : (
         // Max width wrapper for text readability, but parent is full width
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           {/* Featured Image */}
           {blog?.image && !isImageError ? (
             <div className="w-full aspect-[21/9] rounded-2xl overflow-hidden mb-12 shadow-xl bg-slate-100 dark:bg-slate-800 relative content-visibility-auto">
@@ -438,7 +456,11 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
                 )}
                 <div>
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider block mb-2">
-                    {formatUserDate(post.createdDate || post.date, currentUser, 'short')}
+                    {formatUserDate(
+                      post.createdAt || post.createdDate || post.date,
+                      currentUser,
+                      'short'
+                    )}
                   </span>
                   <h4 className="font-bold text-xl text-slate-800 dark:text-slate-200 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors leading-tight">
                     {post.name}

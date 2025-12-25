@@ -34,6 +34,65 @@ export const PrivateBlogFeed: React.FC<PrivateBlogFeedProps> = ({
     }
   };
 
+  const handleJumpToFirst = () => {
+    if (onPageChange) onPageChange(1);
+  };
+
+  const handleJumpToLast = () => {
+    if (onPageChange && pagination) {
+      onPageChange(pagination.totalPages);
+    }
+  };
+
+  const renderPagination = () => {
+    if (!pagination || pagination.totalPages <= 1) return null;
+    return (
+      <div className="flex justify-center items-center py-4 gap-2">
+        {/* Jump First */}
+        {pagination.currentPage > 1 && (
+          <button
+            onClick={handleJumpToFirst}
+            className="w-8 h-8 rounded-full border border-pink-200 text-pink-400 hover:bg-pink-50 hover:text-pink-600 flex items-center justify-center transition-colors"
+            title="First Page"
+          >
+            <i className="fas fa-step-backward text-xs"></i>
+          </button>
+        )}
+
+        <button
+          onClick={() => handlePageChange(pagination.currentPage - 1)}
+          disabled={!pagination.hasPrevPage}
+          className="w-8 h-8 rounded-full border border-pink-200 text-pink-400 hover:bg-pink-50 hover:text-pink-600 flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          <i className="fas fa-chevron-left text-xs"></i>
+        </button>
+
+        <span className="text-xs font-mono text-pink-400 font-bold px-2">
+          {pagination.currentPage} / {pagination.totalPages}
+        </span>
+
+        <button
+          onClick={() => handlePageChange(pagination.currentPage + 1)}
+          disabled={!pagination.hasNextPage}
+          className="w-8 h-8 rounded-full border border-pink-200 text-pink-400 hover:bg-pink-50 hover:text-pink-600 flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          <i className="fas fa-chevron-right text-xs"></i>
+        </button>
+
+        {/* Jump Last */}
+        {pagination.currentPage < pagination.totalPages && (
+          <button
+            onClick={handleJumpToLast}
+            className="w-8 h-8 rounded-full border border-pink-200 text-pink-400 hover:bg-pink-50 hover:text-pink-600 flex items-center justify-center transition-colors"
+            title="Last Page"
+          >
+            <i className="fas fa-step-forward text-xs"></i>
+          </button>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6 pb-20">
       {blogs.map((blog) => {
@@ -52,7 +111,7 @@ export const PrivateBlogFeed: React.FC<PrivateBlogFeedProps> = ({
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1 bg-pink-50 text-pink-600 text-xs font-bold rounded-full font-mono">
                   {formatUserDate(
-                    blog.createdDate || blog.date,
+                    blog.createdAt || blog.createdDate || blog.date,
                     currentUser,
                     'default',
                     t.privateSpace.unknownDate
@@ -172,30 +231,8 @@ export const PrivateBlogFeed: React.FC<PrivateBlogFeedProps> = ({
         </div>
       )}
 
-      {/* Pagination Controls */}
-      {pagination && pagination.totalPages > 1 && (
-        <div className="flex justify-center items-center pt-4 gap-2">
-          <button
-            onClick={() => handlePageChange(pagination.currentPage - 1)}
-            disabled={!pagination.hasPrevPage}
-            className="w-8 h-8 rounded-full border border-pink-200 text-pink-400 hover:bg-pink-50 hover:text-pink-600 flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <i className="fas fa-chevron-left text-xs"></i>
-          </button>
-
-          <span className="text-xs font-mono text-pink-400 font-bold px-2">
-            {pagination.currentPage} / {pagination.totalPages}
-          </span>
-
-          <button
-            onClick={() => handlePageChange(pagination.currentPage + 1)}
-            disabled={!pagination.hasNextPage}
-            className="w-8 h-8 rounded-full border border-pink-200 text-pink-400 hover:bg-pink-50 hover:text-pink-600 flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <i className="fas fa-chevron-right text-xs"></i>
-          </button>
-        </div>
-      )}
+      {/* Bottom Pagination */}
+      {renderPagination()}
 
       {/* Infinite Scroll Loader Indicator (Optional visual cue when no pagination or loading) */}
       {!pagination && blogs.length > 0 && (

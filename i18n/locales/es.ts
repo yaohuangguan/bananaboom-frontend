@@ -1,4 +1,3 @@
-
 export const es = {
   header: {
     home: 'Inicio',
@@ -18,9 +17,9 @@ export const es = {
     system: 'Gestión del Sistema'
   },
   pwa: {
-    title: "PS5 Space",
-    desc: "Instalar en la pantalla de inicio para una mejor experiencia",
-    install: "Instalar",
+    title: 'PS5 Space',
+    desc: 'Instalar en la pantalla de inicio para una mejor experiencia',
+    install: 'Instalar',
     ios: "Toque compartir <i class='fas fa-share-square'></i> y seleccione <b>'Agregar a Inicio'</b>"
   },
   bottomNav: {
@@ -35,7 +34,8 @@ export const es = {
     title2: 'lo Desconocido',
     introPrefix: 'Soy ',
     introName: 'Sam',
-    introSuffix: '. Navegando el cosmos digital, construyendo arquitecturas robustes y explorando las fronteras de la Inteligencia Artificial.',
+    introSuffix:
+      '. Navegando el cosmos digital, construyendo arquitecturas robustes y explorando las fronteras de la Inteligencia Artificial.',
     ctaPrimary: 'Explorar Diario',
     ctaSecondary: 'Perfil del Sistema'
   },
@@ -47,15 +47,15 @@ export const es = {
     liveDemo: 'Demo en Vivo',
     sourceCode: 'Código Fuente',
     demoOptions: {
-      title: "Seleccionar modo de visualización",
-      local: "Vista previa aquí",
-      newTab: "Nueva pestaña",
-      iframeTitle: "Vista previa en vivo"
+      title: 'Seleccionar modo de visualización',
+      local: 'Vista previa aquí',
+      newTab: 'Nueva pestaña',
+      iframeTitle: 'Vista previa en vivo'
     }
   },
   blogList: {
-    title: 'Registro de Transmisión',
-    subtitle: 'Pensamientos registrados sobre ingeniería, mapas estelares y evolución digital.',
+    title: 'Diario y Reflexiones',
+    subtitle: 'Notas sobre tecnología, inversión y crecimiento personal.',
     titlePrivate: 'Bóveda Cifrada',
     subtitlePrivate: 'Documentación clasificada y registros personales.',
     viewAll: 'Ver todos los registros',
@@ -133,7 +133,8 @@ export const es = {
     exportLogs: 'Exportar Registros',
     active: 'Activo',
     vipBadge: 'VIP',
-    downloadBackup: 'Descargue una copia de seguridad de todos sus registros personales en formato JSON.',
+    downloadBackup:
+      'Descargue una copia de seguridad de todos sus registros personales en formato JSON.',
     height: 'Altura (cm)',
     fitnessGoal: 'Objetivo Fitness',
     barkUrl: 'URL de Bark (Push)',
@@ -237,7 +238,7 @@ export const es = {
   footprint: {
     title: 'Mapa Estelar',
     subtitle: 'Rastreo de huellas a través de la galaxia.',
-    intro: "Ilumina las provincias que has explorado y fija tus recuerdos en la cuadrícula global.",
+    intro: 'Ilumina las provincias que has explorado y fija tus recuerdos en la cuadrícula global.',
     tabs: {
       china: 'Sector China',
       world: 'Marcadores Globales'
@@ -273,18 +274,23 @@ export const es = {
       title: 'Arquitectura del Sistema',
       subtitle: 'Descripción general de los módulos disponibles en este espacio digital.',
       journalTitle: 'Diario Público',
-      journalDesc: 'Mi registro de transmisión personal. Compartiendo ideas sobre tecnología, codificación y experiencias de vida.',
+      journalDesc:
+        'Mi registro de transmisión personal. Compartiendo ideas sobre tecnología, codificación y experiencias de vida.',
       profileTitle: 'Perfil del Capitán',
-      profileDesc: 'Un expediente de mi viaje: experiencia en Big Tech, startups y exploración financiera.',
+      profileDesc:
+        'Un expediente de mi viaje: experiencia en Big Tech, startups y exploración financiera.',
       chatTitle: 'Chat Interestelar',
-      chatDesc: 'Enlace cuántico en tiempo real. Se requiere inicio de sesión. Conéctese y chatee con otros viajeros en el sistema.',
+      chatDesc:
+        'Enlace cuántico en tiempo real. Se requiere inicio de sesión. Conéctese y chatee con otros viajeros en el sistema.',
       privateTitle: 'Camarote del Capitán',
-      privateDesc: 'Bóveda cifrada para mi historia de amor y recuerdos personales. Estrictamente para los ojos del Capitán (jaja).'
+      privateDesc:
+        'Bóveda cifrada para mi historia de amor y recuerdos personales. Estrictamente para los ojos del Capitán (jaja).'
     },
     orion: {
       etymology1: '(Francés: Oro)',
       etymology2: '(El Cazador)',
-      description: 'La constelación más brillante del cielo nocturno. Una estrella de navegación que te guía a través del cosmos digital para descubrir tu valor.',
+      description:
+        'La constelación más brillante del cielo nocturno. Una estrella de navegación que te guía a través del cosmos digital para descubrir tu valor.',
       slogan: 'Navega tu Valor'
     },
     education: 'Base de Datos: Educación',
@@ -298,25 +304,29 @@ export const es = {
       {
         company: 'Gold Woodbath Capital',
         role: 'Fundador / Inversionista',
-        description: 'Fundó una firma de capital privado centrada en tecnología y mercados emergentes. Gestión de estrategias de cartera.',
+        description:
+          'Fundó una firma de capital privado centrada en tecnología y mercados emergentes. Gestión de estrategias de cartera.',
         color: 'bg-amber-500'
       },
       {
         company: 'Lalamove',
         role: 'Ingeniero Frontend Senior',
-        description: 'Optimización del sistema central de despacho logístico. Mejora de las vistas web de las aplicaciones de conductores y usuarios.',
+        description:
+          'Optimización del sistema central de despacho logístico. Mejora de las vistas web de las aplicaciones de conductores y usuarios.',
         color: 'bg-orange-500'
       },
       {
         company: 'Tencent Cloud',
         role: 'Desarrollador Frontend',
-        description: 'Lideró el desarrollo frontend para la plataforma Coding OA. Implementación de cadenas de herramientas DevOps.',
+        description:
+          'Lideró el desarrollo frontend para la plataforma Coding OA. Implementación de cadenas de herramientas DevOps.',
         color: 'bg-blue-500'
       },
       {
         company: 'BeeHex (Spin-off de la NASA)',
         role: 'Ingeniero Frontend',
-        description: 'Revolucionó la automatización de alimentos con tecnología de impresión 3D. Construcción de plataforma personalizada Vue.js.',
+        description:
+          'Revolucionó la automatización de alimentos con tecnología de impresión 3D. Construcción de plataforma personalizada Vue.js.',
         color: 'bg-slate-500'
       }
     ]
@@ -348,13 +358,16 @@ export const es = {
   },
   delete: {
     confirmTitle: '¿Eliminar Registro?',
-    confirmMessage: 'Esta acción es irreversible. Para confirmar la eliminación, por favor escriba:',
-    confirmSecretMessage: 'Acción Restringida. Ingrese la Clave Secreta para autorizar la eliminación:',
+    confirmMessage:
+      'Esta acción es irreversible. Para confirmar la eliminación, por favor escriba:',
+    confirmSecretMessage:
+      'Acción Restringida. Ingrese la Clave Secreta para autorizar la eliminación:',
     button: 'Eliminar Registro'
   },
   live: {
     title: 'Enlace en Vivo',
-    subtitle: 'Interfaz neuronal en tiempo real activa. Transmitiendo datos de audio/video al Núcleo Gemini.',
+    subtitle:
+      'Interfaz neuronal en tiempo real activa. Transmitiendo datos de audio/video al Núcleo Gemini.',
     connect: 'Inicializar Enlace',
     disconnect: 'Terminar Enlace'
   },
@@ -366,163 +379,166 @@ export const es = {
   },
   privateSpace: {
     tabs: {
-      secondBrain: "Segundo Cerebro",
-      journal: "Diario",
-      leisure: "Ocio",
-      gallery: "Galería",
-      fitness: "Fitness"
+      secondBrain: 'Segundo Cerebro',
+      journal: 'Diario',
+      leisure: 'Ocio',
+      gallery: 'Galería',
+      fitness: 'Fitness'
     },
     secondBrain: {
-      title: "Gemelo Digital",
-      subtitle: "Núcleo de IA Omnisciente",
-      welcome: "Hola. Soy tu Segundo Cerebro. Tengo acceso a tu diario, registros de fitness y datos de proyectos. ¿Cómo puedo ayudarte?",
-      placeholder: "Pregúntame cualquier cosa sobre tus datos..."
+      title: 'Gemelo Digital',
+      subtitle: 'Núcleo de IA Omnisciente',
+      welcome:
+        'Hola. Soy tu Segundo Cerebro. Tengo acceso a tu diario, registros de fitness y datos de proyectos. ¿Cómo puedo ayudarte?',
+      placeholder: 'Pregúntame cualquier cosa sobre tus datos...'
     },
     hotSearch: {
-      title: "Centro de Noticias",
-      hot: "Tendencias",
-      finance: "Finanzas",
-      game: "Juegos",
-      guonei: "Nacional",
-      world: "Mundo",
-      updated: "Actualizado",
-      loading: "Escaneando red..."
+      title: 'Centro de Noticias',
+      hot: 'Tendencias',
+      finance: 'Finanzas',
+      game: 'Juegos',
+      guonei: 'Nacional',
+      world: 'Mundo',
+      updated: 'Actualizado',
+      loading: 'Escaneando red...'
     },
     leisure: {
-      musicTitle: "Reproductor Sónico",
-      playUrl: "Reproducir URL",
-      search: "Biblioteca",
-      placeholderUrl: "URL MP3...",
-      placeholderSearch: "Buscar...",
-      nowPlaying: "Reproduciendo",
-      stopped: "Inactivo",
-      mahjong: "Zona Mahjong Soul",
-      mahjongDesc: "Acceso a la red Maj-Soul.",
+      musicTitle: 'Reproductor Sónico',
+      playUrl: 'Reproducir URL',
+      search: 'Biblioteca',
+      placeholderUrl: 'URL MP3...',
+      placeholderSearch: 'Buscar...',
+      nowPlaying: 'Reproduciendo',
+      stopped: 'Inactivo',
+      mahjong: 'Zona Mahjong Soul',
+      mahjongDesc: 'Acceso a la red Maj-Soul.',
       clock: {
-        title: "Hub Inteligente",
-        subtitle: "Shenzhen En Vivo"
+        title: 'Hub Inteligente',
+        subtitle: 'Shenzhen En Vivo'
       },
       cycle: {
-        title: "Ciclo Lunar",
-        subtitle: "Bio-Rastreador",
-        prediction: "Predicción",
-        nextPeriod: "Próximo Periodo",
-        inDays: "en {days} días",
-        log: "Registrar Periodo",
-        save: "Guardar",
-        flow: "Flujo",
-        symptoms: "Síntomas",
-        note: "Nota",
-        delete: "Eliminar",
-        startDate: "Fecha Inicio",
-        endDate: "Fecha Fin",
-        color: "Color",
+        title: 'Ciclo Lunar',
+        subtitle: 'Bio-Rastreador',
+        prediction: 'Predicción',
+        nextPeriod: 'Próximo Periodo',
+        inDays: 'en {days} días',
+        log: 'Registrar Periodo',
+        save: 'Guardar',
+        flow: 'Flujo',
+        symptoms: 'Síntomas',
+        note: 'Nota',
+        delete: 'Eliminar',
+        startDate: 'Fecha Inicio',
+        endDate: 'Fecha Fin',
+        color: 'Color',
         flows: {
-          light: "Ligero",
-          medium: "Medio",
-          heavy: "Pesado"
+          light: 'Ligero',
+          medium: 'Medio',
+          heavy: 'Pesado'
         },
         symptomList: {
-          cramps: "Calambres",
-          headache: "Dolor de cabeza",
-          backpain: "Dolor de espalda",
-          fatigue: "Fatiga",
-          bloating: "Hinchazón",
-          acne: "Acné",
-          moody: "Cambios de humor"
+          cramps: 'Calambres',
+          headache: 'Dolor de cabeza',
+          backpain: 'Dolor de espalda',
+          fatigue: 'Fatiga',
+          bloating: 'Hinchazón',
+          acne: 'Acné',
+          moody: 'Cambios de humor'
         },
         legend: {
-          period: "Periodo",
-          predicted: "Predicho",
-          fertile: "Fértil",
-          ovulation: "Ovulación"
+          period: 'Periodo',
+          predicted: 'Predicho',
+          fertile: 'Fértil',
+          ovulation: 'Ovulación'
         }
       },
       chefWheel: {
-        title: "Cocina Inteligente IA",
-        subtitle: "Sistema Automatizado de Decisión de Comidas",
-        spin: "GIRAR",
-        spinning: "ANALIZANDO...",
-        confirm: "Confirmar Selección",
-        retry: "Volver e Intentar",
-        recommending: "Gemini está sugiriendo...",
-        recommendations: "También te podría gustar:",
-        manage: "Gestionar Menú",
-        viewRecipe: "Ver Receta",
-        searchMode: "Buscar Recetas",
-        wheelMode: "Modo Rueda",
-        backToSearch: "Volver a Buscar",
-        searchPlaceholder: "Buscar una receta (ej. Pollo Kung Pao)...",
-        searching: "Buscando...",
-        library: "Gestión de Biblioteca",
+        title: 'Cocina Inteligente IA',
+        subtitle: 'Sistema Automatizado de Decisión de Comidas',
+        spin: 'GIRAR',
+        spinning: 'ANALIZANDO...',
+        confirm: 'Confirmar Selección',
+        retry: 'Volver e Intentar',
+        recommending: 'Gemini está sugiriendo...',
+        recommendations: 'También te podría gustar:',
+        manage: 'Gestionar Menú',
+        viewRecipe: 'Ver Receta',
+        searchMode: 'Buscar Recetas',
+        wheelMode: 'Modo Rueda',
+        backToSearch: 'Volver a Buscar',
+        searchPlaceholder: 'Buscar una receta (ej. Pollo Kung Pao)...',
+        searching: 'Buscando...',
+        library: 'Gestión de Biblioteca',
         smartPlan: {
-          button: "Plan Inteligente IA",
-          title: "Plan Inteligente",
-          nutritionist: "Nutricionista IA",
-          personalized: "Plan de Menú Personalizado",
-          target: "Objetivo",
-          fallbackTitle: "Lógica de Prioridad (Respaldo)",
-          fallback1: "Si registró su peso recientemente en Fitness, la IA prioriza el registro más reciente.",
-          fallback2: "Si estableció explícitamente un objetivo diferente hoy (ej. 'Volumen') en el registro de dieta, la IA recomienda para ese objetivo.",
-          error: "La IA nutricionista está ocupada. Inténtalo de nuevo más tarde."
+          button: 'Plan Inteligente IA',
+          title: 'Plan Inteligente',
+          nutritionist: 'Nutricionista IA',
+          personalized: 'Plan de Menú Personalizado',
+          target: 'Objetivo',
+          fallbackTitle: 'Lógica de Prioridad (Respaldo)',
+          fallback1:
+            'Si registró su peso recientemente en Fitness, la IA prioriza el registro más reciente.',
+          fallback2:
+            "Si estableció explícitamente un objetivo diferente hoy (ej. 'Volumen') en el registro de dieta, la IA recomienda para ese objetivo.",
+          error: 'La IA nutricionista está ocupada. Inténtalo de nuevo más tarde.'
         },
         form: {
-          add: "Añadir Plato",
-          edit: "Editar Plato",
-          name: "Nombre del Plato",
-          image: "URL de Imagen",
-          category: "Categoría",
-          tags: "Etiquetas",
-          cancel: "Cancelar",
-          save: "Guardar"
+          add: 'Añadir Plato',
+          edit: 'Editar Plato',
+          name: 'Nombre del Plato',
+          image: 'URL de Imagen',
+          category: 'Categoría',
+          tags: 'Etiquetas',
+          cancel: 'Cancelar',
+          save: 'Guardar'
         },
         filters: {
-          healthy: "Modo Saludable",
-          cooldown: "Modo Variedad",
-          category: "Categoría",
-          calories: "Calorías",
-          tags: "Etiquetas",
+          healthy: 'Modo Saludable',
+          cooldown: 'Modo Variedad',
+          category: 'Categoría',
+          calories: 'Calorías',
+          tags: 'Etiquetas',
           options: {
-            any: "Cualquiera",
-            lunch: "Almuerzo",
-            dinner: "Cena",
-            supper: "Cena Tardía",
-            low: "Bajo Cal",
-            medium: "Medio",
-            high: "Alto Cal"
+            any: 'Cualquiera',
+            lunch: 'Almuerzo',
+            dinner: 'Cena',
+            supper: 'Cena Tardía',
+            low: 'Bajo Cal',
+            medium: 'Medio',
+            high: 'Alto Cal'
           },
           tooltips: {
-            healthy: "Prioriza comidas bajas en calorías y equilibradas.",
-            variety: "Evita platos comidos recientemente."
+            healthy: 'Prioriza comidas bajas en calorías y equilibradas.',
+            variety: 'Evita platos comidos recientemente.'
           }
         },
         menu: {
-          add: "Añadir Plato",
-          edit: "Editar Plato",
-          name: "Nombre del Plato",
-          category: "Categoría",
-          weight: "Prioridad (1-10)",
-          calories: "Nivel de Calorías",
-          save: "Guardar Plato"
+          add: 'Añadir Plato',
+          edit: 'Editar Plato',
+          name: 'Nombre del Plato',
+          category: 'Categoría',
+          weight: 'Prioridad (1-10)',
+          calories: 'Nivel de Calorías',
+          save: 'Guardar Plato'
         },
         ingredients: {},
         styles: {},
         cats: {}
       },
       pirate: {
-        title: "Los Cuatro Señores Piratas",
-        reset: "Barajar",
-        moves: "Movimientos",
-        victory: "CONQUISTADO",
-        victoryDesc: "Los mares están domados.",
-        playAgain: "Jugar de Nuevo",
-        rulesTitle: "Parámetros de Misión",
+        title: 'Los Cuatro Señores Piratas',
+        reset: 'Barajar',
+        moves: 'Movimientos',
+        victory: 'CONQUISTADO',
+        victoryDesc: 'Los mares están domados.',
+        playAgain: 'Jugar de Nuevo',
+        rulesTitle: 'Parámetros de Misión',
         rules: [
-          "Objetivo: Coordinar las 4 Facciones (Rojo, Azul, Verde, Amarillo) a sus territorios de origen simultáneamente.",
-          "Territorios: Rojo (Arriba-Izq), Azul (Arriba-Der), Verde (Abajo-Izq), Amarillo (Abajo-Der).",
-          "Unidades: Cada facción tiene 4 unidades (Capitán, Barco, Tesoro, Mapa). Las 4 deben estar dentro de su zona de color de 3x3.",
-          "Zona Neutral: La columna central y los espacios vacíos permiten el movimiento.",
-          "Dificultad: Difícil. Requiere planificación anticipada."
+          'Objetivo: Coordinar las 4 Facciones (Rojo, Azul, Verde, Amarillo) a sus territorios de origen simultáneamente.',
+          'Territorios: Rojo (Arriba-Izq), Azul (Arriba-Der), Verde (Abajo-Izq), Amarillo (Abajo-Der).',
+          'Unidades: Cada facción tiene 4 unidades (Capitán, Barco, Tesoro, Mapa). Las 4 deben estar dentro de su zona de color de 3x3.',
+          'Zona Neutral: La columna central y los espacios vacíos permiten el movimiento.',
+          'Dificultad: Difícil. Requiere planificación anticipada.'
         ]
       }
     },
@@ -537,16 +553,46 @@ export const es = {
       calendar: {
         weekdays: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
         holidays: {
-          '1-1': 'Año Nuevo', '2-14': 'San Valentín', '3-8': 'Día de la Mujer', '3-12': 'Día del Árbol',
-          '4-1': 'Día de los Inocentes', '5-1': 'Día del Trabajo', '5-4': 'Día de la Juventud', '6-1': 'Día del Niño',
-          '7-1': 'Día del PCC', '8-1': 'Día del Ejército', '9-10': 'Día del Maestro', '10-1': 'Día Nacional',
-          '12-24': 'Nochebuena', '12-25': 'Navidad'
+          '1-1': 'Año Nuevo',
+          '2-14': 'San Valentín',
+          '3-8': 'Día de la Mujer',
+          '3-12': 'Día del Árbol',
+          '4-1': 'Día de los Inocentes',
+          '5-1': 'Día del Trabajo',
+          '5-4': 'Día de la Juventud',
+          '6-1': 'Día del Niño',
+          '7-1': 'Día del PCC',
+          '8-1': 'Día del Ejército',
+          '9-10': 'Día del Maestro',
+          '10-1': 'Día Nacional',
+          '12-24': 'Nochebuena',
+          '12-25': 'Navidad'
         },
         terms: [
-          "Pequeño Frío", "Gran Frío", "Inicio Primavera", "Agua de Lluvia", "Despertar Insectos", "Equinoccio Primavera", 
-          "Brillo Puro", "Lluvia de Granos", "Inicio Verano", "Pequeña Abundancia", "Grano en Espiga", "Solsticio Verano",
-          "Pequeño Calor", "Gran Calor", "Inicio Otoño", "Fin del Calor", "Rocío Blanco", "Equinoccio Otoño", 
-          "Rocío Frío", "Descenso de Escarcha", "Inicio Invierno", "Pequeña Nieve", "Gran Nieve", "Solsticio Invierno"
+          'Pequeño Frío',
+          'Gran Frío',
+          'Inicio Primavera',
+          'Agua de Lluvia',
+          'Despertar Insectos',
+          'Equinoccio Primavera',
+          'Brillo Puro',
+          'Lluvia de Granos',
+          'Inicio Verano',
+          'Pequeña Abundancia',
+          'Grano en Espiga',
+          'Solsticio Verano',
+          'Pequeño Calor',
+          'Gran Calor',
+          'Inicio Otoño',
+          'Fin del Calor',
+          'Rocío Blanco',
+          'Equinoccio Otoño',
+          'Rocío Frío',
+          'Descenso de Escarcha',
+          'Inicio Invierno',
+          'Pequeña Nieve',
+          'Gran Nieve',
+          'Solsticio Invierno'
         ],
         noActivity: 'Sin actividad',
         summaryTitle: 'Resumen Diario de Actividad'
@@ -561,7 +607,7 @@ export const es = {
       },
       stats: {
         progress: 'Progreso',
-        userProgress: "Progreso de {name}",
+        userProgress: 'Progreso de {name}',
         activeProfile: 'Perfil Activo',
         loading: 'Cargando...',
         loadMore: 'Cargar Más',
@@ -581,7 +627,7 @@ export const es = {
         isDone: '¿Tarea Hecha?',
         duration: 'Duración (min)',
         type: 'Actividades',
-        notes: "Destacados del Día",
+        notes: 'Destacados del Día',
         types: {
           run: 'Correr',
           swim: 'Nadar',
@@ -624,84 +670,94 @@ export const es = {
       save: 'Guardar Registro',
       saved: 'Registro Actualizado'
     },
-    journal: "Nuestro Diario",
-    memories: "RECUERDOS",
-    together: "Juntos",
-    years: "Años",
-    days: "Días",
-    loveMsg: "¡Te amo por siempre! ❤",
+    journal: 'Nuestro Diario',
+    memories: 'RECUERDOS',
+    together: 'Juntos',
+    years: 'Años',
+    days: 'Días',
+    loveMsg: '¡Te amo por siempre! ❤',
     bucketList: {
-      title: "Lista de Deseos",
-      subtitle: "Sueños & Metas",
+      title: 'Lista de Deseos',
+      subtitle: 'Sueños & Metas',
       tabs: {
-        todo: "Deseos",
-        in_progress: "En Progreso",
-        done: "Logrado"
+        todo: 'Deseos',
+        in_progress: 'En Progreso',
+        done: 'Logrado'
       },
       actions: {
-          start: "Empezar",
-          complete: "Hecho",
-          later: "Luego",
-          wishlist: "Deseos",
-          restart: "Reiniciar"
+        start: 'Empezar',
+        complete: 'Hecho',
+        later: 'Luego',
+        wishlist: 'Deseos',
+        restart: 'Reiniciar'
       },
-      add: "Pedir Deseo",
-      edit: "Editar Deseo",
-      placeholder: "¿Cuál es tu sueño?",
-      description: "Plan / Guía / Descripción",
-      targetDate: "Fecha Objetivo",
-      evidence: "Evidencia / Fotos",
-      uploadEvidence: "Subir Foto",
-      empty: "Aún no hay deseos. ¡Sueña en grande!",
-      status: "Estado Actual",
-      save: "Guardar Deseo",
-      update: "Actualizar Deseo",
-      delete: "Eliminar Deseo"
+      add: 'Pedir Deseo',
+      edit: 'Editar Deseo',
+      placeholder: '¿Cuál es tu sueño?',
+      description: 'Plan / Guía / Descripción',
+      targetDate: 'Fecha Objetivo',
+      evidence: 'Evidencia / Fotos',
+      uploadEvidence: 'Subir Foto',
+      empty: 'Aún no hay deseos. ¡Sueña en grande!',
+      status: 'Estado Actual',
+      save: 'Guardar Deseo',
+      update: 'Actualizar Deseo',
+      delete: 'Eliminar Deseo'
     },
-    tasks: "Tareas",
-    newTask: "Nueva Tarea...",
-    caughtUp: "¡Todo al día!",
-    emptyJournal: "El diario está vacío.",
-    writeFirst: "Escribe tu primer recuerdo a la derecha.",
-    read: "Leer",
-    preview: "Sin vista previa...",
-    unknownDate: "Fecha Desconocida",
+    tasks: 'Tareas',
+    newTask: 'Nueva Tarea...',
+    caughtUp: '¡Todo al día!',
+    emptyJournal: 'El diario está vacío.',
+    writeFirst: 'Escribe tu primer recuerdo a la derecha.',
+    read: 'Leer',
+    preview: 'Sin vista previa...',
+    unknownDate: 'Fecha Desconocida',
     editor: {
-      titlePlaceholder: "Título...",
-      author: "Autor",
-      tags: "Etiquetas (separadas por espacio)",
-      private: "Privado",
-      public: "Público",
-      summary: "Resumen",
-      code: "Código / Script",
-      publish: "Publicar Entrada",
-      update: "Actualizar Entrada",
-      cancel: "Cancelar Edición",
-      chars: "Carac",
-      tellStory: "Escribe tu historia...",
-      saving: "Guardando...",
-      saved: "Guardado",
-      saveDraft: "Guardar Borrador",
-      processing: "Procesando..."
+      titlePlaceholder: 'Título...',
+      author: 'Autor',
+      tags: 'Etiquetas (separadas por espacio)',
+      private: 'Privado',
+      public: 'Público',
+      summary: 'Resumen',
+      code: 'Código / Script',
+      publish: 'Publicar Entrada',
+      update: 'Actualizar Entrada',
+      cancel: 'Cancelar Edición',
+      chars: 'Carac',
+      tellStory: 'Escribe tu historia...',
+      saving: 'Guardando...',
+      saved: 'Guardado',
+      saveDraft: 'Guardar Borrador',
+      processing: 'Procesando...'
     },
     gallery: {
-      title: "Galería Cápsula",
-      subtitle: "Momentos eternos conectados por la luz.",
-      upload: "Subir Foto",
-      caption: "Leyenda",
-      location: "Ubicación",
-      save: "Fijar",
-      cancel: "Descartar",
-      replace: "Reemplazar Imagen",
-      delete: "Eliminar",
-      deleteConfirm: "¿Eliminar Foto?",
-      pinTitle: "Grabar Recuerdo",
-      captionLabel: "Título",
-      captionPlaceholder: "Nombra este recuerdo...",
-      dateLabel: "Fecha",
-      pinButton: "Fijar",
-      developing: "Revelando Foto...",
-      reserved: "Reservado"
+      title: 'Galería Cápsula',
+      subtitle: 'Momentos eternos conectados por la luz.',
+      upload: 'Subir Foto',
+      caption: 'Leyenda',
+      location: 'Ubicación',
+      save: 'Fijar',
+      cancel: 'Descartar',
+      replace: 'Reemplazar Imagen',
+      delete: 'Eliminar',
+      deleteConfirm: '¿Eliminar Foto?',
+      pinTitle: 'Grabar Recuerdo',
+      captionLabel: 'Título',
+      captionPlaceholder: 'Nombra este recuerdo...',
+      dateLabel: 'Fecha',
+      pinButton: 'Fijar',
+      developing: 'Revelando Foto...',
+      reserved: 'Reservado'
+    },
+    articleView: {
+      back: 'Volver a Insights',
+      ctaTitle: 'Fin de la Transmisión',
+      ctaMessage:
+        '¿Resonando con esta señal? Aumenta la frecuencia con un like, o transmite el enlace a tu red.',
+      like: 'Me gusta',
+      liked: 'Me gusta',
+      share: 'Compartir enlace',
+      copied: 'Enlace copiado'
     }
   }
 };

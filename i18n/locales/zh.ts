@@ -53,8 +53,8 @@ export const zh = {
     }
   },
   blogList: {
-    title: '传输日志',
-    subtitle: '关于工程、星图和数字演进的记录。',
+    title: '日志与洞察',
+    subtitle: '关于技术演进、投资策略与个人成长的深度总结。',
     titlePrivate: '加密库',
     subtitlePrivate: '机密文档与个人记录。',
     viewAll: '查看所有',
@@ -72,8 +72,9 @@ export const zh = {
     page: '页码'
   },
   articleView: {
-    ctaTitle: '传输结束',
-    ctaMessage: '如果这段信号引起了你的共鸣，请点亮红心，或将链接广播给更多探索者。',
+    back: '返回列表',
+    ctaTitle: '阅读结束',
+    ctaMessage: '如果这篇文章对你有帮助，请点亮红心，或分享给更多朋友。',
     like: '点赞',
     liked: '已赞',
     share: '分享链接',
@@ -90,9 +91,9 @@ export const zh = {
     noData: '当前扇区无活动记录。'
   },
   pagination: {
-    prev: '上一扇区',
-    next: '下一扇区',
-    page: '扇区'
+    prev: '上一页',
+    next: '下一页',
+    page: '页码'
   },
   login: {
     welcome: '身份验证',
@@ -380,15 +381,15 @@ export const zh = {
     ]
   },
   comments: {
-    title: '通讯频道',
-    placeholder: '发送传输...',
+    title: '评论区',
+    placeholder: '发送评论...',
     postButton: '发送',
     loginToComment: '验证身份以发送',
-    noComments: '未收到传输信号。',
-    reply: '响应',
-    replyTo: '响应',
-    cancel: '终止',
-    error: '传输失败。'
+    noComments: '暂无评论。',
+    reply: '回复',
+    replyTo: '回复',
+    cancel: '取消',
+    error: '发送失败。'
   },
   chat: {
     title: '量子链路',

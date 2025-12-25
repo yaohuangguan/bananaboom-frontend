@@ -210,15 +210,29 @@
     <script type="module" src="index.tsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-              console.log('SW registered: ', registration);
-            })
-            .catch(registrationError => {
-              console.log('SW registration failed: ', registrationError);
-            });
-        });
+        // 判断是否是本地环境 (localhost 或 127.0.0.1)
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    
+        if (isLocal) {
+          // 🛑如果是本地开发：检查有没有已存活的 SW，如果有，统统干掉！
+          navigator.serviceWorker.getRegistrations().then((registrations) => {
+            for (let registration of registrations) {
+              registration.unregister();
+              console.log('🧹 Localhost detected: Service Worker unregistered.');
+            }
+          });
+        } else {
+          // ✅如果是线上环境：才进行注册
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+              .then(registration => {
+                console.log('SW registered: ', registration);
+              })
+              .catch(registrationError => {
+                console.log('SW registration failed: ', registrationError);
+              });
+          });
+        }
       }
     </script>
   </body>

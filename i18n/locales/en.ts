@@ -54,8 +54,8 @@ export const en = {
     }
   },
   blogList: {
-    title: 'Transmission Log',
-    subtitle: 'Recorded thoughts on engineering, star charts, and digital evolution.',
+    title: 'Insights & Logs',
+    subtitle: 'A collection of thoughts on technology, investment, and personal growth.',
     titlePrivate: 'Encrypted Vault',
     subtitlePrivate: 'Classified documentation and personal logs.',
     viewAll: 'View all logs',
@@ -73,6 +73,7 @@ export const en = {
     page: 'PAGE'
   },
   articleView: {
+    back: 'Back to Insights',
     ctaTitle: 'End of Transmission',
     ctaMessage:
       'Resonating with this signal? Boost the frequency with a like, or broadcast the link to your network.',

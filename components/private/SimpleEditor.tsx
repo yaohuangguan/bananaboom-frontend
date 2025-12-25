@@ -192,7 +192,7 @@ export const SimpleEditor: React.FC<SimpleEditorProps> = ({
         title,
         content,
         tags: tags.split(' ').filter((t: string) => t),
-        date: editingPost?.date || new Date().toISOString()
+        date: editingPost?.createdAt || editingPost?.date || new Date().toISOString()
       });
     }
   }, [title, content, tags, editingPost, onPreviewChange]);

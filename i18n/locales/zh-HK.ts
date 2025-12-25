@@ -53,8 +53,8 @@ export const zhHK = {
     }
   },
   blogList: {
-    title: '傳輸日誌',
-    subtitle: '關於工程、星圖和數位演進的記錄。',
+    title: '日誌與洞察',
+    subtitle: '關於技術演進、投資策略與個人成長的深度總結。',
     titlePrivate: '加密庫',
     subtitlePrivate: '機密文檔與個人記錄。',
     viewAll: '查看所有',
@@ -70,6 +70,15 @@ export const zhHK = {
     adjustSearch: '請調整搜索關鍵詞',
     clearFilters: '清除篩選',
     page: '頁碼'
+  },
+  articleView: {
+    back: '返回洞察',
+    ctaTitle: '傳輸結束',
+    ctaMessage: '如果這段信號引起了你的共鳴，請點亮紅心，或將鏈接廣播給更多探索者。',
+    like: '點贊',
+    liked: '已贊',
+    share: '分享鏈接',
+    copied: '鏈接已複製'
   },
   auditLog: {
     title: '系統活動日誌',

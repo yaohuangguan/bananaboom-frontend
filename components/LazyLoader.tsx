@@ -2,8 +2,10 @@ import React, {
   Suspense,
   useEffect,
   ComponentType,
-  LazyExoticComponent,
-  ComponentProps
+  Component,
+  ReactNode,
+  ComponentProps,
+  LazyExoticComponent
 } from 'react';
 
 // --- 1. 类型定义 ---
@@ -87,11 +89,17 @@ const DefaultErrorFallback = ({ retry }: { retry: () => void }) => (
 );
 
 // --- 5. 内部错误边界组件 ---
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode; fallback?: React.ReactNode },
-  { hasError: boolean }
-> {
-  constructor(props: any) {
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
   }

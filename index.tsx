@@ -1,5 +1,3 @@
-import React from 'react';
-// 1. 引入 hydrateRoot 和 createRoot
 import { createRoot, hydrateRoot } from 'react-dom/client';
 import App from './App';
 import { LanguageProvider } from './i18n/LanguageContext';
@@ -17,17 +15,16 @@ if (!rootElement) {
 }
 
 // 2. 将原本的 JSX 结构提取出来，避免重复写两遍
+// Removed React.StrictMode to prevent double API calls in dev mode
 const appContent = (
-  <React.StrictMode>
-    <HelmetProvider>
-      <BrowserRouter>
-        <LanguageProvider>
-          <App />
-          <SpeedInsights />
-        </LanguageProvider>
-      </BrowserRouter>
-    </HelmetProvider>
-  </React.StrictMode>
+  <HelmetProvider>
+    <BrowserRouter>
+      <LanguageProvider>
+        <App />
+        <SpeedInsights />
+      </LanguageProvider>
+    </BrowserRouter>
+  </HelmetProvider>
 );
 
 // 3. 核心逻辑：检测 root 节点内是否有内容

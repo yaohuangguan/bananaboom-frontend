@@ -4,9 +4,11 @@ export interface BlogPost {
   info: string;
   author: string;
   tags: string[];
-  createdDate?: string;
-  updatedDate?: string;
-  date?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  createdDate?: string; // Legacy
+  updatedDate?: string; // Legacy
+  date?: string; // Legacy
   likes: number;
   image: string;
   content?: string;

@@ -1,5 +1,3 @@
-
-
 export const ja = {
   header: {
     home: 'ホーム',
@@ -19,9 +17,9 @@ export const ja = {
     system: 'システム管理'
   },
   pwa: {
-    title: "Orion",
-    desc: "ホーム画面に追加して、より良い体験を",
-    install: "インストール",
+    title: 'Orion',
+    desc: 'ホーム画面に追加して、より良い体験を',
+    install: 'インストール',
     ios: "共有アイコン <i class='fas fa-share-square'></i> をタップし、<b>「ホーム画面に追加」</b>を選択"
   },
   bottomNav: {
@@ -36,7 +34,8 @@ export const ja = {
     title2: '探索する',
     introPrefix: '私は ',
     introName: 'Sam',
-    introSuffix: ' です。デジタル宇宙を航海し、堅牢なアーキテクチャを構築し、人工知能のフロンティアを探索しています。',
+    introSuffix:
+      ' です。デジタル宇宙を航海し、堅牢なアーキテクチャを構築し、人工知能のフロンティアを探索しています。',
     ctaPrimary: 'ジャーナルを見る',
     ctaSecondary: 'システムプロファイル'
   },
@@ -48,15 +47,15 @@ export const ja = {
     liveDemo: 'ライブデモ',
     sourceCode: 'ソースコード',
     demoOptions: {
-      title: "選択瀏覽模式",
-      local: "当前页面预览",
-      newTab: "新标签页打开",
-      iframeTitle: "实时预览"
+      title: '選択瀏覽模式',
+      local: '当前页面预览',
+      newTab: '新标签页打开',
+      iframeTitle: '实时预览'
     }
   },
   blogList: {
-    title: '送信ログ',
-    subtitle: 'エンジニアリング、スターチャート、デジタル進化に関する記録。',
+    title: 'ジャーナル & 洞察',
+    subtitle: 'テクノロジー、投資、そして個人の成長に関する記録。',
     titlePrivate: '暗号化ボールト',
     subtitlePrivate: '機密文書および個人ログ。',
     viewAll: 'すべてのログを表示',
@@ -72,6 +71,16 @@ export const ja = {
     adjustSearch: '検索パラメータを調整してください',
     clearFilters: 'フィルターをクリア',
     page: 'ページ'
+  },
+  articleView: {
+    back: 'インサイトに戻る',
+    ctaTitle: '送信終了',
+    ctaMessage:
+      'この信号に共感しましたか？「いいね」で周波数を上げるか、リンクをネットワークにブロードキャストしてください。',
+    like: 'いいね',
+    liked: 'いいね済み',
+    share: 'リンクを共有',
+    copied: 'リンクをコピーしました'
   },
   auditLog: {
     title: 'システムアクティビティログ',
@@ -238,7 +247,7 @@ export const ja = {
   footprint: {
     title: 'スターマップ',
     subtitle: '銀河全体の足跡を追跡します。',
-    intro: "探索した地域を照らし、地球グリッドに思い出をピン留めします。",
+    intro: '探索した地域を照らし、地球グリッドに思い出をピン留めします。',
     tabs: {
       china: '中国セクター',
       world: 'グローバルマーカー'
@@ -274,18 +283,22 @@ export const ja = {
       title: 'システムアーキテクチャ',
       subtitle: 'このデジタルスペースで利用可能なモジュールの概要。',
       journalTitle: '公開ジャーナル',
-      journalDesc: '私の個人的な送信ログ。テクノロジー、コーディング、人生経験に関する洞察を共有します。',
+      journalDesc:
+        '私の個人的な送信ログ。テクノロジー、コーディング、人生経験に関する洞察を共有します。',
       profileTitle: 'キャプテンのプロフィール',
       profileDesc: '私の旅の記録：ビッグテックでの経験、スタートアップ、金融探索。',
       chatTitle: '星間チャット',
-      chatDesc: 'リアルタイムの量子リンク。ログインが必要です。接続して、システム内の他のボイジャーとチャットしましょう。',
+      chatDesc:
+        'リアルタイムの量子リンク。ログインが必要です。接続して、システム内の他のボイジャーとチャットしましょう。',
       privateTitle: 'キャプテンの部屋',
-      privateDesc: '私の個人的な愛の物語と思い出のための暗号化された保管庫。キャプテンの目専用（笑）。'
+      privateDesc:
+        '私の個人的な愛の物語と思い出のための暗号化された保管庫。キャプテンの目専用（笑）。'
     },
     orion: {
       etymology1: '(フランス語: 金)',
       etymology2: '(狩人)',
-      description: '夜空で最も明るい星座。デジタル宇宙を航海し、あなたの価値を発見へと導くナビゲーションスター。',
+      description:
+        '夜空で最も明るい星座。デジタル宇宙を航海し、あなたの価値を発見へと導くナビゲーションスター。',
       slogan: 'あなたの価値をナビゲート'
     },
     education: 'データベース: 教育',
@@ -299,25 +312,29 @@ export const ja = {
       {
         company: 'Gold Woodbath Capital',
         role: '創設者 / 投資家',
-        description: 'テクノロジーと新興市場に焦点を当てたプライベートエクイティ企業を設立。ポートフォリオ戦略を管理。',
+        description:
+          'テクノロジーと新興市場に焦点を当てたプライベートエクイティ企業を設立。ポートフォリオ戦略を管理。',
         color: 'bg-amber-500'
       },
       {
         company: 'Lalamove',
         role: 'シニアフロントエンドエンジニア',
-        description: 'コア物流ディスパッチシステムを最適化。ドライバーおよびユーザーアプリのWebviewを強化。',
+        description:
+          'コア物流ディスパッチシステムを最適化。ドライバーおよびユーザーアプリのWebviewを強化。',
         color: 'bg-orange-500'
       },
       {
         company: 'Tencent Cloud',
         role: 'フロントエンド開発者',
-        description: 'Coding OAプラットフォームのフロントエンド開発を主導。DevOpsツールチェーンを実装。',
+        description:
+          'Coding OAプラットフォームのフロントエンド開発を主導。DevOpsツールチェーンを実装。',
         color: 'bg-blue-500'
       },
       {
         company: 'BeeHex (NASAスピンオフ)',
         role: 'フロントエンドエンジニア',
-        description: '3Dプリンティング技術で食品自動化に革命を起こしました。Vue.jsカスタムプラットフォームを構築。',
+        description:
+          '3Dプリンティング技術で食品自動化に革命を起こしました。Vue.jsカスタムプラットフォームを構築。',
         color: 'bg-slate-500'
       }
     ]
@@ -355,7 +372,8 @@ export const ja = {
   },
   live: {
     title: 'ライブアップリンク',
-    subtitle: 'リアルタイムニューラルインターフェースがアクティブです。音声/ビデオデータをGemini Coreにストリーミングしています。',
+    subtitle:
+      'リアルタイムニューラルインターフェースがアクティブです。音声/ビデオデータをGemini Coreにストリーミングしています。',
     connect: 'リンクを初期化',
     disconnect: 'リンクを終了'
   },
@@ -367,163 +385,165 @@ export const ja = {
   },
   privateSpace: {
     tabs: {
-      secondBrain: "第二の脳",
-      journal: "ジャーナル",
-      leisure: "レジャー",
-      gallery: "ギャラリー",
-      fitness: "フィットネス"
+      secondBrain: '第二の脳',
+      journal: 'ジャーナル',
+      leisure: 'レジャー',
+      gallery: 'ギャラリー',
+      fitness: 'フィットネス'
     },
     secondBrain: {
-      title: "デジタルツイン",
-      subtitle: "全知AIコア",
-      welcome: "こんにちは。私はあなたの第二の脳です。ジャーナル、フィットネスログ、プロジェクトデータにアクセスできます。どのようなお手伝いができますか？",
-      placeholder: "データについて何でも聞いてください..."
+      title: 'デジタルツイン',
+      subtitle: '全知AIコア',
+      welcome:
+        'こんにちは。私はあなたの第二の脳です。ジャーナル、フィットネスログ、プロジェクトデータにアクセスできます。どのようなお手伝いができますか？',
+      placeholder: 'データについて何でも聞いてください...'
     },
     hotSearch: {
-      title: "ニュースセンター",
-      hot: "トレンド",
-      finance: "金融",
-      game: "ゲーム",
-      guonei: "国内",
-      world: "世界",
-      updated: "更新済み",
-      loading: "ネットワークをスキャン中..."
+      title: 'ニュースセンター',
+      hot: 'トレンド',
+      finance: '金融',
+      game: 'ゲーム',
+      guonei: '国内',
+      world: '世界',
+      updated: '更新済み',
+      loading: 'ネットワークをスキャン中...'
     },
     leisure: {
-      musicTitle: "ソニックプレイヤー",
-      playUrl: "URLを再生",
-      search: "ライブラリ",
-      placeholderUrl: "MP3 URL...",
-      placeholderSearch: "検索...",
-      nowPlaying: "再生中",
-      stopped: "アイドル",
-      mahjong: "雀魂ゾーン",
-      mahjongDesc: "Maj-Soulネットワークにアクセス。",
+      musicTitle: 'ソニックプレイヤー',
+      playUrl: 'URLを再生',
+      search: 'ライブラリ',
+      placeholderUrl: 'MP3 URL...',
+      placeholderSearch: '検索...',
+      nowPlaying: '再生中',
+      stopped: 'アイドル',
+      mahjong: '雀魂ゾーン',
+      mahjongDesc: 'Maj-Soulネットワークにアクセス。',
       clock: {
-        title: "スマートハブ",
-        subtitle: "深センライブ"
+        title: 'スマートハブ',
+        subtitle: '深センライブ'
       },
       cycle: {
-        title: "ムーンサイクル",
-        subtitle: "バイオトラッカー",
-        prediction: "予測",
-        nextPeriod: "次の生理",
-        inDays: "{days} 日後",
-        log: "期間を記録",
-        save: "保存",
-        flow: "経血量",
-        symptoms: "症状",
-        note: "メモ",
-        delete: "削除",
-        startDate: "開始日",
-        endDate: "終了日",
-        color: "色",
+        title: 'ムーンサイクル',
+        subtitle: 'バイオトラッカー',
+        prediction: '予測',
+        nextPeriod: '次の生理',
+        inDays: '{days} 日後',
+        log: '期間を記録',
+        save: '保存',
+        flow: '経血量',
+        symptoms: '症状',
+        note: 'メモ',
+        delete: '削除',
+        startDate: '開始日',
+        endDate: '終了日',
+        color: '色',
         flows: {
-          light: "少ない",
-          medium: "普通",
-          heavy: "多い"
+          light: '少ない',
+          medium: '普通',
+          heavy: '多い'
         },
         symptomList: {
-          cramps: "生理痛",
-          headache: "頭痛",
-          backpain: "腰痛",
-          fatigue: "疲労",
-          bloating: "むくみ",
-          acne: "ニキビ",
-          moody: "気分の変化"
+          cramps: '生理痛',
+          headache: '頭痛',
+          backpain: '腰痛',
+          fatigue: '疲労',
+          bloating: 'むくみ',
+          acne: 'ニキビ',
+          moody: '気分の変化'
         },
         legend: {
-          period: "生理",
-          predicted: "予測",
-          fertile: "妊娠しやすい",
-          ovulation: "排卵日"
+          period: '生理',
+          predicted: '予測',
+          fertile: '妊娠しやすい',
+          ovulation: '排卵日'
         }
       },
       chefWheel: {
-        title: "AIスマートキッチン",
-        subtitle: "自動食事決定システム",
-        spin: "抽選開始",
-        spinning: "分析中...",
-        confirm: "選択を確認",
-        retry: "戻って再試行",
-        recommending: "Geminiが提案中...",
-        recommendations: "おすすめ:",
-        manage: "メニュー管理",
-        viewRecipe: "レシピを表示",
-        searchMode: "レシピ検索",
-        wheelMode: "ホイールモード",
-        backToSearch: "検索に戻る",
-        searchPlaceholder: "料理名を検索 (例: 宮保鶏丁)...",
-        searching: "検索中...",
-        library: "ライブラリ管理",
+        title: 'AIスマートキッチン',
+        subtitle: '自動食事決定システム',
+        spin: '抽選開始',
+        spinning: '分析中...',
+        confirm: '選択を確認',
+        retry: '戻って再試行',
+        recommending: 'Geminiが提案中...',
+        recommendations: 'おすすめ:',
+        manage: 'メニュー管理',
+        viewRecipe: 'レシピを表示',
+        searchMode: 'レシピ検索',
+        wheelMode: 'ホイールモード',
+        backToSearch: '検索に戻る',
+        searchPlaceholder: '料理名を検索 (例: 宮保鶏丁)...',
+        searching: '検索中...',
+        library: 'ライブラリ管理',
         smartPlan: {
-          button: "AIスマートプラン",
-          title: "スマートプラン",
-          nutritionist: "AI栄養士",
-          personalized: "パーソナライズされたメニュープラン",
-          target: "目標",
-          fallbackTitle: "優先ロジック (フォールバック)",
-          fallback1: "最近フィットネスで体重を記録した場合、AIは最新のログを優先します。",
-          fallback2: "今日、食事ログで別の目標（例：「増量」）を明示的に設定した場合、AIはプロフィールの長期目標ではなく、その目標を推奨します。",
-          error: "栄養士AIは忙しいです。後でもう一度お試しください。"
+          button: 'AIスマートプラン',
+          title: 'スマートプラン',
+          nutritionist: 'AI栄養士',
+          personalized: 'パーソナライズされたメニュープラン',
+          target: '目標',
+          fallbackTitle: '優先ロジック (フォールバック)',
+          fallback1: '最近フィットネスで体重を記録した場合、AIは最新のログを優先します。',
+          fallback2:
+            '今日、食事ログで別の目標（例：「増量」）を明示的に設定した場合、AIはプロフィールの長期目標ではなく、その目標を推奨します。',
+          error: '栄養士AIは忙しいです。後でもう一度お試しください。'
         },
         form: {
-          add: "料理を追加",
-          edit: "料理を編集",
-          name: "料理名",
-          image: "画像URL",
-          category: "カテゴリ",
-          tags: "タグ",
-          cancel: "キャンセル",
-          save: "保存"
+          add: '料理を追加',
+          edit: '料理を編集',
+          name: '料理名',
+          image: '画像URL',
+          category: 'カテゴリ',
+          tags: 'タグ',
+          cancel: 'キャンセル',
+          save: '保存'
         },
         filters: {
-          healthy: "ヘルシーモード",
-          cooldown: "バラエティモード",
-          category: "カテゴリ",
-          calories: "カロリー",
-          tags: "タグ",
+          healthy: 'ヘルシーモード',
+          cooldown: 'バラエティモード',
+          category: 'カテゴリ',
+          calories: 'カロリー',
+          tags: 'タグ',
           options: {
-            any: "すべて",
-            lunch: "ランチ",
-            dinner: "ディナー",
-            supper: "夜食",
-            low: "低カロリー",
-            medium: "中",
-            high: "高カロリー"
+            any: 'すべて',
+            lunch: 'ランチ',
+            dinner: 'ディナー',
+            supper: '夜食',
+            low: '低カロリー',
+            medium: '中',
+            high: '高カロリー'
           },
           tooltips: {
-            healthy: "低カロリーでバランスの取れた食事を優先します。",
-            variety: "最近食べた料理を避けます（クールダウン期間）。"
+            healthy: '低カロリーでバランスの取れた食事を優先します。',
+            variety: '最近食べた料理を避けます（クールダウン期間）。'
           }
         },
         menu: {
-          add: "料理を追加",
-          edit: "料理を編集",
-          name: "料理名",
-          category: "カテゴリ",
-          weight: "優先度 (1-10)",
-          calories: "カロリーレベル",
-          save: "料理を保存"
+          add: '料理を追加',
+          edit: '料理を編集',
+          name: '料理名',
+          category: 'カテゴリ',
+          weight: '優先度 (1-10)',
+          calories: 'カロリーレベル',
+          save: '料理を保存'
         },
         ingredients: {},
         styles: {},
         cats: {}
       },
       pirate: {
-        title: "四人の海賊王",
-        reset: "リシャッフル",
-        moves: "手数",
-        victory: "征服完了",
-        victoryDesc: "海は飼いならされました。",
-        playAgain: "もう一度プレイ",
-        rulesTitle: "ミッションパラメータ",
+        title: '四人の海賊王',
+        reset: 'リシャッフル',
+        moves: '手数',
+        victory: '征服完了',
+        victoryDesc: '海は飼いならされました。',
+        playAgain: 'もう一度プレイ',
+        rulesTitle: 'ミッションパラメータ',
         rules: [
-          "目的：赤、青、緑、黄色の4つの派閥を同時にそれぞれの本拠地に移動させます。",
-          "本拠地：赤（左上）、青（右上）、緑（左下）、黄色（右下）。",
-          "ユニット：各派閥には4つのユニット（船長、船、宝物、地図）があります。4つすべてが特定の3x3の色付きゾーン内にある必要があります。",
-          "中立ゾーン：中央の列と空きスペースは移動可能です。",
-          "難易度：ハード。先読み計画が必要です。"
+          '目的：赤、青、緑、黄色の4つの派閥を同時にそれぞれの本拠地に移動させます。',
+          '本拠地：赤（左上）、青（右上）、緑（左下）、黄色（右下）。',
+          'ユニット：各派閥には4つのユニット（船長、船、宝物、地図）があります。4つすべてが特定の3x3の色付きゾーン内にある必要があります。',
+          '中立ゾーン：中央の列と空きスペースは移動可能です。',
+          '難易度：ハード。先読み計画が必要です。'
         ]
       }
     },
@@ -538,16 +558,46 @@ export const ja = {
       calendar: {
         weekdays: ['日', '月', '火', '水', '木', '金', '土'],
         holidays: {
-          '1-1': '元旦', '2-14': 'バレンタイン', '3-8': '女性の日', '3-12': '植樹節',
-          '4-1': 'エイプリルフール', '5-1': '労働節', '5-4': '青年節', '6-1': '子供の日',
-          '7-1': '建党記念日', '8-1': '建軍記念日', '9-10': '教師の日', '10-1': '国慶節',
-          '12-24': 'イブ', '12-25': 'クリスマス'
+          '1-1': '元旦',
+          '2-14': 'バレンタイン',
+          '3-8': '女性の日',
+          '3-12': '植樹節',
+          '4-1': 'エイプリルフール',
+          '5-1': '労働節',
+          '5-4': '青年節',
+          '6-1': '子供の日',
+          '7-1': '建党記念日',
+          '8-1': '建軍記念日',
+          '9-10': '教師の日',
+          '10-1': '国慶節',
+          '12-24': 'イブ',
+          '12-25': 'クリスマス'
         },
         terms: [
-          "小寒", "大寒", "立春", "雨水", "啓蟄", "春分", 
-          "清明", "穀雨", "立夏", "小満", "芒種", "夏至",
-          "小暑", "大暑", "立秋", "処暑", "白露", "秋分", 
-          "寒露", "霜降", "立冬", "小雪", "大雪", "冬至"
+          '小寒',
+          '大寒',
+          '立春',
+          '雨水',
+          '啓蟄',
+          '春分',
+          '清明',
+          '穀雨',
+          '立夏',
+          '小満',
+          '芒種',
+          '夏至',
+          '小暑',
+          '大暑',
+          '立秋',
+          '処暑',
+          '白露',
+          '秋分',
+          '寒露',
+          '霜降',
+          '立冬',
+          '小雪',
+          '大雪',
+          '冬至'
         ],
         noActivity: 'アクティビティなし',
         summaryTitle: '毎日のアクティビティ概要'
@@ -562,7 +612,7 @@ export const ja = {
       },
       stats: {
         progress: '進捗',
-        userProgress: "{name} の進捗",
+        userProgress: '{name} の進捗',
         activeProfile: 'アクティブプロファイル',
         loading: '読み込み中...',
         loadMore: 'さらに読み込む',
@@ -582,7 +632,7 @@ export const ja = {
         isDone: 'タスク完了？',
         duration: '時間 (分)',
         type: 'アクティビティ',
-        notes: "今日のハイライト",
+        notes: '今日のハイライト',
         types: {
           run: 'ランニング',
           swim: '水泳',
@@ -625,84 +675,84 @@ export const ja = {
       save: '記録を保存',
       saved: '記録を更新しました'
     },
-    journal: "私たちのジャーナル",
-    memories: "思い出",
-    together: "一緒",
-    years: "年",
-    days: "日",
-    loveMsg: "永遠に愛してる！ ❤",
+    journal: '私たちのジャーナル',
+    memories: '思い出',
+    together: '一緒',
+    years: '年',
+    days: '日',
+    loveMsg: '永遠に愛してる！ ❤',
     bucketList: {
-      title: "バケットリスト",
-      subtitle: "夢と目標",
+      title: 'バケットリスト',
+      subtitle: '夢と目標',
       tabs: {
-        todo: "ウィッシュリスト",
-        in_progress: "進行中",
-        done: "達成済み"
+        todo: 'ウィッシュリスト',
+        in_progress: '進行中',
+        done: '達成済み'
       },
       actions: {
-          start: "開始",
-          complete: "完了",
-          later: "後で",
-          wishlist: "ウィッシュリスト",
-          restart: "再開"
+        start: '開始',
+        complete: '完了',
+        later: '後で',
+        wishlist: 'ウィッシュリスト',
+        restart: '再開'
       },
-      add: "願い事をする",
-      edit: "願い事を編集",
-      placeholder: "あなたの夢は何ですか？",
-      description: "計画 / ガイド / 説明",
-      targetDate: "目標日",
-      evidence: "証拠 / 写真",
-      uploadEvidence: "写真をアップロード",
-      empty: "まだ願い事がありません。大きな夢を見ましょう！",
-      status: "現在のステータス",
-      save: "願い事を保存",
-      update: "願い事を更新",
-      delete: "願い事を削除"
+      add: '願い事をする',
+      edit: '願い事を編集',
+      placeholder: 'あなたの夢は何ですか？',
+      description: '計画 / ガイド / 説明',
+      targetDate: '目標日',
+      evidence: '証拠 / 写真',
+      uploadEvidence: '写真をアップロード',
+      empty: 'まだ願い事がありません。大きな夢を見ましょう！',
+      status: '現在のステータス',
+      save: '願い事を保存',
+      update: '願い事を更新',
+      delete: '願い事を削除'
     },
-    tasks: "タスク",
-    newTask: "新しいタスク...",
-    caughtUp: "すべて完了しました！",
-    emptyJournal: "ジャーナルは空です。",
-    writeFirst: "右側に最初の思い出を書きましょう。",
-    read: "読む",
-    preview: "プレビューなし...",
-    unknownDate: "不明な日付",
+    tasks: 'タスク',
+    newTask: '新しいタスク...',
+    caughtUp: 'すべて完了しました！',
+    emptyJournal: 'ジャーナルは空です。',
+    writeFirst: '右側に最初の思い出を書きましょう。',
+    read: '読む',
+    preview: 'プレビューなし...',
+    unknownDate: '不明な日付',
     editor: {
-      titlePlaceholder: "タイトル...",
-      author: "著者",
-      tags: "タグ (スペース区切り)",
-      private: "プライベート",
-      public: "公開",
-      summary: "概要",
-      code: "コード / スクリプト",
-      publish: "エントリーを公開",
-      update: "エントリーを更新",
-      cancel: "編集をキャンセル",
-      chars: "文字",
-      tellStory: "あなたの物語を書いてください...",
-      saving: "保存中...",
-      saved: "保存済み",
-      saveDraft: "下書きを保存",
-      processing: "処理中..."
+      titlePlaceholder: 'タイトル...',
+      author: '著者',
+      tags: 'タグ (スペース区切り)',
+      private: 'プライベート',
+      public: '公開',
+      summary: '概要',
+      code: 'コード / スクリプト',
+      publish: 'エントリーを公開',
+      update: 'エントリーを更新',
+      cancel: '編集をキャンセル',
+      chars: '文字',
+      tellStory: 'あなたの物語を書いてください...',
+      saving: '保存中...',
+      saved: '保存済み',
+      saveDraft: '下書きを保存',
+      processing: '処理中...'
     },
     gallery: {
-      title: "カプセルギャラリー",
-      subtitle: "光でつながる永遠の瞬間。",
-      upload: "写真をアップロード",
-      caption: "キャプション",
-      location: "場所",
-      save: "ボードにピン留め",
-      cancel: "破棄",
-      replace: "画像を置換",
-      delete: "削除",
-      deleteConfirm: "写真を削除しますか？",
-      pinTitle: "思い出を記録",
-      captionLabel: "タイトル",
-      captionPlaceholder: "この思い出に名前を付けて...",
-      dateLabel: "日付",
-      pinButton: "ピン留め",
-      developing: "写真を現像中...",
-      reserved: "予約済み"
+      title: 'カプセルギャラリー',
+      subtitle: '光でつながる永遠の瞬間。',
+      upload: '写真をアップロード',
+      caption: 'キャプション',
+      location: '場所',
+      save: 'ボードにピン留め',
+      cancel: '破棄',
+      replace: '画像を置換',
+      delete: '削除',
+      deleteConfirm: '写真を削除しますか？',
+      pinTitle: '思い出を記録',
+      captionLabel: 'タイトル',
+      captionPlaceholder: 'この思い出に名前を付けて...',
+      dateLabel: '日付',
+      pinButton: 'ピン留め',
+      developing: '写真を現像中...',
+      reserved: '予約済み'
     }
   }
 };
