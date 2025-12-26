@@ -1,0 +1,131 @@
+@import 'tailwindcss';
+@config "../tailwind.config.js";
+/* COLOR VARIABLES 
+  从 HTML 搬运过来的
+*/
+@theme {
+  --color-primary-50: 253 251 247;
+  --color-primary-100: 247 244 237;
+  /* ... 其他变量如果需要也可以在这里定义，
+     但因为你上面用了 JS config 引用 CSS 变量的方式，
+     我们还是用传统的 :root 写法更稳妥 */
+}
+
+:root {
+  --color-primary-50: 253 251 247;
+  --color-primary-100: 247 244 237;
+  --color-primary-200: 232 226 210;
+  --color-primary-300: 210 199 176;
+  --color-primary-400: 180 160 130;
+  --color-primary-500: 168 121 84;
+  --color-primary-600: 140 98 65;
+  --color-primary-700: 115 78 50;
+  --color-primary-800: 94 62 40;
+  --color-primary-900: 70 45 30;
+}
+
+html.dark {
+  --color-primary-50: 255 251 235 !important;
+  --color-primary-100: 254 243 199 !important;
+  --color-primary-200: 253 230 138 !important;
+  --color-primary-300: 252 211 77 !important;
+  --color-primary-400: 251 191 36 !important;
+  --color-primary-500: 255 170 0 !important;
+  --color-primary-600: 234 140 0 !important;
+  --color-primary-700: 180 83 9 !important;
+  --color-primary-800: 146 64 14 !important;
+  --color-primary-900: 120 53 15 !important;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
+}
+
+/* Hide scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Star Field Utility */
+.stars-sm {
+  width: 1px;
+  height: 1px;
+  background: transparent;
+}
+.stars-md {
+  width: 2px;
+  height: 2px;
+  background: transparent;
+}
+.stars-lg {
+  width: 3px;
+  height: 3px;
+  background: transparent;
+}
+
+/* React Phone Input Overrides */
+.react-tel-input .form-control {
+  width: 100% !important;
+  height: 50px !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid #e2e8f0 !important;
+  background-color: #f8fafc !important;
+  font-family: 'Inter', sans-serif !important;
+}
+.dark .react-tel-input .form-control {
+  background-color: #0a0f1e !important;
+  border-color: #1e293b !important;
+  color: white !important;
+}
+.react-tel-input .flag-dropdown {
+  border-color: #e2e8f0 !important;
+  background-color: transparent !important;
+}
+.dark .react-tel-input .flag-dropdown {
+  border-color: #1e293b !important;
+}
+.react-tel-input .country-list {
+  background-color: white !important;
+  color: #334155 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+.dark .react-tel-input .country-list {
+  background-color: #0f172a !important;
+  color: #e2e8f0 !important;
+  border-color: #1e293b !important;
+}
+
+/* Code Block Wrapper Styling */
+.code-block-wrapper {
+  font-family:
+    'Fira Code', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  border-radius: 0.75rem;
+  margin: 1.5rem 0;
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+  padding: 1.5rem !important;
+  overflow-x: auto;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #334155;
+}
+
+.code-block-wrapper code {
+  font-family: inherit;
+  background-color: transparent !important;
+  padding: 0 !important;
+  color: inherit !important;
+}
+
+.hljs {
+  background: transparent !important;
+  padding: 0 !important;
+}

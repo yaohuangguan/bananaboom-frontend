@@ -15,206 +15,24 @@
 
     <title>Orion | Engineering & Design</title>
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    
     <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sen:wght@400;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    
     <link href="https://cdn.jsdelivr.net/npm/react-phone-input-2@2.15.1/lib/style.css" rel="stylesheet" />
-
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'system-ui', 'sans-serif'],
-              display: ['Sen', 'system-ui', 'sans-serif'],
-              mono: ['Fira Code', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace'],
-            },
-            colors: {
-              slate: {
-                850: '#151e2e',
-                950: '#020617',
-              },
-              milky: {
-                50: '#fdfbf7', 
-                100: '#f7f4ed',
-                200: '#e8e2d2',
-                900: '#1c1917',
-              },
-              primary: {
-                50: 'rgb(var(--color-primary-50) / <alpha-value>)',
-                100: 'rgb(var(--color-primary-100) / <alpha-value>)',
-                200: 'rgb(var(--color-primary-200) / <alpha-value>)',
-                300: 'rgb(var(--color-primary-300) / <alpha-value>)',
-                400: 'rgb(var(--color-primary-400) / <alpha-value>)',
-                500: 'rgb(var(--color-primary-500) / <alpha-value>)',
-                600: 'rgb(var(--color-primary-600) / <alpha-value>)',
-                700: 'rgb(var(--color-primary-700) / <alpha-value>)',
-                800: 'rgb(var(--color-primary-800) / <alpha-value>)',
-                900: 'rgb(var(--color-primary-900) / <alpha-value>)',
-              }
-            },
-            animation: {
-              'fade-in': 'fadeIn 0.6s ease-out forwards',
-              'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-            },
-            keyframes: {
-              fadeIn: {
-                '0%': { opacity: '0' },
-                '100%': { opacity: '1' },
-              },
-              slideUp: {
-                '0%': { transform: 'translateY(20px)', opacity: '0' },
-                '100%': { transform: 'translateY(0)', opacity: '1' },
-              },
-            },
-          },
-        },
-      }
-    </script>
-
-    <style>
-      /* 
-        COLOR VARIABLES 
-      */
-      
-      :root {
-        --color-primary-50: 253 251 247;
-        --color-primary-100: 247 244 237;
-        --color-primary-200: 232 226 210;
-        --color-primary-300: 210 199 176;
-        --color-primary-400: 180 160 130;
-        --color-primary-500: 168 121 84;
-        --color-primary-600: 140 98 65;
-        --color-primary-700: 115 78 50;
-        --color-primary-800: 94 62 40;
-        --color-primary-900: 70 45 30;
-      }
-
-      html.dark {
-        --color-primary-50: 255 251 235 !important;
-        --color-primary-100: 254 243 199 !important;
-        --color-primary-200: 253 230 138 !important;
-        --color-primary-300: 252 211 77 !important;
-        --color-primary-400: 251 191 36 !important;
-        --color-primary-500: 255 170 0 !important;
-        --color-primary-600: 234 140 0 !important;
-        --color-primary-700: 180 83 9 !important;
-        --color-primary-800: 146 64 14 !important;
-        --color-primary-900: 120 53 15 !important;
-      }
-
-      body {
-        font-family: 'Inter', sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        overscroll-behavior-y: none;
-      }
-
-      /* Hide scrollbar */
-      .no-scrollbar::-webkit-scrollbar { display: none; }
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      
-      /* Star Field Utility */
-      .stars-sm { width: 1px; height: 1px; background: transparent; }
-      .stars-md { width: 2px; height: 2px; background: transparent; }
-      .stars-lg { width: 3px; height: 3px; background: transparent; }
-
-      /* React Phone Input Overrides */
-      .react-tel-input .form-control {
-        width: 100% !important;
-        height: 50px !important;
-        border-radius: 0.75rem !important;
-        border: 1px solid #e2e8f0 !important;
-        background-color: #f8fafc !important;
-        font-family: 'Inter', sans-serif !important;
-      }
-      .dark .react-tel-input .form-control {
-        background-color: #0a0f1e !important;
-        border-color: #1e293b !important;
-        color: white !important;
-      }
-      .react-tel-input .flag-dropdown { border-color: #e2e8f0 !important; background-color: transparent !important; }
-      .dark .react-tel-input .flag-dropdown { border-color: #1e293b !important; }
-      .react-tel-input .country-list { background-color: white !important; color: #334155 !important; border: 1px solid #e2e8f0 !important; }
-      .dark .react-tel-input .country-list { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #1e293b !important; }
-
-      /* Code Block Wrapper Styling - Updated for White Paper Look */
-      .code-block-wrapper {
-        font-family: 'Fira Code', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
-        font-size: 0.9rem;
-        line-height: 1.6;
-        border-radius: 0.75rem;
-        margin: 1.5rem 0;
-        background-color: #1e293b !important; /* Always dark slate */
-        color: #f1f5f9 !important; /* Always light text */
-        padding: 1.5rem !important; /* Increased Padding */
-        overflow-x: auto;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        border: 1px solid #334155;
-      }
-
-      .code-block-wrapper code {
-        font-family: inherit;
-        background-color: transparent !important;
-        padding: 0 !important;
-        color: inherit !important;
-      }
-
-      .hljs {
-        background: transparent !important;
-        padding: 0 !important;
-      }
-
-    </style>
-    <script type="importmap">
-{
-  "imports": {
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "socket.io-client": "https://cdn.socket.io/4.7.4/socket.io.esm.min.js",
-    "recharts": "https://esm.sh/recharts@2.12.0?external=react,react-dom",
-    "echarts": "https://esm.sh/echarts@5.5.0",
-    "leaflet": "https://esm.sh/leaflet@1.9.4",
-    "react-phone-input-2": "https://esm.sh/react-phone-input-2@2.15.1?external=react,react-dom",
-    "react-router-dom": "https://esm.sh/react-router-dom@6.22.0?external=react,react-dom",
-    "@remix-run/router": "https://esm.sh/@remix-run/router@1.15.0",
-    "@vercel/analytics": "https://esm.sh/@vercel/analytics@^1.6.1",
-    "@remixicon/react": "https://esm.sh/@remixicon/react@4.2.0?external=react,react-dom",
-    "remixicon": "https://esm.sh/remixicon@4.2.0",
-    "remixicon/": "https://esm.sh/remixicon@^4.7.0/",
-    "react-helmet-async": "https://esm.sh/react-helmet-async@2.0.4?external=react,react-dom",
-    "@vercel/speed-insights/": "https://esm.sh/@vercel/speed-insights@^1.3.1/"
-  }
-}
-</script>
-  </head>
+    </head>
   <body class="bg-milky-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-500 overflow-x-hidden">
     <div id="root"></div>
     <script type="module" src="index.tsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
-        // 判断是否是本地环境 (localhost 或 127.0.0.1)
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
         if (isLocal) {
-          // 🛑如果是本地开发：检查有没有已存活的 SW，如果有，统统干掉！
           navigator.serviceWorker.getRegistrations().then((registrations) => {
             for (let registration of registrations) {
               registration.unregister();
@@ -222,15 +40,10 @@
             }
           });
         } else {
-          // ✅如果是线上环境：才进行注册
           window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js')
-              .then(registration => {
-                console.log('SW registered: ', registration);
-              })
-              .catch(registrationError => {
-                console.log('SW registration failed: ', registrationError);
-              });
+              .then(registration => { console.log('SW registered: ', registration); })
+              .catch(registrationError => { console.log('SW registration failed: ', registrationError); });
           });
         }
       }

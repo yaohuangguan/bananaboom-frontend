@@ -5,7 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { inject } from '@vercel/analytics';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { HelmetProvider } from 'react-helmet-async';
-
+import './styles/index.css';
 // Initialize Vercel Web Analytics
 inject();
 
