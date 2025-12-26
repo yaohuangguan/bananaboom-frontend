@@ -41,7 +41,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
-    "@prerenderer/renderer-puppeteer": "^1.2.4",
     "@sparticuz/chromium": "^143.0.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^22.14.0",
@@ -63,7 +62,6 @@
     "puppeteer-core": "^24.34.0",
     "tailwindcss": "^4.1.18",
     "typescript": "~5.8.2",
-    "vite": "^6.2.0",
-    "vite-plugin-prerender": "^1.0.8"
+    "vite": "^6.2.0"
   }
 }

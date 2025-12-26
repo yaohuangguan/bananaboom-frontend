@@ -1,80 +1,120 @@
-import { run } from 'react-snap';
 import puppeteer from 'puppeteer';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { spawn } from 'child_process';
 import process from 'process';
+
+// 模拟 __dirname
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DIST_DIR = path.resolve(__dirname, '../dist');
+
+// 需要预渲染的路由
+const ROUTES = ['/', '/blogs', '/profile', '/404'];
 
 const isVercel = process.env.VERCEL === '1';
 
+// 启动预览服务器
+function startServer() {
+  return new Promise((resolve, reject) => {
+    console.log('🚀 Starting preview server...');
+    // 使用 vite preview 启动 dist 目录
+    const server = spawn('npm', ['run', 'preview', '--', '--port', '4173'], {
+      stdio: 'inherit',
+      shell: true,
+      detached: false // 确保父进程死掉时子进程也死掉
+    });
+
+    // 简单粗暴：等待 3 秒让服务器启动（或者你可以轮询端口）
+    setTimeout(() => {
+      resolve(server);
+    }, 3000);
+  });
+}
+
 (async () => {
+  let serverProcess;
+  let browser;
+
   try {
+    // 1. 启动本地静态服务器
+    serverProcess = await startServer();
+
+    // 2. 准备浏览器
     let executablePath;
     let launchArgs = [];
 
     if (isVercel) {
-      console.log('☁️ Detected Vercel Environment. Loading @sparticuz/chromium...');
+      console.log('☁️ Detected Vercel. Loading @sparticuz/chromium...');
       const chromium = await import('@sparticuz/chromium').then((m) => m.default);
       executablePath = await chromium.executablePath();
       launchArgs = chromium.args;
     } else {
-      console.log('💻 Detected Local Environment. Using Standard Puppeteer...');
+      console.log('💻 Local run. Using Puppeteer...');
       executablePath = puppeteer.executablePath();
-
-      // Windows 路径兼容修复
-      if (process.platform === 'win32') {
-        executablePath = path.resolve(executablePath).split(path.sep).join('/');
-      }
-
-      launchArgs = [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu'
-      ];
+      launchArgs = ['--no-sandbox', '--disable-setuid-sandbox'];
     }
 
-    console.log(`🚀 Final Executable Path: ${executablePath}`);
-
-    // 运行 react-snap
-    await run({
-      puppeteerExecutablePath: executablePath,
-      source: 'dist',
-      destination: 'dist',
-      include: ['/', '/blogs', '/404.html'], // 显式包含 404
-
-      // 🔥 核心修复 1: 强制根路径
-      publicPath: '/',
-
-      // 🔥 核心修复 2: 彻底禁用所有 HTML/CSS 篡改功能
-      // Vite 已经压缩得很好了，react-snap 再搞一次只会破坏 ESM 标签
-      minifyCss: false,
-      inlineCss: false, // 👈 最可能是它导致了 SyntaxError
-      minifyHtml: false, // 先关掉，排查问题，Vite 已经压缩过 HTML 了
-
-      // 🔥 核心修复 3: 禁用 Webpack 专用逻辑
-      fixWebpackChunksIssue: false,
-      asyncScriptTags: false, // Vite 默认就是 module defer，不要乱动
-
-      // 🔥 核心修复 4: 忽略外部资源报错 (比如图片 404 不应该挂断构建)
-      skipThirdPartyRequests: true,
-
-      // Vercel 性能限制
-      concurrency: 1,
-
-      puppeteerArgs: [
-        ...launchArgs,
-        '--single-process',
-        '--no-zygote',
-        '--disable-web-security' // 允许跨域加载
-      ],
-
-      pageLoadTimeout: 60000
+    browser = await puppeteer.launch({
+      executablePath,
+      headless: 'new',
+      args: [...launchArgs, '--single-process', '--no-zygote']
     });
 
-    console.log('✅ Pre-rendering complete!');
+    // 3. 开始抓取
+    for (const route of ROUTES) {
+      const page = await browser.newPage();
+      await page.setViewport({ width: 1280, height: 800 });
+
+      // 注意：Vite Preview 默认端口 4173
+      const url = `http://localhost:4173${route === '/' ? '' : route}`;
+      console.log(`📸 Snapping: ${url}`);
+
+      try {
+        // networkidle0: 等待网络空闲，确保 React 渲染完成
+        await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+
+        // 额外的保险：等待 root 节点出现
+        try {
+          await page.waitForSelector('#root', { timeout: 5000 });
+        } catch (e) {
+          /* empty */
+        }
+
+        const html = await page.content();
+
+        // 计算文件路径
+        // / -> index.html
+        // /blogs -> /blogs/index.html
+        // /404 -> 404.html
+        let filePath;
+        if (route === '/404') {
+          filePath = path.join(DIST_DIR, '404.html');
+        } else {
+          const routePath = route === '/' ? '' : route;
+          const dir = path.join(DIST_DIR, routePath);
+          if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+          filePath = path.join(dir, 'index.html');
+        }
+
+        fs.writeFileSync(filePath, html);
+        console.log(`✅ Saved: ${filePath}`);
+      } catch (e) {
+        console.error(`❌ Error snapping ${route}:`, e.message);
+        // 不中断部署，只报错
+      } finally {
+        await page.close();
+      }
+    }
   } catch (error) {
-    console.error('⚠️ Pre-rendering failed, but continuing build...', error);
-    // 保持 exit 0，确保即使 snap 失败，网站也能上线（虽然是未预渲染的版本）
+    console.error('⚠️ Prerender script failed:', error);
+  } finally {
+    if (browser) await browser.close();
+    if (serverProcess) {
+      console.log('🛑 Killing preview server...');
+      serverProcess.kill();
+    }
+    // 强制成功退出，保证 Vercel 部署不挂
     process.exit(0);
   }
 })();
