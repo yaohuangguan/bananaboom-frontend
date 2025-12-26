@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { featureService } from '../../services/featureService';
 import { apiService } from '../../services/api';
-import { CloudinaryUsage } from '../../types';
+import { CloudinaryUsage, R2UsageStats } from '../../types';
 import { toast } from '../Toast';
 import { DeleteModal } from '../DeleteModal';
+import { useLocation } from 'react-router-dom';
+import { R2UsageDashboard } from './R2UsageDashboard';
 
 export const SystemResources: React.FC = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'CLOUDINARY' | 'R2'>('CLOUDINARY');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<'CLOUDINARY' | 'R2'>('R2');
 
   // Cloudinary State
   const [usageData, setUsageData] = useState<CloudinaryUsage | null>(null);
@@ -20,17 +23,57 @@ export const SystemResources: React.FC = () => {
   );
   const [loadingCloudinaryLib, setLoadingCloudinaryLib] = useState(false);
 
-  // R2 State
+  // R2 State (Enhanced)
   const [r2Files, setR2Files] = useState<any[]>([]);
+  const [r2Folders, setR2Folders] = useState<any[]>([]); // New: Separate folders
   const [loadingR2, setLoadingR2] = useState(false);
   const [r2Cursor, setR2Cursor] = useState<string | undefined>(undefined);
   const [r2HasMore, setR2HasMore] = useState(true);
+
+  // R2 Upload State
+  const [isUploading, setIsUploading] = useState(false);
+  const r2FileInputRef = useRef<HTMLInputElement>(null);
+
+  // R2 Usage Dashboard State
+  const [r2Usage, setR2Usage] = useState<R2UsageStats | null>(null);
+  const [loadingR2Usage, setLoadingR2Usage] = useState(false);
+
+  // R2 Navigation State
+  const [r2Type, setR2Type] = useState<'image' | 'backup'>('image');
+  const [currentFolder, setCurrentFolder] = useState<string>(''); // Current subfolder path (e.g. "2023-12-25/")
 
   // Common Delete State
   const [fileToDelete, setFileToDelete] = useState<{
     id: string;
     type: 'CLOUDINARY' | 'R2';
   } | null>(null);
+
+  // Context Menu State
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    visible: boolean;
+    targetFolder?: string;
+  }>({ x: 0, y: 0, visible: false });
+  const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+
+  // Initialize from Location State (if coming from backup action)
+  useEffect(() => {
+    if (location.state && (location.state as any).resourceTab) {
+      setActiveTab((location.state as any).resourceTab);
+    }
+    if (location.state && (location.state as any).r2Type) {
+      setR2Type((location.state as any).r2Type);
+    }
+  }, [location.state]);
+
+  // Click outside to close context menu
+  useEffect(() => {
+    const handleClick = () => setContextMenu({ ...contextMenu, visible: false });
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, [contextMenu]);
 
   // --- Cloudinary Logic ---
   const fetchUsage = async () => {
@@ -60,38 +103,160 @@ export const SystemResources: React.FC = () => {
   };
 
   // --- R2 Logic ---
-  const fetchR2Files = async (cursor?: string) => {
+  const fetchR2Data = async (cursor?: string) => {
     setLoadingR2(true);
     try {
-      const res: any = await featureService.getR2Files(20, cursor);
+      // Call updated endpoint with folder & type
+      const res: any = await featureService.getR2Files(50, cursor, r2Type, currentFolder);
       if (res.success) {
-        // Updated to match API: { success: true, data: [], pagination: { nextCursor, hasMore } }
-        const incomingFiles = res.data || [];
+        const incomingFiles = res.data.files || [];
+        const incomingFolders = res.data.folders || [];
         const pagination = res.pagination || {};
 
-        setR2Files((prev) => (cursor ? [...prev, ...incomingFiles] : incomingFiles));
+        // If cursor exists, append files (folders usually don't paginate the same way in mixed views, but logic applies)
+        // For cleaner folder navigation, we usually replace list on folder change, append on load more
+        if (cursor) {
+          setR2Files((prev) => [...prev, ...incomingFiles]);
+        } else {
+          setR2Files(incomingFiles);
+          setR2Folders(incomingFolders);
+        }
+
+        // Sync current folder from metadata if available to keep breadcrumbs accurate
+        if (res.meta && typeof res.meta.currentPath === 'string') {
+          if (res.meta.currentPath !== currentFolder) {
+            setCurrentFolder(res.meta.currentPath);
+          }
+        }
+
         setR2Cursor(pagination.nextCursor);
         setR2HasMore(!!pagination.hasMore);
       }
     } catch (e) {
       console.error(e);
-      toast.error('Failed to load R2 files');
+      toast.error(t.system.r2.empty);
     } finally {
       setLoadingR2(false);
+    }
+  };
+
+  const fetchR2Usage = async () => {
+    setLoadingR2Usage(true);
+    try {
+      const stats = await featureService.getR2Usage();
+      setR2Usage(stats);
+    } catch (e) {
+      console.error('Failed to load R2 usage stats', e);
+    } finally {
+      setLoadingR2Usage(false);
     }
   };
 
   useEffect(() => {
     if (activeTab === 'CLOUDINARY' && !usageData) {
       fetchUsage();
-    } else if (activeTab === 'R2' && r2Files.length === 0) {
-      fetchR2Files();
+    } else if (activeTab === 'R2') {
+      // Reset and fetch when tab or type or folder changes
+      setR2Files([]);
+      setR2Folders([]);
+      setR2Cursor(undefined);
+      fetchR2Data();
+      // Only fetch usage once per session or on tab switch
+      if (!r2Usage) fetchR2Usage();
     }
-  }, [activeTab]);
+  }, [activeTab, r2Type, currentFolder]);
 
   const handleLoadMoreR2 = () => {
     if (r2HasMore && !loadingR2) {
-      fetchR2Files(r2Cursor);
+      fetchR2Data(r2Cursor);
+    }
+  };
+
+  const handleFolderClick = (nextQueryParam: string) => {
+    // Directly set the folder path provided by the API
+    setCurrentFolder(nextQueryParam);
+  };
+
+  const handleBreadcrumbClick = (index: number, parts: string[]) => {
+    // Reconstruct path up to index
+    const newPath = parts.slice(0, index + 1).join('/');
+    setCurrentFolder(newPath);
+  };
+
+  const handleRootClick = () => {
+    setCurrentFolder('');
+  };
+
+  // --- Context Menu Logic ---
+  const handleContextMenu = (e: React.MouseEvent, folderName?: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      visible: true,
+      targetFolder: folderName
+    });
+  };
+
+  // --- Create Folder Logic ---
+  const handleCreateFolder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFolderName.trim()) return;
+
+    setIsUploading(true);
+    try {
+      // Use Presigned URL to upload a .keep file to create folder structure
+      await featureService.createR2Folder(newFolderName, currentFolder);
+      toast.success('Folder created!');
+      setIsCreateFolderModalOpen(false);
+      setNewFolderName('');
+      fetchR2Data(); // Refresh to see new folder
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to create folder.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const openCreateFolderModal = () => {
+    setIsCreateFolderModalOpen(true);
+    setContextMenu({ ...contextMenu, visible: false });
+  };
+
+  // --- R2 Upload Logic (Presigned) ---
+  const handleR2UploadClick = () => {
+    if (r2FileInputRef.current) r2FileInputRef.current.click();
+  };
+
+  const handleR2FileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    let successCount = 0;
+
+    // Determine upload target: If context menu had a target, upload there, else current folder
+    const targetPath = contextMenu.targetFolder || currentFolder;
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        // Use New Presigned Flow
+        await featureService.uploadFileToR2Presigned(file, targetPath, true);
+        successCount++;
+      }
+      toast.success(`${successCount} file(s) uploaded successfully.`);
+      fetchR2Data(); // Refresh list
+      fetchR2Usage(); // Refresh usage stats
+    } catch (e: any) {
+      console.error(e);
+      toast.error('Upload failed: ' + e.message);
+    } finally {
+      setIsUploading(false);
+      setContextMenu({ ...contextMenu, targetFolder: undefined }); // Reset context target
+      if (r2FileInputRef.current) r2FileInputRef.current.value = '';
     }
   };
 
@@ -106,11 +271,13 @@ export const SystemResources: React.FC = () => {
         await apiService.deleteCloudinaryImage(id);
         fetchUsage(); // Refresh usage stats
       } else {
-        // R2 Delete using ID
-        setR2Files((prev) => prev.filter((f) => f.id !== id));
+        // R2 Delete
+        // Ensure we filter by unique ID (key) which is passed as 'id'
+        setR2Files((prev) => prev.filter((f) => (f.id || f.key || f.name) !== id));
         await featureService.deleteR2File(id);
+        fetchR2Usage(); // Refresh usage
       }
-      toast.success('File deleted successfully');
+      toast.success(t.system.r2.deleteSuccess);
     } catch (e) {
       console.error(e);
       toast.error('Delete failed');
@@ -133,20 +300,20 @@ export const SystemResources: React.FC = () => {
   };
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <div className="animate-fade-in space-y-6" onContextMenu={(e) => handleContextMenu(e)}>
       {/* Tab Switcher */}
       <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit">
-        <button
-          onClick={() => setActiveTab('CLOUDINARY')}
-          className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all ${activeTab === 'CLOUDINARY' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
-        >
-          Cloudinary
-        </button>
         <button
           onClick={() => setActiveTab('R2')}
           className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all ${activeTab === 'R2' ? 'bg-white dark:bg-slate-700 shadow-sm text-orange-500' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
         >
-          R2 Storage
+          {t.system.r2.tab_storage}
+        </button>
+        <button
+          onClick={() => setActiveTab('CLOUDINARY')}
+          className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all ${activeTab === 'CLOUDINARY' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+        >
+          {t.system.r2.tab_cloudinary}
         </button>
       </div>
 
@@ -156,7 +323,9 @@ export const SystemResources: React.FC = () => {
           {loadingUsage && !usageData ? (
             <div className="flex flex-col items-center justify-center min-h-[300px]">
               <i className="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i>
-              <p className="text-slate-400 font-mono text-sm uppercase">Loading Metrics...</p>
+              <p className="text-slate-400 font-mono text-sm uppercase">
+                {t.system.common.loading}
+              </p>
             </div>
           ) : usageData ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -410,39 +579,143 @@ export const SystemResources: React.FC = () => {
         </>
       )}
 
-      {/* --- R2 VIEW --- */}
+      {/* --- R2 VIEW (Updated with Dashboard, Folders & Breadcrumbs) --- */}
       {activeTab === 'R2' && (
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xl h-[600px] flex flex-col relative">
-          <div className="flex justify-between items-center mb-4 shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-lg">
-                <i className="fas fa-layer-group"></i>
+        <div className="flex flex-col gap-6">
+          {/* R2 Usage Dashboard */}
+          {r2Usage && <R2UsageDashboard usage={r2Usage} />}
+
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xl min-h-[600px] flex flex-col relative">
+            {/* Header & Controls */}
+            <div className="flex flex-col gap-4 mb-4 shrink-0">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-lg">
+                    <i className="fas fa-layer-group"></i>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-slate-800 dark:text-white">
+                      {t.system.r2.title}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {r2Files.length} Files, {r2Folders.length} {t.system.r2.folders}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  {/* Type Switcher */}
+                  <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                    <button
+                      onClick={() => {
+                        setR2Type('image');
+                        setCurrentFolder('');
+                      }}
+                      className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${r2Type === 'image' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500'}`}
+                    >
+                      {t.system.r2.images}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setR2Type('backup');
+                        setCurrentFolder('');
+                      }}
+                      className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${r2Type === 'backup' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500'}`}
+                    >
+                      {t.system.r2.backups}
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => {
+                      fetchR2Data();
+                      fetchR2Usage();
+                    }}
+                    className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-blue-500 flex items-center justify-center transition-colors"
+                  >
+                    <i className="fas fa-sync"></i>
+                  </button>
+
+                  {/* Upload Button */}
+                  <button
+                    onClick={handleR2UploadClick}
+                    disabled={isUploading}
+                    className="px-4 bg-emerald-500 text-white rounded-lg text-xs font-bold uppercase hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isUploading ? (
+                      <i className="fas fa-circle-notch fa-spin"></i>
+                    ) : (
+                      <i className="fas fa-upload"></i>
+                    )}
+                    {t.system.r2.upload}
+                  </button>
+                  <input
+                    type="file"
+                    multiple
+                    ref={r2FileInputRef}
+                    className="hidden"
+                    onChange={handleR2FileChange}
+                    disabled={isUploading}
+                  />
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-lg text-slate-800 dark:text-white">
-                  Cloudflare R2 Objects
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {r2Files.length} Loaded
-                </p>
+
+              {/* Breadcrumbs */}
+              <div className="flex items-center gap-2 text-sm text-slate-500 bg-slate-50 dark:bg-black/30 p-2 rounded-xl overflow-x-auto whitespace-nowrap custom-scrollbar">
+                <button
+                  onClick={handleRootClick}
+                  className={`flex items-center gap-1 hover:text-orange-500 transition-colors ${!currentFolder ? 'font-bold text-orange-500' : ''}`}
+                >
+                  <i className="fas fa-home"></i> {t.system.r2.home}
+                </button>
+                {currentFolder
+                  .split('/')
+                  .filter(Boolean)
+                  .map((part, index, arr) => (
+                    <React.Fragment key={index}>
+                      <span className="text-slate-300 text-xs">/</span>
+                      <button
+                        onClick={() => handleBreadcrumbClick(index, arr)}
+                        className={`hover:text-orange-500 transition-colors ${index === arr.length - 1 ? 'font-bold text-slate-700 dark:text-slate-200' : ''}`}
+                      >
+                        {part}
+                      </button>
+                    </React.Fragment>
+                  ))}
               </div>
             </div>
-            <button onClick={() => fetchR2Files()} className="text-slate-400 hover:text-blue-500">
-              <i className="fas fa-sync"></i>
-            </button>
-          </div>
 
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-2 bg-slate-50 dark:bg-black/20 rounded-2xl">
-            {r2Files.length === 0 && !loadingR2 ? (
-              <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                <i className="fas fa-box-open text-4xl mb-3 opacity-50"></i>
-                <p>Bucket is empty or failed to load.</p>
-              </div>
-            ) : (
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 bg-slate-50 dark:bg-black/20 rounded-2xl relative">
+              {/* Folders Section */}
+              {r2Folders.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-xs font-bold uppercase text-slate-400 mb-2 px-1">
+                    {t.system.r2.folders}
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {r2Folders.map((folder, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => handleFolderClick(folder.nextQueryParam || folder.name)}
+                        onContextMenu={(e) => handleContextMenu(e, folder.name)}
+                        className="bg-amber-50 dark:bg-slate-800 border border-amber-100 dark:border-slate-700 p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-amber-100 dark:hover:bg-slate-700/80 transition-colors group"
+                      >
+                        <i className="fas fa-folder text-amber-400 text-xl group-hover:text-amber-500"></i>
+                        <span
+                          className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate"
+                          title={folder.name}
+                        >
+                          {folder.name.replace(/\/$/, '')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Files Section */}
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {r2Files.map((file) => (
                   <div
-                    key={file.id}
+                    key={file.id || file.key || file.name}
                     className="group relative aspect-square bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-slate-200 dark:border-slate-700"
                   >
                     <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-900 relative">
@@ -459,21 +732,26 @@ export const SystemResources: React.FC = () => {
                         />
                       ) : (
                         <div className="flex flex-col items-center justify-center text-slate-400">
-                          <i className="fas fa-file-alt text-3xl mb-2"></i>
-                          <span className="text-[10px] font-bold uppercase">
-                            {file.type || 'FILE'}
+                          <i
+                            className={`fas ${file.name.endsWith('.json') ? 'fa-file-code' : 'fa-file-alt'} text-3xl mb-2`}
+                          ></i>
+                          <span className="text-[10px] font-bold uppercase truncate max-w-[80%]">
+                            {file.name.split('.').pop()}
                           </span>
                         </div>
                       )}
                     </div>
 
                     {/* Overlay Info */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-between p-3">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-between p-3">
                       <div className="flex justify-end transform translate-y-[-10px] group-hover:translate-y-0 transition-transform">
                         <button
-                          onClick={() => setFileToDelete({ id: file.id, type: 'R2' })}
+                          // FIX: Pass valid ID provided by backend, falling back to key/name
+                          onClick={() =>
+                            setFileToDelete({ id: file.id || file.key || file.name, type: 'R2' })
+                          }
                           className="w-8 h-8 rounded-full bg-red-500/90 hover:bg-red-600 text-white flex items-center justify-center shadow-lg backdrop-blur-sm transition-transform hover:scale-110"
-                          title="Delete File"
+                          title={t.system.common.delete}
                         >
                           <i className="fas fa-trash-alt text-xs"></i>
                         </button>
@@ -489,14 +767,14 @@ export const SystemResources: React.FC = () => {
                         <div className="flex justify-between items-end text-[10px] text-white/70 font-mono border-t border-white/10 pt-2">
                           <div className="flex flex-col">
                             <span>{formatBytes(file.size)}</span>
-                            <span>{new Date(file.createdAt).toLocaleDateString()}</span>
+                            <span>{new Date(file.lastModified).toLocaleDateString()}</span>
                           </div>
                           <a
                             href={file.url}
                             target="_blank"
                             rel="noreferrer"
                             className="text-white hover:text-blue-300 transition-colors"
-                            title="Open Link"
+                            title="Open/Download"
                           >
                             <i className="fas fa-external-link-alt"></i>
                           </a>
@@ -506,25 +784,124 @@ export const SystemResources: React.FC = () => {
                   </div>
                 ))}
               </div>
-            )}
 
-            {loadingR2 && (
-              <div className="py-4 text-center text-slate-400 animate-pulse">
-                <i className="fas fa-circle-notch fa-spin mr-2"></i> Fetching objects...
-              </div>
-            )}
+              {r2Files.length === 0 && r2Folders.length === 0 && !loadingR2 && (
+                <div
+                  className="flex flex-col items-center justify-center h-40 text-slate-400 cursor-pointer hover:text-slate-500"
+                  onContextMenu={(e) => handleContextMenu(e)}
+                >
+                  <i className="fas fa-folder-open text-4xl mb-3 opacity-50"></i>
+                  <p>{t.system.r2.empty}</p>
+                  <span className="text-[10px] mt-1 opacity-50">Right-click to create folder</span>
+                </div>
+              )}
 
-            {!loadingR2 && r2HasMore && (
-              <button
-                onClick={handleLoadMoreR2}
-                className="w-full py-3 mt-4 text-xs font-bold uppercase text-slate-500 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:text-blue-500 hover:border-blue-500 transition-colors"
-              >
-                Load More
-              </button>
-            )}
+              {loadingR2 && (
+                <div className="py-8 text-center text-slate-400 animate-pulse">
+                  <i className="fas fa-circle-notch fa-spin mr-2"></i> {t.system.common.loading}
+                </div>
+              )}
+
+              {!loadingR2 && r2HasMore && r2Files.length > 0 && (
+                <button
+                  onClick={handleLoadMoreR2}
+                  className="w-full py-3 mt-4 text-xs font-bold uppercase text-slate-500 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:text-blue-500 hover:border-blue-500 transition-colors"
+                >
+                  {t.system.r2.loadMore}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
+
+      {/* --- CONTEXT MENU --- */}
+      {contextMenu.visible &&
+        createPortal(
+          <div
+            className="fixed z-[10000] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-lg py-1 w-48 text-sm text-slate-700 dark:text-slate-300 animate-fade-in"
+            style={{ top: contextMenu.y, left: contextMenu.x }}
+          >
+            {contextMenu.targetFolder ? (
+              <>
+                <div className="px-3 py-2 text-xs font-bold uppercase text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1 truncate">
+                  {contextMenu.targetFolder}
+                </div>
+                <button
+                  className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
+                  onClick={() => handleFolderClick(contextMenu.targetFolder!)}
+                >
+                  <i className="fas fa-folder-open text-amber-500"></i> Open Folder
+                </button>
+                <button
+                  className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
+                  onClick={handleR2UploadClick}
+                >
+                  <i className="fas fa-upload text-blue-500"></i> Upload Here
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
+                  onClick={openCreateFolderModal}
+                >
+                  <i className="fas fa-folder-plus text-amber-500"></i> Create Folder
+                </button>
+                <button
+                  className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
+                  onClick={handleR2UploadClick}
+                >
+                  <i className="fas fa-upload text-blue-500"></i> Upload File
+                </button>
+              </>
+            )}
+          </div>,
+          document.body
+        )}
+
+      {/* --- CREATE FOLDER MODAL --- */}
+      {isCreateFolderModalOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl shadow-xl p-6 border border-slate-200 dark:border-slate-800">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">
+                Create New Folder
+              </h3>
+              <form onSubmit={handleCreateFolder}>
+                <div className="mb-4">
+                  <label className="block text-xs font-bold uppercase text-slate-400 mb-1">
+                    Folder Name
+                  </label>
+                  <input
+                    autoFocus
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 outline-none focus:border-orange-500"
+                    placeholder="e.g. Documents"
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsCreateFolderModalOpen(false)}
+                    className="px-4 py-2 rounded-lg text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUploading || !newFolderName.trim()}
+                    className="px-4 py-2 rounded-lg text-sm font-bold bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50"
+                  >
+                    {isUploading ? 'Creating...' : 'Create'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* --- SHARED MODALS --- */}
 
@@ -540,7 +917,7 @@ export const SystemResources: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                      Cloudinary Library
+                      {t.system.cloudinary.title}
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       {cloudinaryImages.length} Assets
@@ -560,7 +937,7 @@ export const SystemResources: React.FC = () => {
                   <div className="flex flex-col items-center justify-center h-full text-slate-400">
                     <i className="fas fa-circle-notch fa-spin text-3xl mb-4 text-blue-500"></i>
                     <p className="font-mono text-xs uppercase tracking-widest">
-                      Fetching Assets...
+                      {t.system.common.loading}
                     </p>
                   </div>
                 ) : cloudinaryImages.length === 0 ? (
@@ -587,7 +964,7 @@ export const SystemResources: React.FC = () => {
                               setFileToDelete({ id: img.public_id, type: 'CLOUDINARY' })
                             }
                             className="w-10 h-10 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transform scale-50 group-hover:scale-100 transition-all flex items-center justify-center hover:bg-red-600 shadow-lg"
-                            title="Delete Asset"
+                            title={t.system.common.delete}
                           >
                             <i className="fas fa-trash-alt"></i>
                           </button>
@@ -610,10 +987,13 @@ export const SystemResources: React.FC = () => {
         isOpen={!!fileToDelete}
         onClose={() => setFileToDelete(null)}
         onConfirm={confirmDeleteFile}
-        title="Delete File"
-        message={`Permanently remove this file from ${fileToDelete?.type === 'R2' ? 'R2 Storage' : 'Cloudinary'}?`}
+        title={t.system.r2.deleteTitle}
+        message={t.system.r2.deleteMsg.replace(
+          '{storage}',
+          fileToDelete?.type === 'R2' ? 'R2 Storage' : 'Cloudinary'
+        )}
         requireInput={false}
-        buttonText="Delete"
+        buttonText={t.system.common.delete}
         zIndexClass="z-[10000]"
       />
     </div>

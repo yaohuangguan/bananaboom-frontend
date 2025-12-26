@@ -345,7 +345,7 @@ export const ZenEditor: React.FC<ZenEditorProps> = ({
     setIsProcessing(true);
     try {
       // Use the unified uploadImage helper (handles R2 -> Cloudinary -> Base64 fallback)
-      const imageUrl = await uploadImage(file);
+      const imageUrl = await uploadImage(file, { folder: 'journal' });
 
       restoreSelection();
       const imgHtml = `<img src="${imageUrl}" class="max-w-full h-auto rounded-lg my-4 shadow-md hover:shadow-lg transition-shadow duration-300" />`;

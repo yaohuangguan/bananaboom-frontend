@@ -1,7 +1,14 @@
-
 import { fetchClient, API_BASE_URL } from './core';
 import { toast } from '../components/Toast';
-import { User, AuditLog, PaginationData, PaginatedResponse, PermissionRequest, Role, Permission } from '../types';
+import {
+  User,
+  AuditLog,
+  PaginationData,
+  PaginatedResponse,
+  PermissionRequest,
+  Role,
+  Permission
+} from '../types';
 
 export const authService = {
   // --- Auth & Subscription ---
@@ -15,19 +22,22 @@ export const authService = {
   },
 
   verifySecret: async (secret: string): Promise<boolean> => {
-    const res = await fetchClient<{ success: boolean, code: number, message: string }>('/auth/verify-secret', {
-      method: 'POST',
-      body: JSON.stringify({ secret })
-    });
+    const res = await fetchClient<{ success: boolean; code: number; message: string }>(
+      '/auth/verify-secret',
+      {
+        method: 'POST',
+        body: JSON.stringify({ secret })
+      }
+    );
     return res.success;
   },
 
   // --- Users ---
-  login: async (email: string, password: string): Promise<{ token: string, user?: User }> => {
+  login: async (email: string, password: string): Promise<{ token: string; user?: User }> => {
     try {
-      const response = await fetchClient<{ token: string, user?: User }>('/users/signin', {
+      const response = await fetchClient<{ token: string; user?: User }>('/users/signin', {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password })
       });
       if (response.token) {
         localStorage.setItem('auth_token', response.token);
@@ -39,17 +49,23 @@ export const authService = {
     }
   },
 
-  register: async (displayName: string, email: string, password: string, passwordConf: string, phone?: string): Promise<{ token: string, user?: User }> => {
+  register: async (
+    displayName: string,
+    email: string,
+    password: string,
+    passwordConf: string,
+    phone?: string
+  ): Promise<{ token: string; user?: User }> => {
     try {
-      const response = await fetchClient<{ token: string, user?: User }>('/users', {
+      const response = await fetchClient<{ token: string; user?: User }>('/users', {
         method: 'POST',
-        body: JSON.stringify({ 
-          displayName, 
-          email, 
-          password, 
+        body: JSON.stringify({
+          displayName,
+          email,
+          password,
           passwordConf,
-          phone 
-        }),
+          phone
+        })
       });
       if (response.token) {
         localStorage.setItem('auth_token', response.token);
@@ -68,7 +84,11 @@ export const authService = {
     });
   },
 
-  resetPasswordBySecret: async (email: string, newPassword: string, secretKey: string): Promise<any> => {
+  resetPasswordBySecret: async (
+    email: string,
+    newPassword: string,
+    secretKey: string
+  ): Promise<any> => {
     return await fetchClient('/users/reset-by-secret', {
       method: 'POST',
       body: JSON.stringify({ email, newPassword, secretKey })
@@ -114,10 +134,10 @@ export const authService = {
         'Content-Type': 'application/json'
       }
     });
-    
+
     if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Backup failed');
+      const errorText = await response.text();
+      throw new Error(errorText || 'Backup failed');
     }
 
     const blob = await response.blob();
@@ -132,11 +152,18 @@ export const authService = {
     document.body.removeChild(a);
   },
 
+  backupDatabaseToR2: async (): Promise<void> => {
+    await fetchClient('/backup/database', {
+      method: 'POST'
+    });
+    toast.success('Database backup uploaded to Cloud successfully!');
+  },
+
   getCurrentUser: async (): Promise<User> => {
     try {
       return await fetchClient<User>('/users/profile');
     } catch (error) {
-      console.warn("Auth check failed:", error);
+      console.warn('Auth check failed:', error);
       localStorage.removeItem('auth_token'); // Ensure clean state
       throw error;
     }
@@ -253,8 +280,8 @@ export const authService = {
 
   // --- Audit Logs ---
   getAuditLogs: async (
-    page: number = 1, 
-    limit: number = 20, 
+    page: number = 1,
+    limit: number = 20,
     filters: {
       operator?: string; // User ID
       action?: string;
@@ -263,12 +290,12 @@ export const authService = {
       startDate?: string;
       endDate?: string;
     } = {}
-  ): Promise<{ data: AuditLog[], pagination: PaginationData }> => {
+  ): Promise<{ data: AuditLog[]; pagination: PaginationData }> => {
     const queryParams = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString(),
+      limit: limit.toString()
     });
-    
+
     if (filters.operator) queryParams.append('operator', filters.operator);
     if (filters.action) queryParams.append('action', filters.action);
     if (filters.target) queryParams.append('target', filters.target);
@@ -276,8 +303,10 @@ export const authService = {
     if (filters.startDate) queryParams.append('startDate', filters.startDate);
     if (filters.endDate) queryParams.append('endDate', filters.endDate);
 
-    const response = await fetchClient<PaginatedResponse<AuditLog>>(`/audit?${queryParams.toString()}`);
-    
+    const response = await fetchClient<PaginatedResponse<AuditLog>>(
+      `/audit?${queryParams.toString()}`
+    );
+
     const backendPagination = response.pagination as any;
     const pagination: PaginationData = {
       currentPage: backendPagination.currentPage,
@@ -293,12 +322,12 @@ export const authService = {
 
   // --- Users List ---
   getUsers: async (
-    page: number = 1, 
-    limit: number = 20, 
-    search: string = '', 
-    sortBy: string = 'vip', 
+    page: number = 1,
+    limit: number = 20,
+    search: string = '',
+    sortBy: string = 'vip',
     order: string = 'desc'
-  ): Promise<{ data: User[], pagination: PaginationData }> => {
+  ): Promise<{ data: User[]; pagination: PaginationData }> => {
     const queryParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
@@ -308,7 +337,7 @@ export const authService = {
     if (search) queryParams.append('search', search);
 
     const response = await fetchClient<PaginatedResponse<User>>(`/users?${queryParams.toString()}`);
-    
+
     const backendPagination = response.pagination as any;
     const pagination: PaginationData = {
       currentPage: backendPagination.currentPage || page,
@@ -320,5 +349,5 @@ export const authService = {
     };
 
     return { data: response.data, pagination };
-  },
+  }
 };

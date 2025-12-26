@@ -6,6 +6,7 @@ import { useTranslation } from '../i18n/LanguageContext';
 import { apiService } from '../services/api';
 import { toast } from '../components/Toast';
 import { DeleteModal } from '../components/DeleteModal';
+import { BackupTerminalModal } from '../components/BackupTerminalModal';
 
 interface UserProfileProps {
   user: User;
@@ -51,6 +52,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
   // Export Log State
   const [isExporting, setIsExporting] = useState(false);
   const [exportType, setExportType] = useState('');
+
+  // Backup Terminal Modal State
+  const [showBackupModal, setShowBackupModal] = useState(false);
 
   // Permission Request State
   const [isPermModalOpen, setIsPermModalOpen] = useState(false);
@@ -324,6 +328,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
 
   return (
     <div className="container mx-auto px-6 py-24 pt-32 max-w-4xl animate-fade-in relative z-10">
+      {/* Backup Terminal Modal */}
+      <BackupTerminalModal isOpen={showBackupModal} onClose={() => setShowBackupModal(false)} />
+
       <div className="mb-8 border-b border-slate-200 dark:border-slate-800 pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-4xl font-display font-bold text-slate-900 dark:text-white mb-2">
@@ -618,60 +625,71 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) 
                 {t.profile.downloadBackup}
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                  <select
-                    value={exportType}
-                    onChange={(e) => setExportType(e.target.value)}
-                    className="w-full appearance-none px-4 py-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700 dark:text-slate-300 font-medium cursor-pointer"
-                  >
-                    <option value="">Full System Backup</option>
-                    <optgroup label="Content">
-                      <option value="posts">Posts & Journals</option>
-                      <option value="projects">Projects (Portfolio)</option>
-                      <option value="photos">Photo Gallery</option>
-                      <option value="footprints">Footprints (Star Map)</option>
-                    </optgroup>
-                    <optgroup label="Personal">
-                      <option value="todos">Tasks (Todos)</option>
-                      <option value="fitness">Fitness Records</option>
-                      <option value="menus">Menus (Chef's Wheel)</option>
-                      <option value="periods">Period Tracker Data</option>
-                      <option value="resume">Resume Data</option>
-                    </optgroup>
-                    <optgroup label="Communication">
-                      <option value="chats">Chat History</option>
-                      <option value="conversations">AI Conversations</option>
-                      <option value="comments">Comments</option>
-                    </optgroup>
-                    <optgroup label="System & Admin">
-                      <option value="users">Users Database</option>
-                      <option value="roles">Roles Config</option>
-                      <option value="permissions">Permissions Config</option>
-                      <option value="requests">Permission Requests</option>
-                      <option value="audit">Audit Logs</option>
-                      <option value="logs">System Logs</option>
-                      <option value="sessions">Active Sessions</option>
-                      <option value="homepage">Homepage Config</option>
-                      <option value="external">External Resources</option>
-                    </optgroup>
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                    <i className="fas fa-chevron-down text-xs"></i>
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <select
+                      value={exportType}
+                      onChange={(e) => setExportType(e.target.value)}
+                      className="w-full appearance-none px-4 py-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700 dark:text-slate-300 font-medium cursor-pointer"
+                    >
+                      <option value="">Full System Backup</option>
+                      <optgroup label="Content">
+                        <option value="posts">Posts & Journals</option>
+                        <option value="projects">Projects (Portfolio)</option>
+                        <option value="photos">Photo Gallery</option>
+                        <option value="footprints">Footprints (Star Map)</option>
+                      </optgroup>
+                      <optgroup label="Personal">
+                        <option value="todos">Tasks (Todos)</option>
+                        <option value="fitness">Fitness Records</option>
+                        <option value="menus">Menus (Chef's Wheel)</option>
+                        <option value="periods">Period Tracker Data</option>
+                        <option value="resume">Resume Data</option>
+                      </optgroup>
+                      <optgroup label="Communication">
+                        <option value="chats">Chat History</option>
+                        <option value="conversations">AI Conversations</option>
+                        <option value="comments">Comments</option>
+                      </optgroup>
+                      <optgroup label="System & Admin">
+                        <option value="users">Users Database</option>
+                        <option value="roles">Roles Config</option>
+                        <option value="permissions">Permissions Config</option>
+                        <option value="requests">Permission Requests</option>
+                        <option value="audit">Audit Logs</option>
+                        <option value="logs">System Logs</option>
+                        <option value="sessions">Active Sessions</option>
+                        <option value="homepage">Homepage Config</option>
+                        <option value="external">External Resources</option>
+                      </optgroup>
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                      <i className="fas fa-chevron-down text-xs"></i>
+                    </div>
                   </div>
+
+                  <button
+                    onClick={handleExportLogs}
+                    disabled={isExporting}
+                    className="px-6 py-3 bg-blue-500 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-blue-600 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 shrink-0"
+                  >
+                    {isExporting ? (
+                      <i className="fas fa-circle-notch fa-spin"></i>
+                    ) : (
+                      <i className="fas fa-download"></i>
+                    )}
+                    {t.profile.exportLogs}
+                  </button>
                 </div>
 
+                {/* New One-Click Cloud Backup Button */}
                 <button
-                  onClick={handleExportLogs}
-                  disabled={isExporting}
-                  className="px-6 py-3 bg-blue-500 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-blue-600 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 shrink-0"
+                  onClick={() => setShowBackupModal(true)}
+                  className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold uppercase tracking-widest hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2"
                 >
-                  {isExporting ? (
-                    <i className="fas fa-circle-notch fa-spin"></i>
-                  ) : (
-                    <i className="fas fa-download"></i>
-                  )}
-                  {t.profile.exportLogs}
+                  <i className="fas fa-cloud-upload-alt"></i>
+                  Backup to Cloud (R2)
                 </button>
               </div>
             </div>

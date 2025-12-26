@@ -6,6 +6,7 @@ import { PortfolioProject, User } from '../../types';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { toast } from '../Toast';
 import { DeleteModal } from '../DeleteModal';
+import { R2ImageSelectorModal } from '../R2ImageSelectorModal';
 
 interface ProjectShowcaseProps {
   currentUser?: User | null;
@@ -28,6 +29,7 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
   // Upload State
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isR2ModalOpen, setIsR2ModalOpen] = useState(false);
 
   // Demo Modal State
   const [demoProject, setDemoProject] = useState<PortfolioProject | null>(null);
@@ -149,7 +151,7 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
   const processUpload = async (file: File) => {
     setIsUploading(true);
     try {
-      const url = await apiService.uploadImage(file);
+      const url = await apiService.uploadImage(file, { folder: 'portfolio' });
       setCurrentProject((prev) => ({ ...prev, coverImage: url }));
       toast.success('Image uploaded successfully');
     } catch (error) {
@@ -252,6 +254,15 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(156, 163, 175, 0.3); border-radius: 20px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(156, 163, 175, 0.5); }
       `}</style>
+
+      <R2ImageSelectorModal
+        isOpen={isR2ModalOpen}
+        onClose={() => setIsR2ModalOpen(false)}
+        onSelect={(url) => {
+          setCurrentProject((prev) => ({ ...prev, coverImage: url }));
+          setIsR2ModalOpen(false);
+        }}
+      />
 
       <DeleteModal
         isOpen={!!projectToDelete}
@@ -388,6 +399,18 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ currentUser })
                         }
                         onPaste={handlePaste}
                       />
+
+                      {currentUser?.role === 'super_admin' && (
+                        <button
+                          type="button"
+                          onClick={() => setIsR2ModalOpen(true)}
+                          className="px-4 bg-orange-100 dark:bg-orange-900/30 hover:bg-orange-200 dark:hover:bg-orange-900/50 rounded-lg text-orange-600 dark:text-orange-400 transition-colors flex items-center justify-center min-w-[3rem]"
+                          title="R2 Library"
+                        >
+                          <i className="fas fa-database"></i>
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}

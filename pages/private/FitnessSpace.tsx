@@ -300,7 +300,7 @@ export const FitnessSpace: React.FC<FitnessSpaceProps> = ({ currentUser }) => {
   const processUploadFile = async (file: File) => {
     setIsUploadingPhoto(true);
     try {
-      const url = await apiService.uploadImage(file);
+      const url = await apiService.uploadImage(file, { folder: 'fitness' });
       setRecord((prev) => ({ ...prev, photos: [...(prev.photos || []), url] }));
       toast.success('Photo uploaded');
     } catch (e) {
@@ -548,6 +548,7 @@ export const FitnessSpace: React.FC<FitnessSpaceProps> = ({ currentUser }) => {
       <FitnessInputForm
         currentDate={currentDate}
         selectedUser={selectedUser}
+        currentUser={currentUser}
         record={record}
         updateRecord={(partial) => setRecord((prev) => ({ ...prev, ...partial }))}
         onGoalChange={handleGoalChange}

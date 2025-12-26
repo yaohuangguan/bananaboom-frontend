@@ -8,6 +8,12 @@ export interface CompressOptions {
   type?: 'image/jpeg' | 'image/png' | 'image/webp'; // 默认 image/webp
 }
 
+export interface UploadOptions {
+  forceCloudinary?: boolean;
+  folder?: string;
+  useOriginalName?: boolean;
+}
+
 // Helper: Convert File to Base64 Data URI (Raw)
 export const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -62,8 +68,22 @@ export const compressImage = (file: File, options: CompressOptions = {}): Promis
 };
 
 // Helper to upload to Cloudflare R2
-const uploadToR2 = async (file: File): Promise<string> => {
+const uploadToR2 = async (file: File, options?: UploadOptions): Promise<string> => {
   const formData = new FormData();
+
+  // 1. Append text fields FIRST
+  // Default folder set to 'uploads' to prevent root directory pollution
+  formData.append('folder', options?.folder || 'uploads');
+
+  // Explicitly append metadata for strict backend validation
+  formData.append('fileType', file.type || 'application/octet-stream');
+  formData.append('fileName', file.name);
+
+  if (options?.useOriginalName !== undefined) {
+    formData.append('useOriginalName', String(options.useOriginalName));
+  }
+
+  // 2. Append file LAST
   formData.append('files', file); // Field name MUST be 'files'
 
   const token = localStorage.getItem('auth_token');
@@ -82,24 +102,46 @@ const uploadToR2 = async (file: File): Promise<string> => {
   }
 
   const data = await response.json();
+
+  // Prioritize root-level 'url' as per latest API response format
+  if (data.url) {
+    return data.url;
+  }
+
+  // Check for 'data' array containing objects with 'url'
+  if (Array.isArray(data.data) && data.data.length > 0 && data.data[0].url) {
+    return data.data[0].url;
+  }
+
+  // Fallback for legacy format
   if (data.success && data.urls && data.urls.length > 0) {
     return data.urls[0];
   }
+
+  console.error('R2 Upload Response:', data);
   throw new Error('R2 Upload returned no URLs');
 };
 
 // Helper to upload to Cloudinary directly
-const uploadToCloudinary = async (file: File): Promise<string> => {
+const uploadToCloudinary = async (file: File, options?: UploadOptions): Promise<string> => {
   const config = await fetchClient<{ cloudName: string; apiKey: string }>('/cloudinary/config');
   const signData = await fetchClient<{ timestamp: number; signature: string }>(
     '/cloudinary/signature'
   );
 
   const formData = new FormData();
-  formData.append('file', file);
+
+  // 1. Text fields first
   formData.append('api_key', config.apiKey);
   formData.append('timestamp', signData.timestamp.toString());
   formData.append('signature', signData.signature);
+
+  if (options?.folder) {
+    formData.append('folder', options.folder);
+  }
+
+  // 2. File last
+  formData.append('file', file);
 
   const res = await fetch(`https://api.cloudinary.com/v1_1/${config.cloudName}/image/upload`, {
     method: 'POST',
@@ -114,17 +156,13 @@ const uploadToCloudinary = async (file: File): Promise<string> => {
   return data.secure_url;
 };
 
-interface UploadOptions {
-  forceCloudinary?: boolean;
-}
-
 // NEW: Helper to upload image (Public for components)
 // Strategy: Try R2 first -> Fail -> Try Cloudinary -> Fail -> Return Base64 (Local)
 export const uploadImage = async (file: File, options?: UploadOptions): Promise<string> => {
   // 1. Force Cloudinary (e.g. for Avatar face detection features)
   if (options?.forceCloudinary) {
     try {
-      return await uploadToCloudinary(file);
+      return await uploadToCloudinary(file, options);
     } catch (e) {
       console.error('Forced Cloudinary upload failed:', e);
       toast.error('Avatar upload failed. Trying local compression.');
@@ -134,13 +172,13 @@ export const uploadImage = async (file: File, options?: UploadOptions): Promise<
 
   // 2. Default: Try R2 First
   try {
-    return await uploadToR2(file);
+    return await uploadToR2(file, options);
   } catch (r2Error) {
     console.warn('R2 upload failed, falling back to Cloudinary:', r2Error);
 
     // 3. Fallback: Cloudinary
     try {
-      const cloudinaryUrl = await uploadToCloudinary(file);
+      const cloudinaryUrl = await uploadToCloudinary(file, options);
       // Optional: Toast to inform user of fallback? Maybe too noisy.
       return cloudinaryUrl;
     } catch (cloudinaryError) {

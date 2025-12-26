@@ -5,6 +5,7 @@ import { uploadImage } from '../../services/media';
 import { User, Conversation } from '../../types';
 import { toast } from '../../components/Toast';
 import { DeleteModal } from '../../components/DeleteModal';
+import { R2ImageSelectorModal } from '../../components/R2ImageSelectorModal';
 
 // --- Types for Web Speech API ---
 declare global {
@@ -26,7 +27,7 @@ interface BrainMessage {
   isStreaming?: boolean;
   avatar?: string;
   name?: string;
-  image?: string; // URL
+  images?: string[]; // Updated to support multiple images
 }
 
 const DEFAULT_AI_AVATAR = 'https://cdn-icons-png.flaticon.com/512/4712/4712027.png';
@@ -64,6 +65,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null); // Now stores URL
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isR2ModalOpen, setIsR2ModalOpen] = useState(false);
 
   // Voice Input State
   const [isVoiceMode, setIsVoiceMode] = useState(false);
@@ -121,7 +123,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
           avatar:
             msg.user?.photoURL || (msg.user?.id === 'ai_assistant' ? DEFAULT_AI_AVATAR : undefined),
           name: msg.user?.displayName,
-          image: msg.image && msg.image.length > 0 ? msg.image[0] : undefined // Backend stores array, take first
+          images: msg.image || [] // Backend stores array in 'image' field
         }));
         setMessages(mappedMessages);
       } else {
@@ -280,13 +282,12 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
       return;
     }
 
-    // Optimistic: show spinner or processing state?
-    // For now we assume upload is fast enough or handled by isProcessing blocking input if needed.
-    // Actually we should probably show a spinner overlay or block send.
-    // For simplicity, we just await uploadImage.
-
     try {
-      const uploadedUrl = await uploadImage(file);
+      const activeId = currentSessionId || 'temp';
+      const uploadedUrl = await uploadImage(file, {
+        folder: `ai-chat/${activeId}`,
+        useOriginalName: false
+      });
       setSelectedImage(uploadedUrl);
       inputRef.current?.focus();
     } catch (e) {
@@ -356,7 +357,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
       timestamp: new Date(),
       avatar: user?.photoURL,
       name: user?.displayName || 'User',
-      image: userImage || undefined
+      images: userImage ? [userImage] : []
     };
 
     setMessages((prev) => [...prev, userMsg]);
@@ -486,6 +487,16 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
 
   return (
     <div className="flex h-[calc(100vh-140px)] md:h-full relative max-w-7xl mx-auto w-full bg-[#171717] rounded-[2rem] border border-[#333] shadow-2xl overflow-hidden">
+      <R2ImageSelectorModal
+        isOpen={isR2ModalOpen}
+        onClose={() => setIsR2ModalOpen(false)}
+        onSelect={(url) => {
+          setSelectedImage(url);
+          setIsR2ModalOpen(false);
+          inputRef.current?.focus();
+        }}
+      />
+
       <DeleteModal
         isOpen={!!sessionToDelete}
         onClose={() => setSessionToDelete(null)}
@@ -620,17 +631,23 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
                           {msg.name}
                         </div>
 
-                        {msg.image && (
+                        {/* Updated: Handle Multiple Images */}
+                        {msg.images && msg.images.length > 0 && (
                           <div
-                            className={`mb-3 ${isUser ? 'flex justify-end' : 'flex justify-start'}`}
+                            className={`mb-3 ${isUser ? 'flex justify-end' : 'flex justify-start'} flex-wrap gap-2`}
                           >
-                            <div className="relative group max-w-[250px] rounded-lg overflow-hidden border border-white/10">
-                              <img
-                                src={msg.image}
-                                alt="Upload"
-                                className="w-full h-auto object-contain"
-                              />
-                            </div>
+                            {msg.images.map((imgUrl, imgIdx) => (
+                              <div
+                                key={imgIdx}
+                                className="relative group max-w-[250px] rounded-lg overflow-hidden border border-white/10"
+                              >
+                                <img
+                                  src={imgUrl}
+                                  alt={`Attachment ${imgIdx}`}
+                                  className="w-full h-auto object-contain"
+                                />
+                              </div>
+                            ))}
                           </div>
                         )}
 
@@ -729,6 +746,18 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
                   accept="image/*"
                   onChange={handleFileSelect}
                 />
+
+                {/* R2 Library Button (Admin Only) */}
+                {user?.role === 'super_admin' && (
+                  <button
+                    onClick={() => setIsR2ModalOpen(true)}
+                    disabled={isProcessing || isRecording}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-orange-500 hover:bg-white/10 transition-colors"
+                    title="R2 Library"
+                  >
+                    <i className="fas fa-database text-sm"></i>
+                  </button>
+                )}
 
                 {/* Voice Mode Toggle */}
                 <button

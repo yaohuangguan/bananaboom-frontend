@@ -495,7 +495,7 @@ export const FootprintSpace: React.FC<FootprintSpaceProps> = ({ theme }) => {
     if (!file) return;
     setIsUploading(true);
     try {
-      const url = await apiService.uploadImage(file);
+      const url = await apiService.uploadImage(file, { folder: 'footprints' });
       setCurrentFootprint((prev) => ({
         ...prev,
         images: [...(prev.images || []), url]

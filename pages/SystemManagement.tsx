@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { SystemResources } from '../components/system/SystemResources';
 import { UserManagement } from '../components/system/UserManagement';
@@ -8,27 +8,31 @@ import { RequestManagement } from '../components/system/RequestManagement';
 import { PERM_KEYS, can } from '../types';
 import { AccessRestricted } from '../components/AccessRestricted';
 import { apiService } from '../services/api';
+import { useLocation } from 'react-router-dom';
 
 type SystemTab = 'RESOURCES' | 'USERS' | 'ROLES' | 'PERMISSIONS' | 'REQUESTS';
 
 export const SystemManagement: React.FC = () => {
   const { t } = useTranslation();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<SystemTab>('RESOURCES');
 
-  // We need to fetch current user permissions again or assume they are passed/contextual.
-  // For simplicity here, we assume a mechanism like `apiService.getCurrentUser` cached or passed down.
-  // In a real app, use the `useOutletContext` or global state.
-  // For this component, we'll re-fetch briefly or rely on the `ProtectedRoute` wrapper having done the high-level check.
-  // But granular tab checks need user info.
-  // Let's use a local user state fetched on mount to be safe for granular checks.
+  // Local user state for permission checks
   const [user, setUser] = useState<any>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     apiService
       .getCurrentUser()
       .then(setUser)
       .catch(() => {});
   }, []);
+
+  // Listen for navigation state to switch tabs
+  useEffect(() => {
+    if (location.state && (location.state as any).tab) {
+      setActiveTab((location.state as any).tab);
+    }
+  }, [location.state]);
 
   const renderTabContent = () => {
     if (!user) return null;
@@ -55,8 +59,7 @@ export const SystemManagement: React.FC = () => {
           <AccessRestricted permission={PERM_KEYS.PERM_MANAGE} />
         );
       case 'REQUESTS':
-        // Usually handled by role management or user management permissions, or a specific one.
-        // Let's use USER_MANAGE as a proxy or if strict, add REQUEST_MANAGE.
+        // Usually handled by role management or user management permissions
         return can(user, PERM_KEYS.USER_MANAGE) ? (
           <RequestManagement />
         ) : (

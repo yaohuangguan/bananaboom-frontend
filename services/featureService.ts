@@ -15,7 +15,8 @@ import {
   DailyListType,
   SmartMenuResponse,
   CloudinaryUsage,
-  Conversation
+  Conversation,
+  R2UsageStats
 } from '../types';
 
 export const featureService = {
@@ -396,10 +397,19 @@ export const featureService = {
   },
 
   // --- R2 Resource Management ---
-  getR2Files: async (limit = 20, cursor?: string): Promise<any> => {
-    const params = new URLSearchParams({ limit: limit.toString() });
+  getR2Files: async (
+    limit = 50,
+    cursor?: string,
+    type: 'image' | 'backup' = 'image',
+    folder: string = ''
+  ): Promise<any> => {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      type: type
+    });
     if (cursor) params.append('cursor', cursor);
-    // Returning any here to allow for inconsistent backend responses (files vs objects)
+    if (folder) params.append('folder', folder);
+
     return await fetchClient(`/upload/list?${params.toString()}`);
   },
 
@@ -408,6 +418,143 @@ export const featureService = {
       method: 'DELETE',
       body: JSON.stringify({ key })
     });
-    toast.success('File deleted from R2.');
+    // No toast here to allow custom messages in component
+  },
+
+  // --- R2 Presigned Upload Flow ---
+
+  // 1. Get the Presigned URL from Backend
+  getPresignedUrl: async (
+    fileName: string,
+    fileType: string,
+    folder: string = '',
+    useOriginalName: boolean = true
+  ): Promise<{ uploadUrl: string; publicUrl: string; key: string; folder: string }> => {
+    // Fallback for missing fileType
+    const safeType = fileType || 'application/octet-stream';
+
+    return await fetchClient('/upload/presign', {
+      method: 'POST',
+      body: JSON.stringify({ fileName, fileType: safeType, folder, useOriginalName })
+    });
+  },
+
+  // 2. Perform the direct PUT to R2/S3
+  uploadToPresignedUrl: async (uploadUrl: string, file: File): Promise<void> => {
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type
+      },
+      body: file
+    });
+
+    if (!response.ok) {
+      throw new Error(`Direct upload failed: ${response.statusText}`);
+    }
+  },
+
+  // Combined Helper for simple uploads
+  uploadFileToR2Presigned: async (
+    file: File,
+    folder: string = '',
+    useOriginalName: boolean = true
+  ): Promise<string> => {
+    // Step 1: Get Sign
+    const { uploadUrl, publicUrl } = await featureService.getPresignedUrl(
+      file.name,
+      file.type,
+      folder,
+      useOriginalName
+    );
+
+    // Step 2: Put File
+    await featureService.uploadToPresignedUrl(uploadUrl, file);
+
+    return publicUrl;
+  },
+
+  // Helper to "Create Folder" by uploading a dummy .keep file
+  createR2Folder: async (folderName: string, parentFolder: string = ''): Promise<void> => {
+    const dummyFile = new File([''], '.keep', { type: 'application/x-empty' });
+    const targetPath = parentFolder ? `${parentFolder}${folderName}/` : `${folderName}/`;
+
+    // We treat the "folder" param as the full path for the presign, excluding the filename
+    // Or we can pass folder=targetPath and fileName=.keep
+    const { uploadUrl } = await featureService.getPresignedUrl(
+      '.keep',
+      'application/x-empty',
+      targetPath,
+      true // Force exact name to keep structure
+    );
+
+    await featureService.uploadToPresignedUrl(uploadUrl, dummyFile);
+  },
+
+  // Legacy Multipart Upload (kept for backup or small files if needed)
+  uploadFileToR2Multipart: async (file: File, folder: string = ''): Promise<string> => {
+    const formData = new FormData();
+
+    // Explicitly append metadata fields FIRST
+    formData.append('fileType', file.type || 'application/octet-stream');
+    formData.append('fileName', file.name);
+
+    if (folder) {
+      formData.append('folder', folder);
+    }
+
+    // Append File LAST
+    formData.append('files', file);
+
+    const token = localStorage.getItem('auth_token');
+    const headers: HeadersInit = {};
+    if (token) headers['x-auth-token'] = token;
+
+    const response = await fetch(`${API_BASE_URL}/upload`, {
+      method: 'POST',
+      headers,
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`R2 Upload Failed: ${response.status} ${errText}`);
+    }
+
+    const data = await response.json();
+
+    // Updated Logic for new response structure
+    if (data.url) {
+      return data.url;
+    }
+
+    if (data.data && Array.isArray(data.data) && data.data.length > 0 && data.data[0].url) {
+      return data.data[0].url;
+    }
+
+    if (data.success && data.urls && data.urls.length > 0) {
+      return data.urls[0];
+    }
+
+    throw new Error('R2 Upload returned no URLs');
+  },
+
+  // NEW: Get R2 Usage Stats
+  getR2Usage: async (): Promise<R2UsageStats> => {
+    const res = await fetchClient<{ success: boolean; usage: R2UsageStats }>('/upload/r2/usage');
+    return res.usage;
+  },
+
+  // NEW: Get Backup Stream (Returns raw Response)
+  getBackupStream: async (): Promise<Response> => {
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch(`${API_BASE_URL}/backup/database`, {
+      method: 'POST',
+      headers: {
+        'x-auth-token': token || '',
+        'Content-Type': 'application/json'
+      }
+    });
+    return response;
   }
 };
