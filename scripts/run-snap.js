@@ -59,18 +59,24 @@ const isVercel = process.env.VERCEL === '1';
       destination: 'dist',
       include: ['/', '/blogs'],
 
+      // 🔥 新增核心配置：强制根路径
+      publicPath: '/',
+
+      // 🔥 新增配置：禁用 Webpack 专用修复 (避免破坏 Vite 的 module script)
+      fixWebpackChunksIssue: false,
+
       // 合并参数
       puppeteerArgs: [
         ...launchArgs,
-        '--single-process', // Vercel 必须单进程
-        '--no-zygote'
+        '--single-process',
+        '--no-zygote',
+        '--disable-web-security' // 允许跨域，减少 404 干扰
       ],
 
-      // Vercel 这种解压版启动很慢，必须加长超时时间
       pageLoadTimeout: 120000,
-      // 甚至可以增加延迟，等待 JS 执行
       minifyCss: true,
       inlineCss: true
+      // asyncScriptTags: true // 可选：如果上面都不行，可以尝试解开这个注释
     });
 
     console.log('✅ Pre-rendering complete!');

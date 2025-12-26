@@ -32,20 +32,28 @@ export default defineConfig(({ mode }) => {
       }
     },
     build: {
-      // 👇 新增：解决 chunk 大小警告
+      // 2. 手动拆包配置 (解决 2MB 警告)
       rollupOptions: {
         output: {
-          manualChunks(id) {
-            // 把 node_modules 里的第三方包单独打包成 vendor.js
-            // 这样业务代码变动时，用户不需要重新下载巨大的第三方库
+          manualChunks: (id) => {
+            // 把 node_modules 里的库拆分成独立文件
             if (id.includes('node_modules')) {
+              // 比如把 react 全家桶单独拆出来
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+                return 'vendor-react';
+              }
+              // 把 heavy 的库（比如 three.js 或编辑器）单独拆出来
+              if (id.includes('three') || id.includes('codemirror')) {
+                return 'vendor-heavy';
+              }
+              // 其他所有第三方库归为 vendor
               return 'vendor';
             }
           }
         }
       },
-      // 调高警告阈值（可选，如果你不想分包也可以单纯把这个数字改大）
-      chunkSizeWarningLimit: 1000
+      // 适当调高警告阈值，虽然拆包后应该就不会报了
+      chunkSizeWarningLimit: 1500
     },
     // 🔥 修复 2：显式注入 Dockerfile 里的 VITE_API_URL
     // 这样你的代码里无论是用 process.env.VITE_API_URL 还是 import.meta.env 都能读到了
