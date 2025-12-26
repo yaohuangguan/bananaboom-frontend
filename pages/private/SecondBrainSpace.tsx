@@ -6,6 +6,7 @@ import { User, Conversation } from '../../types';
 import { toast } from '../../components/Toast';
 import { DeleteModal } from '../../components/DeleteModal';
 import { R2ImageSelectorModal } from '../../components/R2ImageSelectorModal';
+import { createPortal } from 'react-dom';
 
 // --- Types for Web Speech API ---
 declare global {
@@ -46,7 +47,15 @@ const generateUUID = () => {
 
 // --- OPTIMIZED SUB-COMPONENT: Memoized Message Item ---
 const BrainMessageItem = React.memo(
-  ({ msg, onCopy }: { msg: BrainMessage; onCopy: (text: string) => void }) => {
+  ({
+    msg,
+    onCopy,
+    onImageClick
+  }: {
+    msg: BrainMessage;
+    onCopy: (text: string) => void;
+    onImageClick: (url: string) => void;
+  }) => {
     const isUser = msg.role === 'user';
     const contentRef = useRef<HTMLDivElement>(null);
 
@@ -108,12 +117,13 @@ const BrainMessageItem = React.memo(
                 {msg.images.map((imgUrl, imgIdx) => (
                   <div
                     key={imgIdx}
-                    className="relative group max-w-[250px] rounded-lg overflow-hidden border border-white/10"
+                    className="relative group max-w-[250px] rounded-lg overflow-hidden border border-white/10 cursor-zoom-in"
+                    onClick={() => onImageClick(imgUrl)}
                   >
                     <img
                       src={imgUrl}
                       alt={`Attachment ${imgIdx}`}
-                      className="w-full h-auto object-contain"
+                      className="w-full h-auto object-contain transition-transform group-hover:scale-105"
                     />
                   </div>
                 ))}
@@ -121,9 +131,12 @@ const BrainMessageItem = React.memo(
             )}
 
             {isUser ? (
-              <div className="inline-block bg-[#2f2f2f] text-gray-100 px-4 py-2 md:px-5 md:py-3 rounded-2xl rounded-tr-sm text-sm leading-relaxed whitespace-pre-wrap text-left shadow-sm">
-                {msg.content}
-              </div>
+              // Only render user bubble if content exists
+              msg.content ? (
+                <div className="inline-block bg-[#2f2f2f] text-gray-100 px-4 py-2 md:px-5 md:py-3 rounded-2xl rounded-tr-sm text-sm leading-relaxed whitespace-pre-wrap text-left shadow-sm">
+                  {msg.content}
+                </div>
+              ) : null
             ) : (
               <div
                 className="chat-content text-gray-300 text-sm md:text-[15px] leading-relaxed relative"
@@ -186,10 +199,13 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
   const [isInitializing, setIsInitializing] = useState(true);
 
   // Image Upload State
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isR2ModalOpen, setIsR2ModalOpen] = useState(false);
+
+  // Image Viewer State
+  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
 
   // Voice Input State
   const [isVoiceMode, setIsVoiceMode] = useState(false);
@@ -228,6 +244,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
     setCurrentSessionId(sessionId);
     setIsSidebarOpen(false);
     setMessages([]);
+    setSelectedImages([]); // Clear any pending images
 
     try {
       const historyData = await featureService.getAiChatHistory(sessionId, 1, 50);
@@ -244,7 +261,8 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
           avatar:
             msg.user?.photoURL || (msg.user?.id === 'ai_assistant' ? DEFAULT_AI_AVATAR : undefined),
           name: msg.user?.displayName,
-          images: msg.image || []
+          // Robust mapping for images array from API response
+          images: Array.isArray(msg.images) ? msg.images : msg.image ? [msg.image] : []
         }));
         setMessages(mappedMessages);
       } else {
@@ -260,6 +278,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
     const newId = generateUUID();
     setCurrentSessionId(newId);
     setMessages([]);
+    setSelectedImages([]);
     setIsSidebarOpen(false);
   };
 
@@ -291,7 +310,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isProcessing, selectedImage]);
+  }, [messages, isProcessing, selectedImages]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -377,42 +396,57 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
   };
 
   // --- Image Handling ---
-  const processFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
+  const processFiles = async (files: FileList | File[]) => {
+    const validFiles: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      if (files[i].type.startsWith('image/')) {
+        validFiles.push(files[i]);
+      }
+    }
+
+    if (validFiles.length === 0) {
       toast.error('Only image files are supported.');
       return;
     }
 
+    // Process uploads sequentially or parallel, then update state
+    const activeId = currentSessionId || 'temp';
+
+    // Optimistic: We can't really do optimistic easily with raw files without reading them all to base64.
+    // Let's just upload.
     try {
-      const activeId = currentSessionId || 'temp';
-      const uploadedUrl = await uploadImage(file, {
-        folder: `ai-chat/${activeId}`,
-        useOriginalName: false
-      });
-      setSelectedImage(uploadedUrl);
+      for (const file of validFiles) {
+        const uploadedUrl = await uploadImage(file, {
+          folder: `ai-chat/${activeId}`,
+          useOriginalName: false
+        });
+        setSelectedImages((prev) => [...prev, uploadedUrl]);
+      }
       inputRef.current?.focus();
     } catch (e) {
       console.error('Image upload failed', e);
-      toast.error('Failed to upload image.');
+      toast.error('Failed to upload image(s).');
     }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) processFile(file);
+    const files = e.target.files;
+    if (files && files.length > 0) processFiles(files);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
     const items = e.clipboardData.items;
+    const files: File[] = [];
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.indexOf('image') !== -1) {
         const file = items[i].getAsFile();
-        if (file) {
-          processFile(file);
-          e.preventDefault();
-        }
+        if (file) files.push(file);
       }
+    }
+    if (files.length > 0) {
+      e.preventDefault();
+      processFiles(files);
     }
   };
 
@@ -428,7 +462,11 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
     e.preventDefault();
     setIsDragging(false);
     const files = e.dataTransfer.files;
-    if (files && files.length > 0) processFile(files[0]);
+    if (files && files.length > 0) processFiles(files);
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   // --- Submission Logic ---
@@ -437,7 +475,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
 
     const textToSend = overrideText !== undefined ? overrideText : input;
 
-    if ((!textToSend.trim() && !selectedImage) || isProcessing) return;
+    if ((!textToSend.trim() && selectedImages.length === 0) || isProcessing) return;
 
     let activeSessionId = currentSessionId;
     if (!activeSessionId) {
@@ -446,7 +484,8 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
     }
 
     const userText = textToSend.trim();
-    const userImage = selectedImage;
+    // Copy images array to prevent modification during clear
+    const userImages = [...selectedImages];
     const tempId = Date.now().toString();
 
     // 1. Optimistic Update (User Msg)
@@ -457,7 +496,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
       timestamp: new Date(),
       avatar: user?.photoURL,
       name: user?.displayName || 'User',
-      images: userImage ? [userImage] : []
+      images: userImages
     };
 
     setMessages((prev) => [...prev, userMsg]);
@@ -465,7 +504,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
     if (overrideText === undefined) {
       setInput('');
     }
-    setSelectedImage(null);
+    setSelectedImages([]); // Clear pending images
     setIsProcessing(true);
     if (inputRef.current) inputRef.current.style.height = 'auto';
 
@@ -475,7 +514,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
         userText,
         'user',
         activeSessionId,
-        userImage || undefined
+        userImages.length > 0 ? userImages : undefined
       );
 
       // 3. AI Placeholder
@@ -517,7 +556,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
             })
           );
         },
-        userImage
+        userImages.length > 0 ? userImages : undefined // Pass full array
       );
 
       // 5. Save AI Response
@@ -575,11 +614,34 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
 
   return (
     <div className="flex h-[calc(100vh-140px)] md:h-full relative max-w-7xl mx-auto w-full bg-[#171717] rounded-[2rem] border border-[#333] shadow-2xl overflow-hidden">
+      {/* Full Screen Image Viewer */}
+      {fullScreenImage &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[2200] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+            onClick={() => setFullScreenImage(null)}
+          >
+            <button
+              onClick={() => setFullScreenImage(null)}
+              className="absolute top-4 right-4 text-white text-3xl hover:text-rose-500 transition-colors"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+            <img
+              src={fullScreenImage}
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+              alt="Full View"
+            />
+          </div>,
+          document.body
+        )}
+
       <R2ImageSelectorModal
         isOpen={isR2ModalOpen}
         onClose={() => setIsR2ModalOpen(false)}
         onSelect={(url) => {
-          setSelectedImage(url);
+          setSelectedImages((prev) => [...prev, url]);
           setIsR2ModalOpen(false);
           inputRef.current?.focus();
         }}
@@ -679,7 +741,12 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
           ) : (
             <div className="flex flex-col pb-4">
               {messages.map((msg) => (
-                <BrainMessageItem key={msg.id} msg={msg} onCopy={copyToClipboard} />
+                <BrainMessageItem
+                  key={msg.id}
+                  msg={msg}
+                  onCopy={copyToClipboard}
+                  onImageClick={setFullScreenImage}
+                />
               ))}
             </div>
           )}
@@ -696,19 +763,27 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
               </div>
             )}
 
-            {selectedImage && (
-              <div className="absolute -top-24 left-0 bg-[#2f2f2f] p-2 rounded-xl border border-gray-700 shadow-xl flex items-start gap-2 animate-slide-up z-20">
-                <img
-                  src={selectedImage}
-                  alt="Preview"
-                  className="h-20 w-auto rounded-lg object-contain"
-                />
-                <button
-                  onClick={() => setSelectedImage(null)}
-                  className="w-5 h-5 rounded-full bg-gray-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors"
-                >
-                  <i className="fas fa-times text-[10px]"></i>
-                </button>
+            {/* Selected Images Preview List */}
+            {selectedImages.length > 0 && (
+              <div className="absolute -top-28 left-0 right-0 flex gap-3 overflow-x-auto p-2 z-20 custom-scrollbar pointer-events-auto">
+                {selectedImages.map((img, idx) => (
+                  <div
+                    key={idx}
+                    className="relative group bg-[#2f2f2f] p-1.5 rounded-xl border border-gray-700 shadow-xl shrink-0 animate-slide-up"
+                  >
+                    <img
+                      src={img}
+                      alt="Preview"
+                      className="h-20 w-auto rounded-lg object-contain"
+                    />
+                    <button
+                      onClick={() => removeImage(idx)}
+                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-gray-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors shadow-md border border-gray-800"
+                    >
+                      <i className="fas fa-times text-[10px]"></i>
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -731,6 +806,7 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
                   ref={fileInputRef}
                   className="hidden"
                   accept="image/*"
+                  multiple
                   onChange={handleFileSelect}
                 />
 
@@ -790,8 +866,8 @@ export const SecondBrainSpace: React.FC<SecondBrainSpaceProps> = ({ user }) => {
               {!isVoiceMode && (
                 <button
                   onClick={(e) => handleSubmit(e)}
-                  disabled={(!input.trim() && !selectedImage) || isProcessing}
-                  className={`absolute right-2 bottom-2 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${!input.trim() && !selectedImage ? 'bg-transparent text-gray-600 cursor-not-allowed' : 'bg-white text-black hover:bg-gray-200'}`}
+                  disabled={(!input.trim() && selectedImages.length === 0) || isProcessing}
+                  className={`absolute right-2 bottom-2 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${!input.trim() && selectedImages.length === 0 ? 'bg-transparent text-gray-600 cursor-not-allowed' : 'bg-white text-black hover:bg-gray-200'}`}
                 >
                   {isProcessing ? (
                     <i className="fas fa-stop text-xs"></i>

@@ -108,11 +108,11 @@ export const featureService = {
     text: string,
     role: 'user' | 'ai',
     sessionId: string,
-    image?: string
+    images?: string[]
   ): Promise<any> => {
     return await fetchClient('/chat/ai/save', {
       method: 'POST',
-      body: JSON.stringify({ text, role, sessionId, image })
+      body: JSON.stringify({ text, role, sessionId, images })
     });
   },
 
@@ -135,7 +135,7 @@ export const featureService = {
     prompt: string,
     history: { role: 'user' | 'assistant'; content: string }[],
     onChunk: (text: string) => void,
-    image?: string | null
+    images?: string[] | null
   ): Promise<void> => {
     const token = localStorage.getItem('auth_token');
     if (!token) throw new Error('No auth token');
@@ -148,9 +148,8 @@ export const featureService = {
           'Content-Type': 'application/json',
           'x-auth-token': token
         },
-        // We pass the prompt, history, and image to the streaming endpoint.
-        // The backend processes this logic separately from the chat storage.
-        body: JSON.stringify({ prompt, history, image })
+        // We pass the prompt, history, and images (array) to the streaming endpoint.
+        body: JSON.stringify({ prompt, history, images })
       });
 
       if (!response.ok) {
