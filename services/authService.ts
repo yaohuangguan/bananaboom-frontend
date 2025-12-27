@@ -278,19 +278,26 @@ export const authService = {
     toast.success('Permission rejected.');
   },
 
-  // --- Audit Logs ---
+  // --- Audit Logs (Updated for new Backend API) ---
+  getAuditOptions: async (): Promise<{ actions: string[] }> => {
+    return await fetchClient<{ actions: string[] }>('/audit/options');
+  },
+
   getAuditLogs: async (
     page: number = 1,
     limit: number = 20,
     filters: {
-      operator?: string; // User ID
+      operator?: string;
       action?: string;
       target?: string;
       ip?: string;
       startDate?: string;
       endDate?: string;
     } = {}
-  ): Promise<{ data: AuditLog[]; pagination: PaginationData }> => {
+  ): Promise<{
+    data: AuditLog[];
+    pagination: { currentPage: number; limit: number; totalPages: number; totalLogCount: number };
+  }> => {
     const queryParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString()
@@ -303,21 +310,24 @@ export const authService = {
     if (filters.startDate) queryParams.append('startDate', filters.startDate);
     if (filters.endDate) queryParams.append('endDate', filters.endDate);
 
-    const response = await fetchClient<PaginatedResponse<AuditLog>>(
-      `/audit?${queryParams.toString()}`
+    const response = await fetchClient<any>(`/audit?${queryParams.toString()}`);
+    return response;
+  },
+
+  deleteAuditLog: async (id: string): Promise<void> => {
+    await fetchClient(`/audit/${id}`, { method: 'DELETE' });
+    toast.success('Audit log deleted.');
+  },
+
+  pruneAuditLogs: async (): Promise<{ deletedCount: number }> => {
+    const res = await fetchClient<{ success: boolean; msg: string; deletedCount: number }>(
+      '/audit/prune/old',
+      {
+        method: 'DELETE'
+      }
     );
-
-    const backendPagination = response.pagination as any;
-    const pagination: PaginationData = {
-      currentPage: backendPagination.currentPage,
-      totalPages: backendPagination.totalPages,
-      totalItems: backendPagination.totalPosts || 0,
-      itemsPerPage: limit,
-      hasNextPage: backendPagination.currentPage < backendPagination.totalPages,
-      hasPrevPage: backendPagination.currentPage > 1
-    };
-
-    return { data: response.data, pagination };
+    toast.success(res.msg);
+    return res;
   },
 
   // --- Users List ---

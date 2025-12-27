@@ -485,7 +485,7 @@ export const JournalSpace: React.FC = () => {
         {/* Right Column: Widgets & Editor */}
         <div className="flex flex-col gap-6 lg:h-full order-1 lg:order-2 min-h-0">
           <div className="shrink-0 relative z-20">
-            <TodoWidget />
+            <TodoWidget user={user} />
           </div>
 
           <div

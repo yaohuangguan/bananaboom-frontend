@@ -16,7 +16,8 @@ import {
   SmartMenuResponse,
   CloudinaryUsage,
   Conversation,
-  R2UsageStats
+  R2UsageStats,
+  PaginatedResponse
 } from '../types';
 
 export const featureService = {
@@ -174,11 +175,34 @@ export const featureService = {
   },
 
   // --- Bucket List (Todos) ---
-  getTodos: async (): Promise<Todo[]> => {
+  getTodos: async (
+    page: number = 1,
+    limit: number = 20,
+    type?: string,
+    keyword?: string
+  ): Promise<PaginatedResponse<Todo>> => {
     try {
-      return await fetchClient<Todo[]>('/todo');
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString()
+      });
+      if (type) params.append('type', type);
+      if (keyword) params.append('keyword', keyword);
+
+      return await fetchClient<PaginatedResponse<Todo>>(`/todo?${params.toString()}`);
     } catch (e) {
-      return [];
+      console.error('Fetch todos failed', e);
+      return {
+        data: [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: 0,
+          itemsPerPage: limit,
+          hasNextPage: false,
+          hasPrevPage: false
+        }
+      };
     }
   },
 
@@ -187,12 +211,26 @@ export const featureService = {
     description?: string,
     targetDate?: string,
     images?: string[],
-    type?: 'wish' | 'routine'
+    type?: 'wish' | 'routine',
+    recurrence?: string,
+    remindAt?: string,
+    options?: { notifyUsers?: string[]; bark?: any }
   ): Promise<Todo[]> => {
     try {
+      const payload = {
+        todo,
+        description,
+        targetDate,
+        images,
+        type,
+        recurrence,
+        remindAt,
+        ...(options || {})
+      };
+
       const res = await fetchClient<Todo[]>('/todo', {
         method: 'POST',
-        body: JSON.stringify({ todo, description, targetDate, images, type })
+        body: JSON.stringify(payload)
       });
       toast.success('Added to the list!');
       return res;
@@ -211,6 +249,18 @@ export const featureService = {
     } catch (e) {
       throw e;
     }
+  },
+
+  checkRoutine: async (id: string): Promise<{ success: boolean; nextRun: string; msg: string }> => {
+    return await fetchClient(`/todo/routine/${id}/check`, {
+      method: 'POST'
+    });
+  },
+
+  testRoutine: async (id: string): Promise<{ success: boolean; msg: string }> => {
+    return await fetchClient(`/todo/routine/${id}/test`, {
+      method: 'POST'
+    });
   },
 
   deleteTodo: async (id: string): Promise<void> => {

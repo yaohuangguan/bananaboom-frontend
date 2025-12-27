@@ -17,7 +17,14 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
           // 🔥 关键：把请求路径中的 '/api' 替换为空字符串
-          rewrite: (path) => path.replace(/^\/api/, '')
+          rewrite: (path) => path.replace(/^\/api/, ''),
+          configure: (proxy, options) => {
+            proxy.on('proxyReq', (proxyReq, req, res) => {
+              // 把 Origin 伪装成你的生产域名 (后端白名单里的域名)
+              // 这样后端就以为是自己人发的请求，不会拦截了
+              proxyReq.setHeader('Origin', 'https://www.ps6.space');
+            });
+          }
         }
       }
     },

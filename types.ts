@@ -267,6 +267,14 @@ export interface Comment {
   _userid?: string;
 }
 
+export interface BarkConfig {
+  sound?: string;
+  level?: 'active' | 'timeSensitive' | 'passive' | 'critical';
+  icon?: string;
+  url?: string;
+  image?: string;
+}
+
 // Updated Bucket List / Todo Model
 export interface Todo {
   _id: string;
@@ -276,6 +284,10 @@ export interface Todo {
   type?: 'wish' | 'routine'; // New Type Field
   images?: string[];
   targetDate?: string;
+  remindAt?: string; // 🔥 New: Routine reminder time
+  recurrence?: string; // 🔥 New: Routine recurrence rule
+  notifyUsers?: string[] | User[]; // 🔥 New: Users to notify
+  bark?: BarkConfig; // 🔥 New: Bark config
   order?: number;
   done: boolean; // Legacy field for compatibility
   timestamp: number | string;
