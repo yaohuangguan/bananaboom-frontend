@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Routes, Route, Navigate, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { Header } from './components/Header';
